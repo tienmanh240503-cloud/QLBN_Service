@@ -14,10 +14,10 @@ const router = express.Router();
 router.post('/', verify, createKhungGioKham);
 
 // Lấy danh sách khung giờ
-router.get('/', verify, getAllKhungGioKham);
+router.get('/', getAllKhungGioKham);
 
 // Lấy chi tiết khung giờ theo ID
-router.get('/:id_khung_gio', verify, getKhungGioById);
+router.get('/:id_khung_gio', getKhungGioById);
 
 // Cập nhật khung giờ
 router.put('/:id_khung_gio', verify, updateKhungGioKham);

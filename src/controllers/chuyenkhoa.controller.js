@@ -17,8 +17,7 @@ export const createChuyenKhoa = async (req, res) => {
 // Lấy danh sách chuyên khoa
 export const getAllChuyenKhoa = async (req, res) => {
     try {
-        const { id_chuyen_khoa } = req.params;
-        const cks = await ChuyenKhoa.findAll({id_chuyen_khoa});
+        const cks = await ChuyenKhoa.getAll();
         return res.status(200).json({ success: true, data: cks });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });

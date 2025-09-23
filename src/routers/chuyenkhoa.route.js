@@ -14,10 +14,10 @@ const router = express.Router();
 router.post("/", verify, createChuyenKhoa);
 
 // Lấy danh sách chuyên khoa
-router.get("/", verify, getAllChuyenKhoa);
+router.get("/", getAllChuyenKhoa);
 
 // Lấy chi tiết chuyên khoa theo ID
-router.get("/:id_chuyen_khoa", verify, getChuyenKhoaById);
+router.get("/:id_chuyen_khoa", getChuyenKhoaById);
 
 // Cập nhật chuyên khoa
 router.put("/:id_chuyen_khoa", verify, updateChuyenKhoa);
