@@ -48,9 +48,11 @@ export const getKetQuaByChiDinh = async (req, res) => {
 export const updateKetQua = async (req, res) => {
     try {
         const { id_chi_dinh } = req.params;
+
         const ketqua = await KetQuaXetNghiem.findOne({id_chi_dinh});
         if (!ketqua) return res.status(404).json({ success: false, message: "Không tìm thấy kết quả" });
-        const updated = await KetQuaXetNghiem.update(req.body, id_chi_dinh);
+        const updated = await KetQuaXetNghiem.update(req.body, ketqua.id_ket_qua);
+        console.log(updated);
         return res.status(200).json({ success: true, message: "Cập nhật thành công", data: updated });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });

@@ -49,8 +49,8 @@ export const createCuocHenKham = async (req, res) => {
         // ✅ Tạo cuộc hẹn
         const cuocHen = await CuocHenKhamBenh.create({
             id_cuoc_hen : Id,
-            id_benh_nhan : id_nguoi_dung,
-            id_bac_si: id_bac_si || null,
+            id_benh_nhan,
+            id_bac_si: id_nguoi_dung || null,
             id_chuyen_khoa: id_chuyen_khoa || null,
             id_khung_gio,
             ngay_kham,
