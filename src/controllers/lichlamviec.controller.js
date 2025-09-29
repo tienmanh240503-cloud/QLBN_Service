@@ -1,4 +1,5 @@
 import { LichLamViec } from "../models/index.js";
+import { v4 as uuidv4 } from 'uuid';
 
 // Tạo lịch làm việc mới
 export const createLichLamViec = async (req, res) => {
@@ -11,7 +12,9 @@ export const createLichLamViec = async (req, res) => {
             return res.status(400).json({ success: false, message: "Ngày và khung giờ là bắt buộc." });
         }
 
-        const lich = await LichLamViec.create({ id_bac_si, id_chuyen_gia, ngay, id_khung_gio });
+        const Id = `L_${uuidv4()}`;
+
+        const lich = await LichLamViec.create({id_lich_lam_viec : Id, id_bac_si, id_chuyen_gia, ngay, id_khung_gio });
         return res.status(201).json({ success: true, message: "Thêm lịch làm việc thành công", data: lich });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });

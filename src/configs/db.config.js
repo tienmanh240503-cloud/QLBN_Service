@@ -19,9 +19,9 @@ export const DB_CONFID = {
         port: 3307,
         user: "manh",
         password: "Manh0385@",
-        database: "hethongquanlybenhvien"
+        database: "HeThongQuanLyBenhVien"
     },
-    table:{
+    table: {
         NguoiDung: "NguoiDung",
         BenhNhan: "BenhNhan",
         ChuyenKhoa: "ChuyenKhoa",
@@ -31,14 +31,21 @@ export const DB_CONFID = {
         NhanVienPhanCong: "NhanVienPhanCong",
         LichLamViec: "LichLamViec",
         KhungGioKham: "KhungGioKham",
-        CuocHen: "CuocHen",
+        CuocHenKhamBenh: "CuocHenKhamBenh",
+        CuocHenTuVan: "CuocHenTuVan",
         HoSoKhamBenh: "HoSoKhamBenh",
+        HoSoDinhDuong: "HoSoDinhDuong",
         DonThuoc: "DonThuoc",
         Thuoc: "Thuoc",
         ChiTietDonThuoc: "ChiTietDonThuoc",
         ChiDinhXetNghiem: "ChiDinhXetNghiem",
+        KetQuaXetNghiem: "KetQuaXetNghiem",
+        DichVu: "DichVu",
         HoaDon: "HoaDon",
+        ChiTietHoaDon: "ChiTietHoaDon",
         CuocTroChuyen: "CuocTroChuyen",
         TinNhan: "TinNhan",
+        LichSuKham: "LichSuKham",
+        LichSuTuVan: "LichSuTuVan"
     }
 }

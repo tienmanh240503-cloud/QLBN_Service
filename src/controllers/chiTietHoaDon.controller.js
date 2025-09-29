@@ -1,13 +1,16 @@
 import { ChiTietHoaDon, HoaDon, DichVu } from "../models/index.js";
-
+import { v4 as uuidv4 } from 'uuid';
 // Thêm chi tiết hóa đơn
 export const createChiTietHoaDon = async (req, res) => {
     try {
-        const { id_hoa_don, id_dich_vu, so_luong, don_gia } = req.body;
+        const { id_hoa_don, id_dich_vu, so_luong, don_gia, thanh_tien } = req.body;
         if (!id_hoa_don || !id_dich_vu || !don_gia) {
             return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc" });
         }
-        const chiTiet = await ChiTietHoaDon.create({ id_hoa_don, id_dich_vu, so_luong, don_gia });
+
+        const Id = `DHD_${uuidv4()}`;
+
+        const chiTiet = await ChiTietHoaDon.create({id_chi_tiet : Id, id_hoa_don, id_dich_vu, so_luong, don_gia, thanh_tien });
         return res.status(201).json({ success: true, data: chiTiet });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });

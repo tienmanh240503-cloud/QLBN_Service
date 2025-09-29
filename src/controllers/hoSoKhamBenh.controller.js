@@ -1,99 +1,110 @@
-import { HoSoKhamBenh, BenhNhan, BacSi, CuocHen } from "../models/index.js";
+import { HoSoKhamBenh, BenhNhan, BacSi} from "../models/index.js";
+import { v4 as uuidv4 } from 'uuid';
 
-// Tạo hồ sơ khám bệnh
 export const createHoSoKham = async (req, res) => {
     try {
-        const { id_cuoc_hen, chan_doan, chi_tiet_chan_doan, phac_do_dieu_tri, huong_dan_tai_kham, id_bac_si_tao } = req.body;
+        const id_nguoi_dung = req.decoded.info.id_nguoi_dung;
+        const {
+            id_benh_nhan,
+            ho_ten,
+            so_dien_thoai,
+            tuoi,
+            gioi_tinh,
+            dan_toc,
+            ma_BHYT,
+            dia_chi,
+            ly_do_kham,
+            chuan_doan,
+            ket_qua_cls,
+            tham_do_chuc_nang,
+            dieu_tri,
+            cham_soc,
+            ghi_chu
+        } = req.body;
 
-        if (!id_cuoc_hen || !chan_doan || !id_bac_si_tao) {
-            return res.status(400).json({
-                success: false,
-                message: "Thiếu thông tin bắt buộc (id_cuoc_hen, chan_doan, id_bac_si_tao)."
-            });
+        if (!id_benh_nhan || !ho_ten) {
+            return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc." });
         }
 
-        // Check cuộc hẹn tồn tại
-        const cuocHen = await CuocHen.findOne({id_cuoc_hen});
-        if (!cuocHen) {
-            return res.status(404).json({ success: false, message: "Cuộc hẹn không tồn tại." });
-        }
+        // Kiểm tra bệnh nhân tồn tại
+        const benhNhan = await BenhNhan.findOne({ id_benh_nhan });
+        if (!benhNhan) return res.status(404).json({ success: false, message: "Bệnh nhân không tồn tại." });
 
-        // Check xem đã có hồ sơ cho cuộc hẹn này chưa
-        const hoSoTonTai = await HoSoKhamBenh.findOne({id_cuoc_hen});
-        if (hoSoTonTai) {
-            return res.status(400).json({
-                success: false,
-                message: "Cuộc hẹn này đã có hồ sơ khám bệnh."
-            });
-        }
+        const bacSi = await BacSi.findOne({ id_bac_si : id_nguoi_dung });
+        if (!bacSi) return res.status(404).json({ success: false, message: "Bac Si không tồn tại." });
+
+        const Id = `KB_${uuidv4()}`;
 
         // Tạo hồ sơ khám
         const hoSo = await HoSoKhamBenh.create({
-            id_cuoc_hen,
-            chan_doan,
-            chi_tiet_chan_doan,
-            phac_do_dieu_tri,
-            huong_dan_tai_kham,
-            id_bac_si_tao,
+            id_ho_so : Id,
+            id_benh_nhan,
+            id_bac_si_tao : id_nguoi_dung,
+            ho_ten,
+            so_dien_thoai,
+            tuoi,
+            gioi_tinh,
+            dan_toc,
+            ma_BHYT,
+            dia_chi,
+            ly_do_kham,
+            chuan_doan,
+            ket_qua_cls,
+            tham_do_chuc_nang,
+            dieu_tri,
+            cham_soc,
+            ghi_chu,
             thoi_gian_tao: new Date()
         });
 
-        return res.status(201).json({
-            success: true,
-            message: "Tạo hồ sơ khám thành công.",
-            data: hoSo
-        });
+        res.status(201).json({ success: true, message: "Tạo hồ sơ khám thành công.", data: hoSo });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: "Lỗi server.",
-            error: error.message
-        });
+        res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
+    }
+};
+// Lấy hồ sơ theo ID hồ sơ Kham benh
+export const getHoSoKhamById = async (req, res) => {
+    try {
+        const { id_ho_so } = req.params;
+        const hoSo = await HoSoKhamBenh.getById(id_ho_so);
+        if (!hoSo) return res.status(404).json({ success: false, message: "Không tìm thấy hồ sơ." });
+
+        res.status(200).json({ success: true, data: hoSo });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
     }
 };
 
-// Xem hồ sơ khám bệnh theo bệnh nhân
-export const getHoSoByBenhNhan = async (req, res) => {
+// Lấy danh sách hồ sơ của 1 bệnh nhân
+export const getHoSoKhamByBenhNhan = async (req, res) => {
     try {
         const { id_benh_nhan } = req.params;
+        const hoSos = await HoSoKhamBenh.findOne({ id_benh_nhan });
 
-        const benhNhan = await BenhNhan.findOne({id_benh_nhan});
-        if (!benhNhan) {
-            return res.status(404).json({ success: false, message: "Bệnh nhân không tồn tại." });
-        }
-
-        const cuocHens = await CuocHen.findAll({id_benh_nhan});
-
-        if (!cuocHens.length) {
-            return res.status(200).json({
-                success: true,
-                message: "Bệnh nhân chưa có hồ sơ khám nào.",
-                data: []
-            });
-        }
-
-        // Lấy danh sách id cuộc hẹn
-        const idCuocHens = cuocHens.map(c => c.id);
-        const hoSos = [];
-        for (const id of idCuocHens) {
-            const hoSo = await HoSoKham.findOne({ id_cuoc_hen: id });
-            if (hoSo) {
-                hoSos.push(hoSo.data);
-            }
-        }
-        return res.status(200).json({
-            success: true,
-            message: "Danh sách hồ sơ khám bệnh.",
-            data: hoSos
-        });
+        res.status(200).json({ success: true, data: hoSos });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: "Lỗi server.",
-            error: error.message
-        });
+        res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
     }
 };
 
+export const updateHoSoKham = async (req, res) => {
+    try {
+        const { id_ho_so } = req.params;
+        const dataUpdate = req.body;
 
+        const updatedHoSo = await HoSoKhamBenh.update(dataUpdate, id_ho_so);
+        res.status(200).json({ success: true, message: "Cập nhật hồ sơ thành công.", data: updatedHoSo });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
+    }
+};
 
+export const deleteHoSoKham = async (req, res) => {
+    try {
+        const { id_ho_so } = req.params;
+        await HoSoKhamBenh.delete(id_ho_so);
+        res.status(200).json({ success: true, message: "Xóa hồ sơ thành công." });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
+    }
+};

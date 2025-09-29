@@ -1,4 +1,5 @@
 import { KhungGioKham } from "../models/index.js";
+import { v4 as uuidv4 } from 'uuid';
 
 // Tạo khung giờ khám mới
 export const createKhungGioKham = async (req, res) => {
@@ -9,7 +10,9 @@ export const createKhungGioKham = async (req, res) => {
             return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc." });
         }
 
-        const khungGio = await KhungGioKham.create({ gio_bat_dau, gio_ket_thuc, mo_ta : mo_ta || null });
+        const Id = `KG_${uuidv4()}`;
+
+        const khungGio = await KhungGioKham.create({ id_khung_gio : Id, gio_bat_dau, gio_ket_thuc, mo_ta : mo_ta || null });
 
         return res.status(201).json({ success: true, message: "Tạo khung giờ khám thành công", data: khungGio });
     } catch (error) {

@@ -3,12 +3,12 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const generateAccessToken = (user,role) => {
-    return jwt.sign({info:user, vai_tro : role}, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+const generateAccessToken = (user,vai_tro) => {
+    return jwt.sign({info:user, vai_tro : vai_tro}, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 };
 
-const generateRefreshToken = (user,role) => { 
-    return jwt.sign({info:user, vai_tro : role},process.env.REFRESH_TOKEN_SECRET, { expiresIn: '2h' });
+const generateRefreshToken = (user,vai_tro) => { 
+    return jwt.sign({info:user, vai_tro : vai_tro},process.env.REFRESH_TOKEN_SECRET, { expiresIn: '2h' });
 };
 
 const verifyAccessToken = (token) => {

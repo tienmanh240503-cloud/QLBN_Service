@@ -1,10 +1,12 @@
 import { ChiDinhXetNghiem, BacSi } from "../models/index.js";
+import { v4 as uuidv4 } from 'uuid';
 
 // Tạo chỉ định xét nghiệm
 export const createChiDinh = async (req, res) => {
     try {
         const{id_ho_so, ten_dich_vu, yeu_cau_ghi_chu, trang_thai, id_bac_si_chi_dinh, thoi_gian_chi_dinh } = req.body;
-        const chiDinh = await ChiDinhXetNghiem.create({id_ho_so, ten_dich_vu, yeu_cau_ghi_chu, trang_thai, id_bac_si_chi_dinh, thoi_gian_chi_dinh });
+        const Id = `CD_${uuidv4()}`;
+        const chiDinh = await ChiDinhXetNghiem.create({ id_chi_dinh : Id, id_ho_so, ten_dich_vu, yeu_cau_ghi_chu, trang_thai, id_bac_si_chi_dinh, thoi_gian_chi_dinh });
         return res.status(201).json({ success: true, data: chiDinh });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -41,7 +43,7 @@ export const updateTrangThaiChiDinh = async (req, res) => {
         const { id_chi_dinh } = req.params;
         const { trang_thai } = req.body;
 
-        const updated = await ChiDinhXetNghiem.update(id_chi_dinh, { trang_thai });
+        const updated = await ChiDinhXetNghiem.update({ trang_thai }, id_chi_dinh);
         if (!updated) return res.status(404).json({ success: false, message: "Không tìm thấy chỉ định" });
 
         return res.status(200).json({ success: true, message: "Cập nhật thành công" });

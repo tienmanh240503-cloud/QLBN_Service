@@ -4,8 +4,11 @@ import { createDichVu, getAllDichVu, getDichVuById, updateDichVu, deleteDichVu }
 const router = express.Router();
 
 router.post("/", createDichVu);
-router.get("/", getAllDichVu);
-router.get("/:id_dich_vu", getDichVuById);
+
+router.get("/", getAllDichVu); 
+
+router.get("/:id_dich_vu", getDichVuById);   
+
 router.put("/:id_dich_vu", updateDichVu);
 router.delete("/:id_dich_vu", deleteDichVu);
 

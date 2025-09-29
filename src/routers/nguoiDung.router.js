@@ -5,7 +5,7 @@ import {
     getUserById,
     getUsersByRole,
     updateUser,
-    deleteUser,
+    updateUserStatus,
     changePassword,
     refreshToken,
     CreateUser
@@ -34,12 +34,11 @@ router.get('/vai_tro/', verify, getUsersByRole);
 // Lấy thông tin người dùng theo ID
 router.get('/:id_nguoi_dung', verify, getUserById);
 
+// Update trang thai người dùng
+router.put('/updatetrangthai/:id_nguoi_dung', verify, updateUserStatus);
 
 // Cập nhật thông tin người dùng
 router.put('/:id_nguoi_dung', verify, updateUser);
-
-// Xóa người dùng
-router.delete('/:id_nguoi_dung', verify, deleteUser);
 
 // Đổi mật khẩu
 router.post('/:id_nguoi_dung/change-password', verify, changePassword);

@@ -1,5 +1,5 @@
 import { Thuoc } from "../models/index.js";
-
+import { v4 as uuidv4 } from 'uuid';
 // Tạo thuốc mới
 export const createThuoc = async (req, res) => {
     try {
@@ -7,7 +7,10 @@ export const createThuoc = async (req, res) => {
         if (!ten_thuoc) {
             return res.status(400).json({ success: false, message: "Tên thuốc là bắt buộc." });
         }
-        const thuoc = await Thuoc.create({ ten_thuoc, hoatchat, hang_bao_che, don_vi_tinh, mo_ta, chong_chi_dinh });
+
+        const Id = `T_${uuidv4()}`;
+
+        const thuoc = await Thuoc.create({ id_thuoc : Id, ten_thuoc, hoatchat, hang_bao_che, don_vi_tinh, mo_ta, chong_chi_dinh });
         return res.status(201).json({ success: true, message: "Thêm thuốc thành công", data: thuoc });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -42,7 +45,7 @@ export const updateThuoc = async (req, res) => {
         const { id_thuoc } = req.params;
         const thuoc = await Thuoc.getById(id_thuoc);
         if (!thuoc) return res.status(404).json({ success: false, message: "Không tìm thấy thuốc" });
-        const updateThuoc = await Thuoc.updateById(req.body, id_thuoc);
+        const updateThuoc = await Thuoc.update(req.body, id_thuoc);
         return res.status(200).json({ success: true, message: "Cập nhật thành công", data: updateThuoc });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -55,7 +58,7 @@ export const deleteThuoc = async (req, res) => {
         const { id_thuoc } = req.params;
         const thuoc = await Thuoc.getById(id_thuoc);
         if (!thuoc) return res.status(404).json({ success: false, message: "Không tìm thấy thuốc" });
-        await Thuoc.deleteById(id_thuoc);
+        await Thuoc.delete(id_thuoc);
         return res.status(200).json({ success: true, message: "Xóa thuốc thành công" });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });

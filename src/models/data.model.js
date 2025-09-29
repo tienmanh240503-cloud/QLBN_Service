@@ -45,10 +45,10 @@ const getByRole = (role, table1,table2, page, pageSize, sortField, sortOrder = '
     });
 };
 
-const getById = (table,dataId, id) => {    
+const getById = (table, dataId, id) => {    
     return new Promise((resolve, reject) => {
-        const query = `SELECT * FROM ${table} WHERE ${dataId} = ${id}`;
-        db.query(query, (err, result) => {
+        const query = `SELECT * FROM ${table} WHERE ${dataId} = ?`;
+        db.query(query, [id], (err, result) => {
             if (err) {
                 reject(err);
             } else {
@@ -57,6 +57,7 @@ const getById = (table,dataId, id) => {
         });
     });
 }
+
 
 const create = (table, newUser) => {
     return new Promise((resolve, reject) => {
@@ -69,7 +70,7 @@ const create = (table, newUser) => {
             if (err) {
                 reject(err);
             } else {
-                resolve({ id: result.insertId, ...newUser });
+                resolve({ ...newUser });
             }
         });
     });
@@ -144,18 +145,18 @@ const find = (table, finds) => {
     });
 }
  
-const getInfoWithJoin = (table1,table2,nameInfo, nameJoin, idName, id) => {
+const getInfoWithJoin = (table1, table2, nameInfo, nameJoin, idName, id) => {
     return new Promise((resolve, reject) => {
-        const query = `SELECT ${table2}.${nameInfo} FROM ${table1} INNER JOIN ${table2} ON ${table1}.${nameJoin} = ${table2}.${nameJoin} where ${idName} = ${id}`;
-        db.query(query, (err, result) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result[0]);
-            }
+        const query = `SELECT ${table2}.${nameInfo} FROM ${table1} 
+                       INNER JOIN ${table2} ON ${table1}.${nameJoin} = ${table2}.${nameJoin} 
+                       WHERE ${idName} = ?`;
+        db.query(query, [id], (err, result) => {
+            if (err) reject(err);
+            else resolve(result[0]);
         });
     });
 }
+
 
 const updateRole = (table,nameRole, role,nameid, id) => {
     return new Promise((resolve, reject) => {

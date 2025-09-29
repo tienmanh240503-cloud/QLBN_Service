@@ -1,4 +1,5 @@
 import { KetQuaXetNghiem } from "../models/index.js";
+import { v4 as uuidv4 } from 'uuid';
 
 // Tạo kết quả xét nghiệm
 export const createKetQua = async (req, res) => {
@@ -15,7 +16,10 @@ export const createKetQua = async (req, res) => {
             return res.status(400).json({ success: false, message: "Chỉ định này đã có kết quả." });
         }
 
+        const Id = `KQ_${uuidv4()}`;
+
         const ketqua = await KetQuaXetNghiem.create({ 
+            id_ket_qua : Id,
             id_chi_dinh, 
             ket_qua_van_ban, 
             duong_dan_file_ket_qua, 

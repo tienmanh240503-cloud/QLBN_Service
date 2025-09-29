@@ -1,4 +1,5 @@
 import { ChiTietDonThuoc ,Thuoc } from "../models/index.js";
+import { v4 as uuidv4 } from 'uuid';
 
 // Tạo chi tiết đơn thuốc mới
 export const createChiTietDonThuoc = async (req, res) => {
@@ -9,7 +10,9 @@ export const createChiTietDonThuoc = async (req, res) => {
             return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc (id_don_thuoc, id_thuoc, so_luong)." });
         }
 
-        const chiTiet = await ChiTietDonThuoc.create({ id_don_thuoc, id_thuoc, so_luong, lieu_dung });
+        const Id = `DDT_${uuidv4()}`;
+
+        const chiTiet = await ChiTietDonThuoc.create({id_chi_tiet_don_thuoc : Id, id_don_thuoc, id_thuoc, so_luong, lieu_dung });
         return res.status(201).json({ success: true, message: "Thêm chi tiết đơn thuốc thành công", data: chiTiet });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });

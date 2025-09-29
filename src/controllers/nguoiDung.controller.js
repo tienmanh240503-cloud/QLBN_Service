@@ -1,7 +1,7 @@
 import { NguoiDung, BenhNhan ,BacSi, ChuyenGiaDinhDuong,NhanVienPhanCong, NhanVienQuay } from "../models/index.js";
 import { hashedPassword, comparePassword } from "../utils/password.js";
-import { generateAccessToken, generateRefreshToken } from "../utils/auth.js";
-
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/auth.js";
+import { v4 as uuidv4 } from 'uuid';
 // Đăng nhập
 const login = async (req, res) => {
     try {
@@ -122,7 +122,10 @@ const register = async (req, res) => {
         // Mã hóa mật khẩu
         const hashed = await hashedPassword(mat_khau);
 
+        const Id = `BN_${uuidv4()}`;
+
         const userData = { 
+            id_nguoi_dung: Id,
             ho_ten, 
             email, 
             so_dien_thoai, 
@@ -137,7 +140,7 @@ const register = async (req, res) => {
 
         const userId = await NguoiDung.create(userData);
         if(userId){
-            await BenhNhan.create({ id_benh_nhan: userId.id });
+            await BenhNhan.create({ id_benh_nhan: userId.id_nguoi_dung });
         }
 
         res.status(201).json({ 
@@ -208,8 +211,22 @@ const CreateUser = async (req, res) => {
         // Mã hóa mật khẩu
         const hashed = await hashedPassword(mat_khau);
 
+        let prefix = '';
+        switch(vai_tro) {
+            case 'benh_nhan': prefix = 'BN_'; break;
+            case 'bac_si': prefix = 'BS_'; break;
+            case 'chuyen_gia_dinh_duong': prefix = 'CG_'; break;
+            case 'nhan_vien_quay': prefix = 'NVQ_'; break;
+            case 'nhan_vien_phan_cong': prefix = 'NVP_'; break;
+            case 'quan_tri_vien': prefix = 'QTV_'; break;
+            default: prefix = 'USER_';
+        }
+
+        const Id = `${prefix}${uuidv4()}`;
+
         // Dữ liệu user
         const userData = { 
+            id_nguoi_dung: Id,
             ho_ten, 
             email, 
             so_dien_thoai, 
@@ -228,19 +245,19 @@ const CreateUser = async (req, res) => {
         if (userId) {
             switch(vai_tro) {
                 case 'benh_nhan':
-                    await BenhNhan.create({ id_benh_nhan: userId.id });
+                    await BenhNhan.create({ id_benh_nhan: Id });
                     break;
                 case 'bac_si':
-                    await BacSi.create({ id_bac_si: userId.id });
+                    await BacSi.create({ id_bac_si: Id });
                     break;
                 case 'chuyen_gia_dinh_duong':
-                    await ChuyenGiaDinhDuong.create({ id_chuyen_gia: userId.id });
+                    await ChuyenGiaDinhDuong.create({ id_chuyen_gia: Id });
                     break;
                 case 'nhan_vien_quay':
-                    await NhanVienQuay.create({ id_nhan_vien_quay: userId.id });
+                    await NhanVienQuay.create({ id_nhan_vien_quay: Id });
                     break;
                 case 'nhan_vien_phan_cong':
-                    await NhanVienPhanCong.create({ id_nhan_vien_phan_cong: userId.id });
+                    await NhanVienPhanCong.create({ id_nhan_vien_phan_cong: Id });
                     break;
                 // case 'quan_tri_vien':
                 //  tutu thêm 
@@ -301,16 +318,10 @@ const getUserById = async (req, res) => {
 const getUsersByRole = async (req, res) => {
     try {
         const { vai_tro } = req.body;
-        let users = await NguoiDung.findAll({ vai_tro });
-        // Ẩn mật khẩu
-        const usersWithoutPassword = users.map(user => {
-            const { mat_khau, ...userWithoutPassword } = user;
-            return userWithoutPassword;
-        });
-
+        let users = await NguoiDung.findAll({ vai_tro , trang_thai_hoat_dong : true });
         res.status(200).json({
             success: true,
-            data: usersWithoutPassword
+            data: users
         });
     } catch (error) {
         res.status(500).json({
@@ -360,7 +371,6 @@ const updateUser = async (req, res) => {
     try {
         const id_nguoi_dung = req.params.id_nguoi_dung;
         const updateData = req.body;
-
         // Kiểm tra người dùng tồn tại
         const existingUser = await NguoiDung.findOne({id_nguoi_dung});
         if (!existingUser) {
@@ -392,12 +402,23 @@ const updateUser = async (req, res) => {
             }
         }
 
+        // Kiểm tra số điện thoại trùng (nếu có cập nhật)
+        if (updateData.so_dien_thoai && updateData.so_dien_thoai !== existingUser.so_dien_thoai) {
+            const phoneExists = await NguoiDung.findOne({ so_dien_thoai: updateData.so_dien_thoai });
+            if (phoneExists) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Số điện thoại đã tồn tại."
+                });
+            }
+        }
+
         // Mã hóa mật khẩu nếu có cập nhật
         if (updateData.mat_khau) {
             updateData.mat_khau = await hashedPassword(updateData.mat_khau);
         }
 
-        const affectedRows = await NguoiDung.update(userId, updateData);
+        const affectedRows = await NguoiDung.update(updateData ,id_nguoi_dung);
 
         res.status(200).json({
             success: true,
@@ -414,7 +435,7 @@ const updateUser = async (req, res) => {
 };
 
 // Xóa người dùng
-const deleteUser = async (req, res) => {
+const updateUserStatus = async (req, res) => {
     try {
         const userId = req.params.id_nguoi_dung;
 
@@ -426,12 +447,11 @@ const deleteUser = async (req, res) => {
                 message: "Không tìm thấy người dùng." 
             });
         }
-
-        const affectedRows = await NguoiDung.delete(userId);
+        const affectedRows = await NguoiDung.update({trang_thai_hoat_dong : false}, userId);
 
         res.status(200).json({
             success: true,
-            message: "Xóa người dùng thành công.",
+            message: "Tắt hoạt động người dùng thành công.",
             affectedRows
         });
     } catch (error) {
@@ -446,10 +466,15 @@ const deleteUser = async (req, res) => {
 // Đổi mật khẩu
 const changePassword = async (req, res) => {
     try {
-        const userId = req.params.id_nguoi_dung;
-        const { currentPassword, newPassword } = req.body;
+        const id_nguoi_dung = req.params.id_nguoi_dung;
+        const { mat_khau_hien_tai, mat_khau_moi } = req.body;
 
-        if (!currentPassword || !newPassword) {
+        const user = await NguoiDung.findOne({id_nguoi_dung: id_nguoi_dung});
+        if(!user){
+            res.status(404).json({msg: 'User not found!',success: false});
+            return;
+        }
+        if (!mat_khau_hien_tai || !mat_khau_moi) {
             return res.status(400).json({ 
                 success: false, 
                 message: "Vui lòng nhập mật khẩu hiện tại và mật khẩu mới." 
@@ -457,22 +482,20 @@ const changePassword = async (req, res) => {
         }
 
         // Kiểm tra mật khẩu hiện tại
-        const isCurrentPasswordValid = await NguoiDung.verifyPassword(userId, currentPassword);
+        const isCurrentPasswordValid = await comparePassword(mat_khau_hien_tai, user.mat_khau);
         if (!isCurrentPasswordValid) {
             return res.status(400).json({ 
                 success: false, 
                 message: "Mật khẩu hiện tại không chính xác." 
             });
         }
-
         // Mã hóa mật khẩu mới
-        const hashedNewPassword = await hashedPassword(newPassword);
-        const affectedRows = await NguoiDung.updatePassword(userId, hashedNewPassword);
+        const hashedNewPassword = await hashedPassword(mat_khau_moi);
 
+        updateMatKhau = await NguoiDung.update({mat_khau : hashedNewPassword})
         res.status(200).json({
             success: true,
-            message: "Đổi mật khẩu thành công.",
-            affectedRows
+            message: "Đổi mật khẩu thành công."
         });
     } catch (error) {
         res.status(500).json({
@@ -495,17 +518,18 @@ const refreshToken = async (req, res) => {
             });
         }
 
-        // Verify refresh token (cần implement verifyRefreshToken function)
+        // Verify refresh token
         const decoded = verifyRefreshToken(refreshToken);
         if (!decoded) {
             return res.status(401).json({ 
                 success: false, 
-                message: "Refresh token không hợp lệ." 
+                message: "Refresh token không hợp lệ hoặc đã hết hạn." 
             });
         }
 
         // Lấy thông tin user
-        const user = await NguoiDung.findById(decoded.id);
+        const userId = decoded.info?.id_nguoi_dung; 
+        const user = await NguoiDung.findOne({ id_nguoi_dung: userId });
         if (!user) {
             return res.status(404).json({ 
                 success: false, 
@@ -518,6 +542,7 @@ const refreshToken = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            message: "Tạo access token mới thành công.",
             data: {
                 accessToken: newAccessToken
             }
@@ -525,7 +550,7 @@ const refreshToken = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: "Đã xảy ra lỗi.",
+            message: "Đã xảy ra lỗi server.",
             error: error.message
         });
     }
@@ -538,7 +563,7 @@ export {
     getUsersByRole,
     // searchUsers,
     updateUser,
-    deleteUser,
+    updateUserStatus,
     changePassword,
     refreshToken,
     CreateUser

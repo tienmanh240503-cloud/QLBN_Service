@@ -1,13 +1,30 @@
 import { ChuyenKhoa } from "../models/index.js";
+import { v4 as uuidv4 } from 'uuid';
 
 // Tạo chuyên khoa mới
 export const createChuyenKhoa = async (req, res) => {
     try {
-        const { ten_chuyen_khoa, mo_ta } = req.body;
+        const { ten_chuyen_khoa, mo_ta, hinh_anh, thiet_bi, thoi_gian_hoat_dong } = req.body;
         if (!ten_chuyen_khoa) {
             return res.status(400).json({ success: false, message: "Tên chuyên khoa là bắt buộc." });
         }
-        const ck = await ChuyenKhoa.create({ ten_chuyen_khoa, mo_ta });
+        // Kiểm tra trùng tên
+        const existing = await ChuyenKhoa.findOne({ ten_chuyen_khoa });
+        if (existing) {
+            return res.status(409).json({ success: false, message: "Chuyên khoa đã tồn tại." });
+        }
+
+        const Id = `CK_${uuidv4()}`;
+
+        const ck = await ChuyenKhoa.create({
+            id_chuyen_khoa : Id,
+            ten_chuyen_khoa,
+            mo_ta,
+            hinh_anh,
+            thiet_bi,
+            thoi_gian_hoat_dong
+        });
+
         return res.status(201).json({ success: true, message: "Thêm chuyên khoa thành công", data: ck });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -42,7 +59,15 @@ export const updateChuyenKhoa = async (req, res) => {
         const { id_chuyen_khoa } = req.params;
         const ck = await ChuyenKhoa.getById(id_chuyen_khoa);
         if (!ck) return res.status(404).json({ success: false, message: "Không tìm thấy chuyên khoa" });
-        const updateCK = await ChuyenKhoa.update(req.body, id_chuyen_khoa);
+
+        if (Object.keys(req.body).length === 0) {
+            return res.status(400).json({ success: false, message: "Không có dữ liệu để cập nhật" });
+        }
+
+        const updateCK = await ChuyenKhoa.update(
+            req.body,
+            id_chuyen_khoa
+        );
         return res.status(200).json({ success: true, message: "Cập nhật thành công", data: updateCK });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });

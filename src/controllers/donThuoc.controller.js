@@ -1,5 +1,5 @@
 import { DonThuoc, ChiTietDonThuoc, Thuoc, HoSoKhamBenh } from "../models/index.js";
-
+import { v4 as uuidv4 } from 'uuid';
 // Tạo đơn thuốc
 export const createDonThuoc = async (req, res) => {
     try {
@@ -14,9 +14,43 @@ export const createDonThuoc = async (req, res) => {
             return res.status(404).json({ success: false, message: "Hồ sơ khám không tồn tại" });
         }
 
-        const donThuoc = await DonThuoc.create({ id_ho_so, ghi_chu , trang_thai : true ,thoi_gian_tao : new Date() });
+        const Id = `DT_${uuidv4()}`;
 
-        return res.status(201).json({ success: true, message: "Tạo đơn thuốc thành công", data: donThuoc });
+        const donThuoc = await DonThuoc.create({id_don_thuoc : Id, id_ho_so, ghi_chu , trang_thai : "dang_su_dung"});
+
+        const details = [];
+        for (const ct of chi_tiet) {
+            const { id_thuoc, lieu_dung, tan_suat, thoi_gian_dung, so_luong, ghi_chu } = ct;
+
+            const IdChiTiet = `DDT_${uuidv4()}`;
+            // Kiểm tra thuốc có tồn tại không
+            const thuoc = await Thuoc.findOne({ id_thuoc });
+            if (!thuoc) {
+                return res.status(400).json({ success: false, message: `Thuốc ID ${id_thuoc} không tồn tại` });
+            }
+
+            const detail = await ChiTietDonThuoc.create({
+                id_chi_tiet_don_thuoc : IdChiTiet,
+                id_don_thuoc: donThuoc.id_don_thuoc,
+                id_thuoc,
+                lieu_dung,
+                tan_suat,
+                thoi_gian_dung,
+                so_luong,
+                ghi_chu
+            });
+
+            details.push(detail);
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: "Tạo đơn thuốc thành công",
+            data: {
+                ...donThuoc,
+                chi_tiet: details
+            }
+        });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }
