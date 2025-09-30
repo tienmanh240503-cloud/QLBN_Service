@@ -4,17 +4,22 @@ import { v4 as uuidv4 } from 'uuid';
 // Tạo lịch làm việc mới
 export const createLichLamViec = async (req, res) => {
     try {
-        const { id_bac_si, id_chuyen_gia, ngay, id_khung_gio } = req.body;
-        if (!id_bac_si && !id_chuyen_gia) {
-            return res.status(400).json({ success: false, message: "Phải có id_bac_si hoặc id_chuyen_gia." });
-        }
-        if (!ngay || !id_khung_gio) {
-            return res.status(400).json({ success: false, message: "Ngày và khung giờ là bắt buộc." });
+        const { id_nguoi_dung, ngay_lam_viec, ca } = req.body;
+
+        if (!id_nguoi_dung || !ngay_lam_viec || !ca) {
+            return res.status(400).json({ success: false, message: "id_nguoi_dung, ngay_lam_viec và ca là bắt buộc." });
         }
 
         const Id = `L_${uuidv4()}`;
 
-        const lich = await LichLamViec.create({id_lich_lam_viec : Id, id_bac_si, id_chuyen_gia, ngay, id_khung_gio });
+        const lich = await LichLamViec.create({
+            id_lich_lam_viec: Id,
+            id_nguoi_dung,
+            id_nguoi_tao: req.user?.id_nguoi_dung || null,
+            ngay_lam_viec,
+            ca
+        });
+
         return res.status(201).json({ success: true, message: "Thêm lịch làm việc thành công", data: lich });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -24,8 +29,7 @@ export const createLichLamViec = async (req, res) => {
 // Lấy tất cả lịch làm việc
 export const getAllLichLamViec = async (req, res) => {
     try {
-        const { id_lich_lam_viec } = req.params;
-        const liches = await LichLamViec.findAll({id_lich_lam_viec});
+        const liches = await LichLamViec.findAll();
         return res.status(200).json({ success: true, data: liches });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -50,7 +54,10 @@ export const updateLichLamViec = async (req, res) => {
         const { id_lich_lam_viec } = req.params;
         const lich = await LichLamViec.getById(id_lich_lam_viec);
         if (!lich) return res.status(404).json({ success: false, message: "Không tìm thấy lịch làm việc" });
-        const updateLich = await LichLamViec.update(req.body, id_lich_lam_viec);
+
+        const { id_nguoi_dung, ngay_lam_viec, ca } = req.body;
+        const updateLich = await LichLamViec.update({ id_nguoi_dung, ngay_lam_viec, ca }, id_lich_lam_viec);
+
         return res.status(200).json({ success: true, message: "Cập nhật thành công", data: updateLich });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -63,9 +70,80 @@ export const deleteLichLamViec = async (req, res) => {
         const { id_lich_lam_viec } = req.params;
         const lich = await LichLamViec.getById(id_lich_lam_viec);
         if (!lich) return res.status(404).json({ success: false, message: "Không tìm thấy lịch làm việc" });
+
         await LichLamViec.delete(id_lich_lam_viec);
         return res.status(200).json({ success: true, message: "Xóa lịch làm việc thành công" });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+// Lọc theo ngày
+export const getLichLamViecByNgay = async (req, res) => {
+    try {
+        const { ngay } = req.query;
+        const liches = await LichLamViec.getAll();
+        const filtered = liches.filter(l => l.ngay_lam_viec === ngay);
+        return res.status(200).json({ success: true, data: filtered });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Lọc theo tuần
+export const getLichLamViecByWeek = async (req, res) => {
+    try {
+        const { ngay } = req.query;
+        const liches = await LichLamViec.getAll();
+
+        const date = new Date(ngay);
+        const day = date.getDay(); // 0=CN
+        const startOfWeek = new Date(date);
+        startOfWeek.setDate(date.getDate() - day + 1); // Thứ 2
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6); // Chủ nhật
+
+        const filtered = liches.filter(l => {
+            const d = new Date(l.ngay_lam_viec);
+            return d >= startOfWeek && d <= endOfWeek;
+        });
+
+        return res.status(200).json({ success: true, data: filtered });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Lọc theo tháng
+export const getLichLamViecByMonth = async (req, res) => {
+    try {
+        const { thang, nam } = req.query;
+        const liches = await LichLamViec.getAll();
+
+        const filtered = liches.filter(l => {
+            const d = new Date(l.ngay_lam_viec);
+            return d.getMonth() + 1 === parseInt(thang) && d.getFullYear() === parseInt(nam);
+        });
+
+        return res.status(200).json({ success: true, data: filtered });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Lọc theo năm
+export const getLichLamViecByYear = async (req, res) => {
+    try {
+        const { nam } = req.query;
+        const liches = await LichLamViec.getAll();
+
+        const filtered = liches.filter(l => {
+            const d = new Date(l.ngay_lam_viec);
+            return d.getFullYear() === parseInt(nam);
+        });
+
+        return res.status(200).json({ success: true, data: filtered });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
     }
 };
