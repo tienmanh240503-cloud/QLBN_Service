@@ -4,7 +4,11 @@ import {
     getAllLichLamViec,
     getLichLamViecById,
     updateLichLamViec,
-    deleteLichLamViec
+    deleteLichLamViec,
+    getLichLamViecByNgay,
+    getLichLamViecByWeek,
+    getLichLamViecByMonth,
+    getLichLamViecByYear
 } from "../controllers/lichlamviec.controller.js";
 import { verify } from "../middlewares/verifyToken.middleware.js";
 
@@ -24,5 +28,17 @@ router.put("/:id_lich_lam_viec", verify, updateLichLamViec);
 
 // Xóa lịch làm việc
 router.delete("/:id_lich_lam_viec", verify, deleteLichLamViec);
+
+// Lọc lịch theo ngày
+router.get("/filter/ngay", verify, getLichLamViecByNgay);
+
+// Lọc lịch theo tuần
+router.get("/filter/week", verify, getLichLamViecByWeek);
+
+// Lọc lịch theo tháng
+router.get("/filter/month", verify, getLichLamViecByMonth);
+
+// Lọc lịch theo năm
+router.get("/filter/year", verify, getLichLamViecByYear);
 
 export default router;
