@@ -99,7 +99,6 @@ export const getLichLamViecByWeek = async (req, res) => {
         if (!ngay) return res.status(400).json({ success: false, message: "Thiếu tham số 'ngay'" });
 
         const liches = await LichLamViec.getAll();
-        console.log(liches);
         const date = new Date(ngay);
         const day = date.getDay(); // 0=CN, 1=T2 ...
         // Tính Thứ 2 tuần hiện tại
@@ -111,8 +110,6 @@ export const getLichLamViecByWeek = async (req, res) => {
 
         const startStr = startOfWeek.toISOString().slice(0, 10);
         const endStr = endOfWeek.toISOString().slice(0, 10);
-        console.log(startStr);
-        console.log(endStr);
 
         const filtered = liches.filter(l => {
             const lvStr = new Date(l.ngay_lam_viec).toISOString().slice(0, 10);

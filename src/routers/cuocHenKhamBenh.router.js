@@ -4,7 +4,8 @@ import {
     getCuocHenKhamByBenhNhan,
     updateTrangThaiCuocHenKham,
     deleteCuocHenKham,
-    getCuocHenByBenhNhanAndTrangThai
+    getCuocHenByBenhNhanAndTrangThai,
+    getCuocHenKhamByBacSi
 } from '../controllers/cuocHenKhamBenh.controller.js';
 import { verify } from '../middlewares/verifyToken.middleware.js';
 
@@ -15,6 +16,8 @@ router.post('/', verify, createCuocHenKham);
 
 // Lấy tất cả cuộc hẹn của bệnh nhân
 router.get('/benh-nhan/:id_benh_nhan', verify, getCuocHenKhamByBenhNhan);
+
+router.get('/bac-si/:id_bac_si', verify, getCuocHenKhamByBacSi);
 
 router.post("/benh-nhan/:id_benh_nhan/loc", verify, getCuocHenByBenhNhanAndTrangThai); 
 

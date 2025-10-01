@@ -86,6 +86,49 @@ export const getCuocHenKhamByBenhNhan = async (req, res) => {
     }
 };
 
+// Lấy tất cả cuộc hẹn theo bác sĩ
+export const getCuocHenKhamByBacSi = async (req, res) => {
+    try {
+        const { id_bac_si } = req.params;
+
+        // Kiểm tra bác sĩ có tồn tại không
+        const bacSi = await BacSi.findOne({ id_bac_si });
+        if (!bacSi) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Bác sĩ không tồn tại" 
+            });
+        }
+         const cuocHenList = await CuocHenKhamBenh.findAll({ id_bac_si , trang_thai: "da_dat" });
+        // Lấy tất cả cuộc hẹn theo bác sĩ
+        const result = await Promise.all(
+          cuocHenList.map(async (cuocHen) => {
+            const benhNhan = await BenhNhan.findOne({ id_benh_nhan: cuocHen.id_benh_nhan });
+
+            const khungGio = await KhungGioKham.findOne({id_khung_gio: cuocHen.id_khung_gio });
+
+            return {
+              ...cuocHen,
+              benhNhan, 
+              khungGio, 
+            };
+          })
+        );
+        return res.status(200).json({ 
+            success: true, 
+            data: result 
+        });
+
+    } catch (error) {
+        return res.status(500).json({ 
+            success: false, 
+            message: "Lỗi server", 
+            error: error.message 
+        });
+    }
+};
+
+
 export const getCuocHenByBenhNhanAndTrangThai = async (req, res) => {
     try {
         const { id_benh_nhan } = req.params;
