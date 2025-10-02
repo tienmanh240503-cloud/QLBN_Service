@@ -1,4 +1,4 @@
-import { CuocHenKhamBenh, BenhNhan, BacSi, ChuyenKhoa, KhungGioKham } from "../models/index.js";
+import { CuocHenKhamBenh, BenhNhan, NguoiDung, BacSi, ChuyenKhoa, KhungGioKham, HoaDon, ChiTietDonThuoc, DonThuoc ,ChiTietHoaDon } from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
 // Tạo cuộc hẹn khám bệnh
 export const createCuocHenKham = async (req, res) => {
@@ -12,7 +12,7 @@ export const createCuocHenKham = async (req, res) => {
         }
 
         // Kiểm tra bệnh nhân
-        const benhNhan = await BenhNhan.findOne({ id_benh_nhan });
+        const benhNhan = await NguoiDung.findOne({ id_nguoi_dung :  id_benh_nhan });
         if (!benhNhan) {
             return res.status(404).json({ success: false, message: "Bệnh nhân không tồn tại" });
         }
@@ -66,6 +66,48 @@ export const createCuocHenKham = async (req, res) => {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }
 };
+///Lich su kham benh
+export const getLichSuKhamBenhFull = async (req, res) => {
+    try {
+        const { id_benh_nhan } = req.params;
+
+        if (!id_benh_nhan) {
+            return res.status(400).json({ success: false, message: "Thiếu id_benh_nhan" });
+        }
+
+        // Lấy tất cả cuộc hẹn
+        const cuocHenList = await CuocHenKhamBenh.findAll({ id_benh_nhan , trang_thai : "da_hoan_thanh" });
+
+        const lichSu = await Promise.all(
+            cuocHenList.map(async (cuocHen) => {
+                // Lấy hóa đơn kèm chi tiết
+                const hoaDon = await HoaDon.findOne({ id_cuoc_hen: cuocHen.id_cuoc_hen });
+                const chiTietHoaDon = hoaDon 
+                    ? await ChiTietHoaDon.findAll({ id_hoa_don: hoaDon.id_hoa_don }) 
+                    : [];
+
+                // Lấy đơn thuốc kèm chi tiết
+                const donThuoc = await DonThuoc.findOne({ id_cuoc_hen: cuocHen.id_cuoc_hen });
+                const chiTietDonThuoc = donThuoc
+                    ? await ChiTietDonThuoc.findAll({ id_don_thuoc: donThuoc.id_don_thuoc })
+                    : [];
+
+                return {
+                    ...cuocHen,
+                    hoaDon: hoaDon || null,
+                    chiTietHoaDon,
+                    donThuoc: donThuoc || null,
+                    chiTietDonThuoc
+                };
+            })
+        );
+
+        return res.status(200).json({ success: true, data: lichSu });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
 
 // Lấy tất cả cuộc hẹn theo bệnh nhân
 export const getCuocHenKhamByBenhNhan = async (req, res) => {
@@ -85,6 +127,28 @@ export const getCuocHenKhamByBenhNhan = async (req, res) => {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }
 };
+export const getCuocHenKhamById = async (req, res) => {
+    try {
+        const { id_cuoc_hen } = req.params;
+        const cuocHen = await CuocHenKhamBenh.findOne({ id_cuoc_hen });
+        if (!cuocHen) {
+            return res.status(404).json({ success: false, message: "Cuoc Hen không tồn tại" });
+        }
+        const khungGio = await KhungGioKham.findOne({ id_khung_gio : cuocHen.id_khung_gio});
+        const cuocHenWithTime = {
+            ...cuocHen, // nếu dùng Mongoose
+            khungGio: khungGio ? {
+                gio_bat_dau: khungGio.gio_bat_dau,
+                gio_ket_thuc: khungGio.gio_ket_thuc
+            } : null
+        };
+
+        return res.status(200).json({ success: true, data: cuocHenWithTime });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
 
 // Lấy tất cả cuộc hẹn theo bác sĩ
 export const getCuocHenKhamByBacSi = async (req, res) => {
@@ -99,17 +163,24 @@ export const getCuocHenKhamByBacSi = async (req, res) => {
                 message: "Bác sĩ không tồn tại" 
             });
         }
-         const cuocHenList = await CuocHenKhamBenh.findAll({ id_bac_si , trang_thai: "da_dat" });
+         const cuocHenList = await CuocHenKhamBenh.findAll({ id_bac_si });
         // Lấy tất cả cuộc hẹn theo bác sĩ
         const result = await Promise.all(
           cuocHenList.map(async (cuocHen) => {
             const benhNhan = await BenhNhan.findOne({ id_benh_nhan: cuocHen.id_benh_nhan });
 
+            const nguoiDung = await NguoiDung.findOne({ id_nguoi_dung: cuocHen.id_benh_nhan });
+
             const khungGio = await KhungGioKham.findOne({id_khung_gio: cuocHen.id_khung_gio });
 
             return {
               ...cuocHen,
-              benhNhan, 
+              benhNhan : {
+                ...benhNhan,
+                ho_ten: nguoiDung?.ho_ten || null,
+                gioi_tinh: nguoiDung?.gioi_tinh || null,
+                so_dien_thoai : nguoiDung?.so_dien_thoai || null,
+              }, 
               khungGio, 
             };
           })

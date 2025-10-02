@@ -45,7 +45,6 @@ const login = async (req, res) => {
 
         // Tạo tokens
         const accessToken = generateAccessToken(user, user.vai_tro);
-        console.log(accessToken);
         const refreshToken = generateRefreshToken(user, user.vai_tro);
 
         // Ẩn mật khẩu trong response

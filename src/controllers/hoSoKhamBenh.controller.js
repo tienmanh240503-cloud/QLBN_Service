@@ -90,12 +90,14 @@ export const getHoSoKhamByBenhNhan = async (req, res) => {
 export const updateHoSoKham = async (req, res) => {
     try {
         const { id_ho_so } = req.params;
+        console.log(id_ho_so);
         const dataUpdate = req.body;
-
+        console.log(dataUpdate);
         const updatedHoSo = await HoSoKhamBenh.update(dataUpdate, id_ho_so);
+        console.log(updatedHoSo);
         res.status(200).json({ success: true, message: "Cập nhật hồ sơ thành công.", data: updatedHoSo });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
+        res.status(500).json({ success: false, message: "Lỗi server.", error: error.msg });
     }
 };
 
