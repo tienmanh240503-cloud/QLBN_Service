@@ -3,7 +3,7 @@ import { BacSi } from "../models/index.js";
 // Lấy tất cả bác sĩ
 export const getAllBacSi = async (req, res) => {
     try {
-        const data = await BacSi.findAll();
+        const data = await BacSi.getAll();
         res.status(200).json({ success: true, data });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server", error: error.message });

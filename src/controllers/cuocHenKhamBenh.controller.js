@@ -70,18 +70,17 @@ export const createCuocHenKham = async (req, res) => {
 export const getLichSuKhamBenhFull = async (req, res) => {
     try {
         const { id_benh_nhan } = req.params;
-
         if (!id_benh_nhan) {
             return res.status(400).json({ success: false, message: "Thiếu id_benh_nhan" });
         }
 
         // Lấy tất cả cuộc hẹn
         const cuocHenList = await CuocHenKhamBenh.findAll({ id_benh_nhan , trang_thai : "da_hoan_thanh" });
-
+        console.log(cuocHenList);
         const lichSu = await Promise.all(
             cuocHenList.map(async (cuocHen) => {
                 // Lấy hóa đơn kèm chi tiết
-                const hoaDon = await HoaDon.findOne({ id_cuoc_hen: cuocHen.id_cuoc_hen });
+                const hoaDon = await HoaDon.findOne({ id_cuoc_hen_kham : cuocHen.id_cuoc_hen });
                 const chiTietHoaDon = hoaDon 
                     ? await ChiTietHoaDon.findAll({ id_hoa_don: hoaDon.id_hoa_don }) 
                     : [];
