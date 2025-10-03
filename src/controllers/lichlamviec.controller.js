@@ -92,10 +92,48 @@ export const getLichLamViecByNgay = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message });
     }
 };
+
+export const getLichLamViecByWeekforBacSi = async (req, res) => {
+    try {
+        const { ngay } = req.query;
+        const { id } = req.params;
+        let liches = null;
+        if (!ngay) return res.status(400).json({ success: false, message: "Thiếu tham số 'ngay'" });
+        if(id){
+            liches = await LichLamViec.findAll({id_nguoi_dung : id});
+            console.log(liches);
+        }else{
+            liches = await LichLamViec.getAll();
+        }
+        
+        const date = new Date(ngay);
+        const day = date.getDay(); // 0=CN, 1=T2 ...
+        // Tính Thứ 2 tuần hiện tại
+        const startOfWeek = new Date(date);
+        startOfWeek.setDate(date.getDate() - (day === 0 ? 6 : day - 1));
+        // Tính Chủ nhật tuần hiện tại
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+        const startStr = startOfWeek.toISOString().slice(0, 10);
+        const endStr = endOfWeek.toISOString().slice(0, 10);
+
+        const filtered = liches.filter(l => {
+            const lvStr = new Date(l.ngay_lam_viec).toISOString().slice(0, 10);
+            return lvStr >= startStr && lvStr <= endStr;
+        });
+
+        // if (filtered.length === 0) 
+        //     return res.status(404).json({ success: false, message: "Không tìm thấy lịch làm việc" });
+
+        return res.status(200).json({ success: true, data: filtered });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
 export const getLichLamViecByWeek = async (req, res) => {
     try {
         const { ngay } = req.query;
-        console.log(ngay);
         if (!ngay) return res.status(400).json({ success: false, message: "Thiếu tham số 'ngay'" });
 
         const liches = await LichLamViec.getAll();

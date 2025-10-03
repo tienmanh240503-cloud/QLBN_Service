@@ -72,8 +72,17 @@ export const getHoSoKhamById = async (req, res) => {
         res.status(200).json({ success: true, data: hoSo });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
+    } 
+};
+export const getAllHoSoKham= async (req, res) => {
+    try {
+        const hoSo = await HoSoKhamBenh.getAll();
+        res.status(200).json({ success: true, data: hoSo});
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
     }
 };
+
 
 // Lấy danh sách hồ sơ của 1 bệnh nhân
 export const getHoSoKhamByBenhNhan = async (req, res) => {

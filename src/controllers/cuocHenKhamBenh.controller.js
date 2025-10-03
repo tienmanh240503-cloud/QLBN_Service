@@ -1,4 +1,4 @@
-import { CuocHenKhamBenh, BenhNhan, NguoiDung, BacSi, ChuyenKhoa, KhungGioKham, HoaDon, ChiTietDonThuoc, DonThuoc ,ChiTietHoaDon } from "../models/index.js";
+import { CuocHenKhamBenh, BenhNhan, NguoiDung, BacSi, ChuyenKhoa, KhungGioKham, HoaDon, ChiTietDonThuoc, DonThuoc ,ChiTietHoaDon, HoSoKhamBenh , DichVu} from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
 // Tạo cuộc hẹn khám bệnh
 export const createCuocHenKham = async (req, res) => {
@@ -74,32 +74,47 @@ export const getLichSuKhamBenhFull = async (req, res) => {
             return res.status(400).json({ success: false, message: "Thiếu id_benh_nhan" });
         }
 
+        const hoSo = await HoSoKhamBenh.findOne({ id_benh_nhan});
+
         // Lấy tất cả cuộc hẹn
         const cuocHenList = await CuocHenKhamBenh.findAll({ id_benh_nhan , trang_thai : "da_hoan_thanh" });
-        console.log(cuocHenList);
         const lichSu = await Promise.all(
-            cuocHenList.map(async (cuocHen) => {
-                // Lấy hóa đơn kèm chi tiết
-                const hoaDon = await HoaDon.findOne({ id_cuoc_hen_kham : cuocHen.id_cuoc_hen });
-                const chiTietHoaDon = hoaDon 
-                    ? await ChiTietHoaDon.findAll({ id_hoa_don: hoaDon.id_hoa_don }) 
-                    : [];
+          cuocHenList.map(async (cuocHen) => {
+            // Lấy hóa đơn kèm chi tiết
+            const hoaDon = await HoaDon.findOne({ id_cuoc_hen_kham: cuocHen.id_cuoc_hen });
 
-                // Lấy đơn thuốc kèm chi tiết
-                const donThuoc = await DonThuoc.findOne({ id_cuoc_hen: cuocHen.id_cuoc_hen });
-                const chiTietDonThuoc = donThuoc
-                    ? await ChiTietDonThuoc.findAll({ id_don_thuoc: donThuoc.id_don_thuoc })
-                    : [];
-
-                return {
-                    ...cuocHen,
-                    hoaDon: hoaDon || null,
-                    chiTietHoaDon,
-                    donThuoc: donThuoc || null,
-                    chiTietDonThuoc
-                };
-            })
+            let chiTietHoaDon = [];
+            if (hoaDon) {
+              const chiTietList = await ChiTietHoaDon.findAll({ id_hoa_don: hoaDon.id_hoa_don });
+            
+              // Lấy tên dịch vụ cho mỗi chi tiết
+              chiTietHoaDon = await Promise.all(
+                chiTietList.map(async (chiTiet) => {
+                  const dichVu = await DichVu.findOne({ id_dich_vu: chiTiet.id_dich_vu });
+                  return {
+                    ...chiTiet,
+                    ten_dich_vu: dichVu?.ten_dich_vu || null
+                  };
+                })
+              );
+            }
+        
+            // Lấy đơn thuốc kèm chi tiết
+            const donThuoc = await DonThuoc.findOne({ id_ho_so: hoSo.id_ho_so });
+            const chiTietDonThuoc = donThuoc
+              ? await ChiTietDonThuoc.findAll({ id_don_thuoc: donThuoc.id_don_thuoc })
+              : [];
+        
+            return {
+              ...cuocHen,
+              hoaDon: hoaDon || null,
+              chiTietHoaDon,
+              donThuoc: donThuoc || null,
+              chiTietDonThuoc
+            };
+          })
         );
+
 
         return res.status(200).json({ success: true, data: lichSu });
 

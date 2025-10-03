@@ -8,7 +8,8 @@ import {
     getLichLamViecByNgay,
     getLichLamViecByWeek,
     getLichLamViecByMonth,
-    getLichLamViecByYear
+    getLichLamViecByYear,
+    getLichLamViecByWeekforBacSi
 } from "../controllers/lichlamviec.controller.js";
 import { verify } from "../middlewares/verifyToken.middleware.js";
 
@@ -32,8 +33,11 @@ router.delete("/:id_lich_lam_viec", verify, deleteLichLamViec);
 // Lọc lịch theo ngày
 router.get("/filter/ngay", verify, getLichLamViecByNgay);
 
+router.get("/filter/week/:id", verify, getLichLamViecByWeekforBacSi);
+
 // Lọc lịch theo tuần
 router.get("/filter/week", verify, getLichLamViecByWeek);
+
 
 // Lọc lịch theo tháng
 router.get("/filter/month", verify, getLichLamViecByMonth);
