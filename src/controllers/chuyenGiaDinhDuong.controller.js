@@ -2,7 +2,7 @@ import { ChuyenGiaDinhDuong } from "../models/index.js";
 
 export const getAllChuyenGia = async (req, res) => {
     try {
-        const data = await ChuyenGiaDinhDuong.findAll();
+        const data = await ChuyenGiaDinhDuong.getAll();
         res.status(200).json({ success: true, data });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
