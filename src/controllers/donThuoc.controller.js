@@ -20,7 +20,7 @@ export const createDonThuoc = async (req, res) => {
 
         const details = [];
         for (const ct of chi_tiet) {
-            const { id_thuoc, lieu_dung, tan_suat, thoi_gian_dung, so_luong, ghi_chu } = ct;
+            const { id_thuoc, lieu_dung, tan_suat, so_luong, ghi_chu } = ct;
 
             const IdChiTiet = `DDT_${uuidv4()}`;
             // Kiểm tra thuốc có tồn tại không
@@ -35,7 +35,6 @@ export const createDonThuoc = async (req, res) => {
                 id_thuoc,
                 lieu_dung,
                 tan_suat,
-                thoi_gian_dung,
                 so_luong,
                 ghi_chu
             });

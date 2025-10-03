@@ -219,14 +219,14 @@ export const updateTrangThaiCuocHenKham = async (req, res) => {
     try {
         const { id_cuoc_hen } = req.params;
         const { trang_thai } = req.body;
-
+        console.log(trang_thai);
         const cuocHen = await CuocHenKhamBenh.findOne({ id_cuoc_hen });
         if (!cuocHen) {
             return res.status(404).json({ success: false, message: "Cuộc hẹn không tồn tại" });
         }
 
-        const updated = await CuocHenKhamBenh.update({ trang_thai }, id_cuoc_hen);
-
+        const updated = await CuocHenKhamBenh.update(trang_thai, id_cuoc_hen);
+        console.log(updated);
         return res.status(200).json({ success: true, message: "Cập nhật trạng thái thành công", data: updated });
 
     } catch (error) {

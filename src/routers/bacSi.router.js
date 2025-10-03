@@ -4,8 +4,8 @@ import { verify } from '../middlewares/verifyToken.middleware.js';
 
 const router = express.Router();
 
-router.get('/', verify, getAllBacSi);
-router.get('/:id_bac_si', verify, getBacSiById);
+router.get('/', getAllBacSi);
+router.get('/:id_bac_si', getBacSiById);
 router.put('/:id_bac_si', verify, updateBacSi);
 
 export default router;

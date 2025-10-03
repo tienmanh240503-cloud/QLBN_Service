@@ -4,17 +4,13 @@ import { v4 as uuidv4 } from 'uuid';
 // Tạo hóa đơn
 export const createHoaDon = async (req, res) => {
     try {
-        const { id_cuoc_hen_kham, id_cuoc_hen_tu_van, chi_tiet } = req.body;
+        const { id_cuoc_hen_kham, id_cuoc_hen_tu_van, chi_tiet, tong_tien } = req.body;
 
         if (!chi_tiet || chi_tiet.length === 0) {
             return res.status(400).json({ success: false, message: "Thiếu chi tiết hóa đơn" });
         }
 
         // Tính tổng tiền
-        let tong_tien = 0;
-        for (const ct of chi_tiet) {
-            tong_tien += ct.so_luong * ct.don_gia;
-        }
 
         const Id = `HD_${uuidv4()}`;
 
