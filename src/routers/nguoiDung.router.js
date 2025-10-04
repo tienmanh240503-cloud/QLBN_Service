@@ -32,7 +32,7 @@ router.post('/refresh-token', refreshToken);
 router.get('/vai_tro/', verify, getUsersByRole);
 
 // Lấy thông tin người dùng theo ID
-router.get('/:id_nguoi_dung', verify, getUserById);
+router.get('/:id_nguoi_dung', getUserById);
 
 // Update trang thai người dùng
 router.put('/updatetrangthai/:id_nguoi_dung', verify, updateUserStatus);
