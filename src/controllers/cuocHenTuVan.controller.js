@@ -6,28 +6,26 @@ export const createCuocHenTuVan = async (req, res) => {
     try {
         const id_nguoi_dung = req.decoded.info.id_nguoi_dung;
 
-        const { id_benh_nhan, id_khung_gio, ngay_kham, loai_dinh_duong, loai_hen, ly_do_tu_van } = req.body;
+        const { id_chuyen_gia, id_khung_gio, ngay_kham, loai_dinh_duong, loai_hen, ly_do_tu_van } = req.body;
 
-        if (!id_benh_nhan || !id_khung_gio || !ngay_kham) {
+        if ( !id_khung_gio || !ngay_kham) {
             return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc" });
         }
 
         // Kiểm tra bệnh nhân
-        const benhNhan = await BenhNhan.findOne({ id_benh_nhan });
+        const benhNhan = await BenhNhan.findOne({ id_benh_nhan : id_nguoi_dung });
         if (!benhNhan) return res.status(404).json({ success: false, message: "Bệnh nhân không tồn tại" });
 
         // Kiểm tra chuyên gia
-        if (id_nguoi_dung) {
-            const chuyenGia = await ChuyenGiaDinhDuong.findOne({ id_chuyen_gia : id_nguoi_dung });
-            if (!chuyenGia) return res.status(404).json({ success: false, message: "Chuyên gia không tồn tại" });
-        }
+        const chuyenGia = await ChuyenGiaDinhDuong.findOne({ id_chuyen_gia});
+        if (!chuyenGia) return res.status(404).json({ success: false, message: "Chuyên gia không tồn tại" });
 
         // Kiểm tra khung giờ
         const khungGio = await KhungGioKham.findOne({ id_khung_gio });
         if (!khungGio) return res.status(404).json({ success: false, message: "Khung giờ không tồn tại" });
 
         // Check trùng lịch
-        const lichTrung = await CuocHenTuVan.findOne({ id_chuyen_gia : id_nguoi_dung, id_khung_gio, ngay_kham });
+        const lichTrung = await CuocHenTuVan.findOne({ id_chuyen_gia, id_khung_gio, ngay_kham });
         if (lichTrung) return res.status(400).json({ success: false, message: "Chuyên gia đã có lịch tư vấn trong khung giờ này" });
 
         const Id = `CH_${uuidv4()}`;
@@ -35,8 +33,8 @@ export const createCuocHenTuVan = async (req, res) => {
         // Tạo mới
         const cuocHen = await CuocHenTuVan.create({
             id_cuoc_hen : Id,
-            id_benh_nhan,
-            id_chuyen_gia: id_nguoi_dung || null,
+            id_benh_nhan : id_nguoi_dung,
+            id_chuyen_gia: id_chuyen_gia || null,
             id_khung_gio,
             ngay_kham,
             loai_dinh_duong,

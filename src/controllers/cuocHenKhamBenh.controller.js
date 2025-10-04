@@ -4,25 +4,21 @@ import { v4 as uuidv4 } from 'uuid';
 export const createCuocHenKham = async (req, res) => {
     try {
         const id_nguoi_dung = req.decoded.info.id_nguoi_dung;
+        const { id_bac_si, id_chuyen_khoa, id_khung_gio, ngay_kham, loai_hen, ly_do_kham, trieu_chung } = req.body;
 
-        const { id_benh_nhan, id_chuyen_khoa, id_khung_gio, ngay_kham, loai_hen, ly_do_kham, trieu_chung } = req.body;
-
-        if (!id_benh_nhan || !id_khung_gio || !ngay_kham) {
+        if (!id_khung_gio || !ngay_kham) {
             return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc" });
         }
 
         // Kiểm tra bệnh nhân
-        const benhNhan = await NguoiDung.findOne({ id_nguoi_dung :  id_benh_nhan });
+        const benhNhan = await BenhNhan.findOne({ id_benh_nhan : id_nguoi_dung });
         if (!benhNhan) {
             return res.status(404).json({ success: false, message: "Bệnh nhân không tồn tại" });
         }
 
-        // Kiểm tra bác sĩ (nếu có)
-        if (id_nguoi_dung) {
-            const bacSi = await BacSi.findOne({ id_bac_si : id_nguoi_dung });
-            if (!bacSi) {
-                return res.status(404).json({ success: false, message: "Bác sĩ không tồn tại" });
-            }
+        const bacSi = await BacSi.findOne({ id_bac_si });
+        if (!bacSi) {
+            return res.status(404).json({ success: false, message: "Bác sĩ không tồn tại" });
         }
 
         // Kiểm tra chuyên khoa (nếu có)
@@ -38,19 +34,20 @@ export const createCuocHenKham = async (req, res) => {
         if (!khungGio) {
             return res.status(404).json({ success: false, message: "Khung giờ không tồn tại" });
         }
-
+        console.log(khungGio);
         // Check trùng lịch cho bệnh nhân
-        const lich = await CuocHenKhamBenh.findOne({ id_benh_nhan, id_khung_gio, ngay_kham });
+        const lich = await CuocHenKhamBenh.findOne({ id_bac_si , id_khung_gio, ngay_kham });
         if (lich) {
             return res.status(400).json({ success: false, message: "Bệnh nhân đã có cuộc hẹn trong khung giờ này" });
         }
 
+        console.log(lich);
         const Id = `CH_${uuidv4()}`;
         // ✅ Tạo cuộc hẹn
         const cuocHen = await CuocHenKhamBenh.create({
+            id_benh_nhan : id_nguoi_dung,
             id_cuoc_hen : Id,
-            id_benh_nhan,
-            id_bac_si: id_nguoi_dung || null,
+            id_bac_si : id_bac_si|| null,
             id_chuyen_khoa: id_chuyen_khoa || null,
             id_khung_gio,
             ngay_kham,
