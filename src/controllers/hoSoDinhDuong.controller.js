@@ -19,17 +19,7 @@ export const createHoSoDinhDuong = async (req, res) => {
             vong_eo,
             mo_co_the,
             khoi_co,
-            nuoc_trong_co_the,
-            ket_qua_cls,
-            chuan_doan,
-            ke_hoach_dinh_duong,
-            nhu_cau_calo,
-            sang,
-            trua,
-            chieu,
-            toi,
-            cham_soc,
-            ghi_chu
+            nuoc_trong_co_the
         } = req.body;
 
         if (!id_benh_nhan || !id_nguoi_dung || !ho_ten) {
@@ -62,16 +52,6 @@ export const createHoSoDinhDuong = async (req, res) => {
             mo_co_the,
             khoi_co,
             nuoc_trong_co_the,
-            ket_qua_cls,
-            chuan_doan,
-            ke_hoach_dinh_duong,
-            nhu_cau_calo,
-            sang,
-            trua,
-            chieu,
-            toi,
-            cham_soc,
-            ghi_chu,
             ngay_tao: new Date()
         });
 

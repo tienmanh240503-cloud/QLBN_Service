@@ -12,14 +12,7 @@ export const createHoSoKham = async (req, res) => {
             gioi_tinh,
             dan_toc,
             ma_BHYT,
-            dia_chi,
-            ly_do_kham,
-            chuan_doan,
-            ket_qua_cls,
-            tham_do_chuc_nang,
-            dieu_tri,
-            cham_soc,
-            ghi_chu
+            dia_chi
         } = req.body;
 
         if (!id_benh_nhan || !ho_ten) {
@@ -47,13 +40,6 @@ export const createHoSoKham = async (req, res) => {
             dan_toc,
             ma_BHYT,
             dia_chi,
-            ly_do_kham,
-            chuan_doan,
-            ket_qua_cls,
-            tham_do_chuc_nang,
-            dieu_tri,
-            cham_soc,
-            ghi_chu,
             thoi_gian_tao: new Date()
         });
 
