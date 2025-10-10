@@ -1,4 +1,4 @@
-import { DonThuoc, ChiTietDonThuoc, Thuoc, HoSoKhamBenh } from "../models/index.js";
+import { DonThuoc, ChiTietDonThuoc, Thuoc, HoSoKhamBenh, LichSuKham } from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
 // Tạo đơn thuốc
 export const createDonThuoc = async (req, res) => {
@@ -87,6 +87,40 @@ export const getDonThuocByHoSo = async (req, res) => {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }
 };
+// Lấy đơn thuốc + chi tiết đơn thuốc theo hồ sơ khám bệnh
+export const getDonThuocByLichSu = async (req, res) => {
+    try {
+        const { id_lich_su } = req.params;
+        
+        // Kiểm tra hồ sơ khám có tồn tại không
+        const LichSu = await LichSuKham.findOne({ id_lich_su });
+        if (!LichSu) {
+            return res.status(404).json({ success: false, message: "LichSu khám không tồn tại" });
+        }
+
+        // Lấy đơn thuốc + chi tiết + thông tin thuốc
+        const donThuoc = await DonThuoc.findOne({id_lich_su});
+        if (!donThuoc) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy đơn thuốc cho hồ sơ này" });
+        }
+       
+        const chiTietDonThuoc = await ChiTietDonThuoc.findAll({id_don_thuoc : donThuoc.id_don_thuoc});
+        const chiTietWithThuoc = await Promise.all(
+            chiTietDonThuoc.map(async (ct) => {
+                const thuoc = await Thuoc.findOne({id_thuoc : ct.id_thuoc});
+                return {
+                    ...ct,
+                    thuoc
+                };
+            })
+        );
+        
+        return res.status(200).json({ success: true, data:{ ...donThuoc, chi_tiet : chiTietWithThuoc}});
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
 
 export const deleteDonThuoc = async (req, res) => {
     try {

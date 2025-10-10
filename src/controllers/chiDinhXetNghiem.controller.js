@@ -5,9 +5,9 @@ import { v4 as uuidv4 } from 'uuid';
 export const createChiDinh = async (req, res) => {
     try {
         const id_nguoi_dung = req.decoded.info.id_nguoi_dung;
-        const{id_ho_so, ten_dich_vu, yeu_cau_ghi_chu, trang_thai } = req.body;
+        const{id_cuoc_hen, ten_dich_vu, yeu_cau_ghi_chu, trang_thai } = req.body;
         const Id = `CD_${uuidv4()}`;
-        const chiDinh = await ChiDinhXetNghiem.create({ id_chi_dinh : Id, id_ho_so, ten_dich_vu, yeu_cau_ghi_chu, trang_thai, id_bac_si_chi_dinh : id_nguoi_dung, thoi_gian_chi_dinh : new Date() });
+        const chiDinh = await ChiDinhXetNghiem.create({ id_chi_dinh : Id, id_cuoc_hen, ten_dich_vu, yeu_cau_ghi_chu, trang_thai, id_bac_si_chi_dinh : id_nguoi_dung, thoi_gian_chi_dinh : new Date() });
         return res.status(201).json({ success: true, data: chiDinh });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -17,22 +17,20 @@ export const createChiDinh = async (req, res) => {
 // Lấy tất cả chỉ định theo id hồ sơ
 export const getChiDinhByHoSo = async (req, res) => {
     try {
-        const { id_ho_so } = req.params;
-        const chiDinhs = await ChiDinhXetNghiem.findAll({ id_ho_so });
-        if (!chiDinhs || chiDinhs.length === 0) {
-            return res.status(404).json({ success: false, message: "Không có chỉ định nào" });
-        }
-
-        const results = [];
-        for (const cd of chiDinhs) {
-            const bacSi = await BacSi.findOne({ id_bac_si: cd.id_bac_si_chi_dinh });
-            results.push({
-                ...cd,
-                bac_si: bacSi || null
-            });
-        }
-
-        return res.status(200).json({ success: true, data: results });
+        const { id_cuoc_hen } = req.params;
+        const chiDinhs = await ChiDinhXetNghiem.findAll({ id_cuoc_hen });
+        // const results = [];
+        // if (chiDinhs ) {
+            
+        //     for (const cd of chiDinhs) {
+        //         const bacSi = await BacSi.findOne({ id_bac_si: cd.id_bac_si_chi_dinh });
+        //         results.push({
+        //             ...cd,
+        //             bac_si: bacSi || null
+        //         });
+        //     }
+        // }
+        return res.status(200).json({ success: true, data: chiDinhs });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }

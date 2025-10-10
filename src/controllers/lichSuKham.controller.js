@@ -89,6 +89,18 @@ export const getLichSuKhamByBenhNhan = async (req, res) => {
         res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
     }
 };
+// Lấy lịch sử khám theo bệnh nhân
+export const getLichSuKhamByCuocHen = async (req, res) => {
+    try {
+        const { id_cuoc_hen } = req.params;
+        console.log(id_cuoc_hen);
+        const lichSu = await LichSuKham.findOne({id_cuoc_hen});
+        console.log(lichSu);
+        res.status(200).json({ success: true, data: lichSu });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
+    }
+};
 
 // Cập nhật lịch sử khám
 export const updateLichSuKham = async (req, res) => {
