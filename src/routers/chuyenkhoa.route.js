@@ -13,6 +13,7 @@ const router = express.Router();
 // Tạo chuyên khoa mới
 router.post("/", verify, createChuyenKhoa);
 
+
 // Lấy danh sách chuyên khoa
 router.get("/", getAllChuyenKhoa);
 
@@ -21,6 +22,7 @@ router.get("/:id_chuyen_khoa", getChuyenKhoaById);
 
 // Cập nhật chuyên khoa
 router.put("/:id_chuyen_khoa", verify, updateChuyenKhoa);
+
 
 // Xóa chuyên khoa
 router.delete("/:id_chuyen_khoa", verify, deleteChuyenKhoa);

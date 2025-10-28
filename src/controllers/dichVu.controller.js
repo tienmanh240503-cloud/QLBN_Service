@@ -4,14 +4,24 @@ import { v4 as uuidv4 } from 'uuid';
 // Thêm dịch vụ
 export const createDichVu = async (req, res) => {
     try {
-        const { ten_dich_vu, mo_ta, don_gia } = req.body;
+        const { ten_dich_vu, mo_ta, don_gia, trang_thai } = req.body;
         if (!ten_dich_vu || !don_gia) {
             return res.status(400).json({ success: false, message: "Tên dịch vụ và đơn giá là bắt buộc" });
         }
 
         const Id = `DV_${uuidv4()}`;
 
-        const dichVu = await DichVu.create({ id_dich_vu : Id, ten_dich_vu, mo_ta, don_gia });
+        // Mặc định trạng thái là "HoatDong" nếu không được cung cấp
+        const trangThai = trang_thai || "HoatDong";
+
+        const dichVu = await DichVu.create({ 
+            id_dich_vu : Id, 
+            ten_dich_vu, 
+            mo_ta, 
+            don_gia, 
+            trang_thai: trangThai 
+        });
+        
         return res.status(201).json({ success: true, data: dichVu });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });

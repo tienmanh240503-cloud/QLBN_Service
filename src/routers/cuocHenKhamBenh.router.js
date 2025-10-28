@@ -3,11 +3,11 @@ import {
     createCuocHenKham,
     getCuocHenKhamByBenhNhan,
     updateTrangThaiCuocHenKham,
-    deleteCuocHenKham,
     getCuocHenByBenhNhanAndTrangThai,
     getCuocHenKhamByBacSi,
     getCuocHenKhamById, 
-    getLichSuKhamBenhFull
+    getLichSuKhamBenhFull,
+    getCuocHenKhamByDateAndCa
 } from '../controllers/cuocHenKhamBenh.controller.js';
 import { verify } from '../middlewares/verifyToken.middleware.js';
 
@@ -28,12 +28,15 @@ router.get('/lich-su/:id_benh_nhan', verify, getLichSuKhamBenhFull);
 
 router.get('/bac-si/:id_bac_si', verify, getCuocHenKhamByBacSi);
 
+// Lấy cuộc hẹn theo ngày và ca
+router.get('/filter/date-ca', verify, getCuocHenKhamByDateAndCa);
+
 router.post("/benh-nhan/:id_benh_nhan/loc", verify, getCuocHenByBenhNhanAndTrangThai); 
 
 // Cập nhật trạng thái cuộc hẹn
 router.put('/:id_cuoc_hen/trang-thai', verify, updateTrangThaiCuocHenKham);
 
-// Xóa cuộc hẹn
-router.delete('/:id_cuoc_hen', verify, deleteCuocHenKham);
+// Xóa cuộc hẹn - Tạm thời comment vì chưa có function
+// router.delete('/:id_cuoc_hen', verify, deleteCuocHenKham);
 
 export default router;

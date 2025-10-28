@@ -31,6 +31,7 @@ export const createChuyenKhoa = async (req, res) => {
     }
 };
 
+
 // Lấy danh sách chuyên khoa
 export const getAllChuyenKhoa = async (req, res) => {
     try {
@@ -73,6 +74,7 @@ export const updateChuyenKhoa = async (req, res) => {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }
 };
+
 
 // Xóa chuyên khoa
 export const deleteChuyenKhoa = async (req, res) => {

@@ -21,6 +21,11 @@ export const DB_CONFID = {
         password: "Manh0385@",
         database: "HeThongQuanLyBenhVien"
     },
+    cloudinary_connect: {
+        cloud_name: 'dh0lhvm9l',
+        api_key: '314188383667441',
+        api_secret: 'g_PBWzOuyUVbjMZymyMR8BjwfZE'
+    },
     table: {
         NguoiDung: "NguoiDung",
         BenhNhan: "BenhNhan",

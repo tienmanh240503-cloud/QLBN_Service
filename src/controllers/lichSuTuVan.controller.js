@@ -90,7 +90,7 @@ export const getAllLichSuTuVan = async (req, res) => {
 export const getLichSuTuVanByBenhNhan = async (req, res) => {
     try {
         const { id_benh_nhan } = req.params;
-        const lichSu = await LichSuTuVan.findAll(id_benh_nhan);
+        const lichSu = await LichSuTuVan.findAll({id_benh_nhan});
         res.status(200).json({ success: true, data: lichSu });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });

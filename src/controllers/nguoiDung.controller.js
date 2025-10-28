@@ -90,7 +90,7 @@ const register = async (req, res) => {
         }
 
         // Kiểm tra email đã tồn tại
-        let existingUser = await NguoiDung.findOne(email);
+        let existingUser = await NguoiDung.findOne({email});
         if (existingUser) {
             return res.status(400).json({ 
                 success: false, 
@@ -99,7 +99,7 @@ const register = async (req, res) => {
         }
 
         // Kiểm tra tên đăng nhập đã tồn tại
-        existingUser = await NguoiDung.findOne(ten_dang_nhap);
+        existingUser = await NguoiDung.findOne({ten_dang_nhap});
         if (existingUser) {
             return res.status(400).json({ 
                 success: false, 
@@ -109,7 +109,7 @@ const register = async (req, res) => {
 
         // Kiểm tra số điện thoại nếu có
         if (so_dien_thoai) {
-            existingUser = await NguoiDung.findOne(so_dien_thoai);
+            existingUser = await NguoiDung.findOne({so_dien_thoai});
             if (existingUser) {
                 return res.status(400).json({ 
                     success: false, 
@@ -155,6 +155,7 @@ const register = async (req, res) => {
         });
     }
 };
+
 
 // Đăng ký (theo vai tro)
 const CreateUser = async (req, res) => {
@@ -433,6 +434,7 @@ const updateUser = async (req, res) => {
     }
 };
 
+
 // Xóa người dùng
 const updateUserStatus = async (req, res) => {
     try {
@@ -452,6 +454,30 @@ const updateUserStatus = async (req, res) => {
             success: true,
             message: "Tắt hoạt động người dùng thành công.",
             affectedRows
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Đã xảy ra lỗi.",
+            error: error.message
+        });
+    }
+};
+
+// Lấy tất cả người dùng
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await NguoiDung.getAll();
+        
+        // Ẩn mật khẩu trong response
+        const usersWithoutPassword = users.map(user => {
+            const { mat_khau, ...userWithoutPassword } = user;
+            return userWithoutPassword;
+        });
+
+        res.status(200).json({
+            success: true,
+            data: usersWithoutPassword
         });
     } catch (error) {
         res.status(500).json({
@@ -491,7 +517,7 @@ const changePassword = async (req, res) => {
         // Mã hóa mật khẩu mới
         const hashedNewPassword = await hashedPassword(mat_khau_moi);
 
-        updateMatKhau = await NguoiDung.update({mat_khau : hashedNewPassword})
+        const updateMatKhau = await NguoiDung.update({mat_khau : hashedNewPassword}, id_nguoi_dung);
         res.status(200).json({
             success: true,
             message: "Đổi mật khẩu thành công."
@@ -560,6 +586,7 @@ export {
     register,
     getUserById,
     getUsersByRole,
+    getAllUsers,
     // searchUsers,
     updateUser,
     updateUserStatus,

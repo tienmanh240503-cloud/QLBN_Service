@@ -1,4 +1,4 @@
-import { CuocHenTuVan, BenhNhan, ChuyenGiaDinhDuong, KhungGioKham } from "../models/index.js";
+import { CuocHenTuVan, BenhNhan, ChuyenGiaDinhDuong, KhungGioKham, HoSoDinhDuong, LichSuTuVan } from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
 
 // Tạo cuộc hẹn tư vấn dinh dưỡng
@@ -95,6 +95,84 @@ export const updateTrangThaiCuocHenTuVan = async (req, res) => {
         return res.status(200).json({ success: true, message: "Cập nhật trạng thái thành công", data: updated });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+// Lấy lịch sử tư vấn đầy đủ theo ID bệnh nhân
+export const getLichSuTuVanByBenhNhan = async (req, res) => {
+    try {
+        const { id_benh_nhan } = req.params;
+        
+        if (!id_benh_nhan) {
+            return res.status(400).json({ success: false, message: "Thiếu id_benh_nhan" });
+        }
+
+        // Kiểm tra bệnh nhân có tồn tại không
+        const benhNhan = await BenhNhan.findOne({ id_benh_nhan });
+        if (!benhNhan) {
+            return res.status(404).json({ success: false, message: "Bệnh nhân không tồn tại" });
+        }
+
+        // Lấy tất cả cuộc hẹn tư vấn đã hoàn thành
+        const cuocHenList = await CuocHenTuVan.findAll({ 
+            id_benh_nhan, 
+            trang_thai: "da_hoan_thanh" 
+        });
+
+        const lichSu = await Promise.all(
+            cuocHenList.map(async (cuocHen) => {
+                // Lấy thông tin chuyên gia dinh dưỡng
+                const chuyenGia = cuocHen.id_chuyen_gia 
+                    ? await ChuyenGiaDinhDuong.findOne({ id_chuyen_gia: cuocHen.id_chuyen_gia })
+                    : null;
+
+                // Lấy thông tin khung giờ
+                const khungGio = await KhungGioKham.findOne({ 
+                    id_khung_gio: cuocHen.id_khung_gio 
+                });
+
+                // Lấy hồ sơ dinh dưỡng cho cuộc hẹn này
+                const hoSo = await HoSoDinhDuong.findOne({ 
+                    id_cuoc_hen_tu_van: cuocHen.id_cuoc_hen 
+                });
+
+                // Lấy lịch sử tư vấn chi tiết
+                const lichSuTuVan = await LichSuTuVan.findOne({ 
+                    id_cuoc_hen: cuocHen.id_cuoc_hen 
+                });
+
+                return {
+                    ...cuocHen,
+                    chuyenGia: chuyenGia ? {
+                        id_chuyen_gia: chuyenGia.id_chuyen_gia,
+                        bang_cap: chuyenGia.bang_cap,
+                        kinh_nghiem: chuyenGia.kinh_nghiem,
+                        chuyen_mon: chuyenGia.chuyen_mon
+                    } : null,
+                    khungGio: khungGio ? {
+                        id_khung_gio: khungGio.id_khung_gio,
+                        gio_bat_dau: khungGio.gio_bat_dau,
+                        gio_ket_thuc: khungGio.gio_ket_thuc
+                    } : null,
+                    hoSo: hoSo || null,
+                    lichSuTuVan: lichSuTuVan || null
+                };
+            })
+        );
+
+        return res.status(200).json({ 
+            success: true, 
+            message: "Lấy lịch sử tư vấn thành công",
+            data: lichSu 
+        });
+
+    } catch (error) {
+        console.error("Error in getLichSuTuVanByBenhNhan:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Lỗi server", 
+            error: error.message 
+        });
     }
 };
 

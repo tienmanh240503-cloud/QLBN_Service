@@ -25,11 +25,13 @@ const CuocTroChuyen = new GenericModel('cuoctrochuyen', 'id_cuoc_tro_chuyen');
 const TinNhan = new GenericModel('tinnhan', 'id_tin_nhan');
 const LichSuKham = new GenericModel('lichsukham', 'id_lich_su');
 const LichSuTuVan = new GenericModel('lichsutuvan', 'id_lich_su');
+const XinNghiPhep = new GenericModel('xinnghiphep', 'id_xin_nghi');
+const DoiCa = new GenericModel('doica', 'id_doi_ca');
 
 export {
     NguoiDung, BenhNhan, ChuyenKhoa, BacSi, ChuyenGiaDinhDuong, NhanVienQuay,
     NhanVienPhanCong, LichLamViec, KhungGioKham, CuocHenKhamBenh, CuocHenTuVan,
     HoSoKhamBenh, HoSoDinhDuong, DonThuoc, Thuoc, ChiTietDonThuoc,
     ChiDinhXetNghiem, KetQuaXetNghiem, DichVu, HoaDon, ChiTietHoaDon,
-    CuocTroChuyen, TinNhan, LichSuKham, LichSuTuVan
+    CuocTroChuyen, TinNhan, LichSuKham, LichSuTuVan, XinNghiPhep, DoiCa
 };

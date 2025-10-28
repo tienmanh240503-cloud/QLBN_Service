@@ -25,6 +25,9 @@ import nhanVienQuayRouter from './src/routers/nhanVienQuay.router.js';
 import nhanVienPhanCongRouter from './src/routers/nhanVienPhanCong.router.js';
 import lichSuKhamRouter from './src/routers/lichSuKham.router.js';
 import lichSuTuVanRouter from './src/routers/lichSuTuVan.router.js';
+import xinNghiPhepRouter from './src/routers/xinNghiPhep.router.js';
+import doiCaRouter from './src/routers/doiCa.router.js';
+import uploadRouter from './src/routers/upload.route.js';
 // import quanTriVienRouter from './src/routers/quanTriVien.router.js';
 import cors from 'cors';
 dotenv.config();
@@ -57,6 +60,9 @@ app.use('/nhan-vien-quay', nhanVienQuayRouter);
 app.use('/nhan-vien-phan-cong', nhanVienPhanCongRouter);
 app.use('/lichSuKham', lichSuKhamRouter);
 app.use('/lichSuTuVan', lichSuTuVanRouter);
+app.use('/xin-nghi-phep', xinNghiPhepRouter);
+app.use('/doi-ca', doiCaRouter);
+app.use('/upload', uploadRouter);
 // app.use('/quan-tri-vien', quanTriVienRouter);
 
 async function main() {

@@ -123,10 +123,36 @@ export const getLichLamViecByWeekforBacSi = async (req, res) => {
             return lvStr >= startStr && lvStr <= endStr;
         });
 
-        // if (filtered.length === 0) 
-        //     return res.status(404).json({ success: false, message: "Không tìm thấy lịch làm việc" });
+        // Thêm thông tin giờ làm việc cho mỗi ca
+        const result = filtered.map(l => {
+            let gio_bat_dau, gio_ket_thuc;
+            
+            switch(l.ca) {
+                case 'Sang':
+                    gio_bat_dau = '07:00';
+                    gio_ket_thuc = '12:00';
+                    break;
+                case 'Chieu':
+                    gio_bat_dau = '13:00';
+                    gio_ket_thuc = '18:00';
+                    break;
+                case 'Toi':
+                    gio_bat_dau = '18:00';
+                    gio_ket_thuc = '22:00';
+                    break;
+                default:
+                    gio_bat_dau = '08:00';
+                    gio_ket_thuc = '17:00';
+            }
+            
+            return {
+                ...l,
+                gio_bat_dau,
+                gio_ket_thuc
+            };
+        });
 
-        return res.status(200).json({ success: true, data: filtered });
+        return res.status(200).json({ success: true, data: result });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
