@@ -325,8 +325,19 @@ export const getCuocHenKhamByDateAndCa = async (req, res) => {
             });
         }
 
+        // Set cache control headers để tránh 304 Not Modified
+        res.set({
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+
+        console.log(`Fetching appointments for date: ${ngay}, ca: ${ca}`);
+
         // Lấy tất cả cuộc hẹn theo ngày
         const cuocHenList = await CuocHenKhamBenh.findAll({ ngay_kham: ngay });
+        
+        console.log(`Found ${cuocHenList?.length || 0} appointments for date ${ngay}`);
         
         // Lọc theo ca và lấy thông tin chi tiết
         const result = await Promise.all(
@@ -381,6 +392,8 @@ export const getCuocHenKhamByDateAndCa = async (req, res) => {
         
         // Lọc bỏ các giá trị null
         const filteredResult = result.filter(item => item !== null);
+        
+        console.log(`Filtered to ${filteredResult.length} appointments for ca ${ca}`);
         
         return res.status(200).json({ 
             success: true, 

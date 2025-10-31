@@ -11,9 +11,6 @@ import {
     // API Quản lý đơn xin nghỉ phép
     getAllXinNghiPhep,
     updateTrangThaiXinNghiPhep,
-    // API Quản lý yêu cầu đổi ca
-    getAllDoiCa,
-    updateTrangThaiDoiCa,
     // API Thống kê và báo cáo
     getThongKeTongQuan,
     getBaoCaoLichLamViecBacSi
@@ -36,10 +33,6 @@ router.delete('/lich-lam-viec/:id_lich_lam_viec', verify, deleteLichLamViec);
 // ==================== API QUẢN LÝ ĐƠN XIN NGHỈ PHÉP ====================
 router.get('/xin-nghi-phep/all', verify, getAllXinNghiPhep);
 router.put('/xin-nghi-phep/:id_xin_nghi_phep/trang-thai', verify, updateTrangThaiXinNghiPhep);
-
-// ==================== API QUẢN LÝ YÊU CẦU ĐỔI CA ====================
-router.get('/doi-ca/all', verify, getAllDoiCa);
-router.put('/doi-ca/:id_doi_ca/trang-thai', verify, updateTrangThaiDoiCa);
 
 // ==================== API THỐNG KÊ VÀ BÁO CÁO ====================
 router.get('/thong-ke/tong-quan', verify, getThongKeTongQuan);

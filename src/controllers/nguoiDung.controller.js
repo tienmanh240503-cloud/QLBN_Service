@@ -168,7 +168,9 @@ const CreateUser = async (req, res) => {
             mat_khau, 
             ngay_sinh, 
             gioi_tinh,
-            vai_tro 
+            vai_tro,
+            dia_chi,
+            so_cccd
         } = req.body;
 
         // Kiểm tra các trường bắt buộc
@@ -235,7 +237,8 @@ const CreateUser = async (req, res) => {
             ngay_sinh, 
             gioi_tinh,
             vai_tro,
-            so_cccd : null,
+            dia_chi,
+            so_cccd,
             trang_thai_hoat_dong: true
         };
 

@@ -1,4 +1,4 @@
-import { NhanVienPhanCong, LichLamViec, BacSi, NguoiDung, XinNghiPhep, DoiCa } from "../models/index.js";
+import { NhanVienPhanCong, LichLamViec, BacSi, NguoiDung, XinNghiPhep } from "../models/index.js";
 // Không cần import Op vì GenericModel không hỗ trợ Sequelize operators
 
 // ==================== API PHÂN CÔNG LỊCH LÀM VIỆC ====================
@@ -199,76 +199,6 @@ export const updateTrangThaiXinNghiPhep = async (req, res) => {
     }
 };
 
-// ==================== API QUẢN LÝ YÊU CẦU ĐỔI CA ====================
-
-// Lấy tất cả yêu cầu đổi ca
-export const getAllDoiCa = async (req, res) => {
-    try {
-        const { page = 1, limit = 10, trang_thai, id_bac_si } = req.query;
-        
-        let whereCondition = {};
-        
-        if (trang_thai) {
-            whereCondition.trang_thai = trang_thai;
-        }
-        
-        if (id_bac_si) {
-            whereCondition.id_bac_si = id_bac_si;
-        }
-
-        const data = await DoiCa.findAll(whereCondition);
-        
-        res.status(200).json({
-            success: true,
-            data: data,
-            pagination: {
-                total: data.length,
-                page: parseInt(page),
-                limit: parseInt(limit),
-                totalPages: Math.ceil(data.length / limit)
-            }
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
-    }
-};
-
-// Duyệt/từ chối yêu cầu đổi ca
-export const updateTrangThaiDoiCa = async (req, res) => {
-    try {
-        const { id_doi_ca } = req.params;
-        const { trang_thai, ly_do_tu_choi } = req.body;
-
-        if (!trang_thai || !['Duyet', 'Tu_Choi'].includes(trang_thai)) {
-            return res.status(400).json({ success: false, message: "Trạng thái không hợp lệ" });
-        }
-
-        const doiCa = await DoiCa.findOne({ id_doi_ca });
-        if (!doiCa) {
-            return res.status(404).json({ success: false, message: "Không tìm thấy yêu cầu đổi ca" });
-        }
-
-        if (doiCa.trang_thai !== 'Cho_Duyet') {
-            return res.status(400).json({ success: false, message: "Yêu cầu này đã được xử lý" });
-        }
-
-        const updateData = { trang_thai };
-        if (trang_thai === 'Tu_Choi' && ly_do_tu_choi) {
-            updateData.ly_do_tu_choi = ly_do_tu_choi;
-        }
-
-        const updated = await DoiCa.update(updateData, id_doi_ca);
-        
-        res.status(200).json({ 
-            success: true, 
-            message: `Đã ${trang_thai === 'Duyet' ? 'duyệt' : 'từ chối'} yêu cầu đổi ca`, 
-            data: updated 
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
-    }
-};
-
 // ==================== API THỐNG KÊ VÀ BÁO CÁO ====================
 
 // Thống kê tổng quan
@@ -310,19 +240,6 @@ export const getThongKeTongQuan = async (req, res) => {
             xinNghiPhepTheoTrangThai[don.trang_thai]++;
         });
 
-        // Thống kê yêu cầu đổi ca
-        const allDoiCa = await DoiCa.findAll();
-        const totalDoiCa = allDoiCa.length;
-        
-        // Thống kê theo trạng thái
-        const doiCaTheoTrangThai = {};
-        allDoiCa.forEach(doi => {
-            if (!doiCaTheoTrangThai[doi.trang_thai]) {
-                doiCaTheoTrangThai[doi.trang_thai] = 0;
-            }
-            doiCaTheoTrangThai[doi.trang_thai]++;
-        });
-
         res.status(200).json({
             success: true,
             data: {
@@ -333,10 +250,6 @@ export const getThongKeTongQuan = async (req, res) => {
                 xinNghiPhep: {
                     tongSo: totalXinNghiPhep,
                     theoTrangThai: Object.entries(xinNghiPhepTheoTrangThai).map(([trang_thai, so_luong]) => ({ trang_thai, so_luong }))
-                },
-                doiCa: {
-                    tongSo: totalDoiCa,
-                    theoTrangThai: Object.entries(doiCaTheoTrangThai).map(([trang_thai, so_luong]) => ({ trang_thai, so_luong }))
                 }
             }
         });

@@ -7,11 +7,12 @@ import {
     deleteChuyenKhoa
 } from "../controllers/chuyenkhoa.controller.js";
 import { verify } from "../middlewares/verifyToken.middleware.js";
+import uploader from "../middlewares/uploader.middleware.js";
 
 const router = express.Router();
 
-// Tạo chuyên khoa mới
-router.post("/", verify, createChuyenKhoa);
+// Tạo chuyên khoa mới (hỗ trợ upload ảnh)
+router.post("/", verify, uploader.single("image"), createChuyenKhoa);
 
 
 // Lấy danh sách chuyên khoa

@@ -4,12 +4,23 @@ import { v4 as uuidv4 } from 'uuid';
 // Tạo đơn xin nghỉ phép
 export const createXinNghiPhep = async (req, res) => {
     try {
-        const { id_bac_si, ngay_bat_dau, ngay_ket_thuc, ly_do, trang_thai } = req.body;
+        const { id_nguoi_dung, ngay_bat_dau, ngay_ket_thuc, ly_do, trang_thai } = req.body;
 
-        if (!id_bac_si || !ngay_bat_dau || !ngay_ket_thuc || !ly_do) {
+        if (!id_nguoi_dung || !ngay_bat_dau || !ngay_ket_thuc || !ly_do) {
             return res.status(400).json({ 
                 success: false, 
-                message: "id_bac_si, ngay_bat_dau, ngay_ket_thuc và ly_do là bắt buộc" 
+                message: "id_nguoi_dung, ngay_bat_dau, ngay_ket_thuc và ly_do là bắt buộc" 
+            });
+        }
+
+        // Validate id_nguoi_dung format (should start with BS_, YT_, QL_, or AD_)
+        const validPrefixes = ['BS_', 'YT_', 'QL_', 'AD_'];
+        const isValidId = validPrefixes.some(prefix => id_nguoi_dung.startsWith(prefix));
+        
+        if (!isValidId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "ID người dùng không hợp lệ. Chỉ hỗ trợ bác sĩ, y tá, quản lý và admin" 
             });
         }
 
@@ -17,7 +28,7 @@ export const createXinNghiPhep = async (req, res) => {
 
         const xinNghiPhep = await XinNghiPhep.create({
             id_xin_nghi: Id,
-            id_bac_si,
+            id_nguoi_dung: id_nguoi_dung,
             ngay_bat_dau,
             ngay_ket_thuc,
             ly_do,
@@ -76,25 +87,37 @@ export const getXinNghiPhepById = async (req, res) => {
     }
 };
 
-// Lấy đơn xin nghỉ phép theo bác sĩ
-export const getXinNghiPhepByBacSi = async (req, res) => {
+// Lấy đơn xin nghỉ phép theo người dùng (bác sĩ, y tá, quản lý, admin)
+export const getXinNghiPhepByNguoiDung = async (req, res) => {
     try {
-        const { id_bac_si } = req.params;
+        const { id_nguoi_dung } = req.params;
         
-        if (!id_bac_si) {
+        if (!id_nguoi_dung) {
             return res.status(400).json({ 
                 success: false, 
-                message: "Thiếu id_bac_si" 
+                message: "Thiếu id_nguoi_dung" 
             });
         }
 
-        const xinNghiPhepList = await XinNghiPhep.findAll({ id_bac_si });
+        // Validate id_nguoi_dung format (should start with BS_, YT_, QL_, or AD_)
+        const validPrefixes = ['BS_', 'YT_', 'QL_', 'AD_'];
+        const isValidId = validPrefixes.some(prefix => id_nguoi_dung.startsWith(prefix));
+        
+        if (!isValidId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "ID người dùng không hợp lệ. Chỉ hỗ trợ bác sĩ, y tá, quản lý và admin" 
+            });
+        }
+
+        const xinNghiPhepList = await XinNghiPhep.findAll({ id_nguoi_dung });
         
         return res.status(200).json({ 
             success: true, 
-            data: xinNghiPhepList 
+            data: xinNghiPhepList || [] 
         });
     } catch (error) {
+        console.error("Error in getXinNghiPhepByNguoiDung:", error);
         return res.status(500).json({ 
             success: false, 
             message: "Lỗi server", 
@@ -102,6 +125,10 @@ export const getXinNghiPhepByBacSi = async (req, res) => {
         });
     }
 };
+
+// Aliases để backward compatibility
+export const getXinNghiPhepByNhanVien = getXinNghiPhepByNguoiDung;
+export const getXinNghiPhepByBacSi = getXinNghiPhepByNguoiDung;
 
 // Cập nhật trạng thái đơn xin nghỉ phép
 export const updateTrangThaiXinNghiPhep = async (req, res) => {
