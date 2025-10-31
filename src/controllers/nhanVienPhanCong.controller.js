@@ -1,48 +1,238 @@
-import { NhanVienPhanCong, LichLamViec, BacSi, NguoiDung, XinNghiPhep } from "../models/index.js";
+import { NhanVienPhanCong, LichLamViec, BacSi, NguoiDung, XinNghiPhep, KhungGioKham, PhongKham, ChuyenGiaDinhDuong, ChuyenNganhDinhDuong } from "../models/index.js";
+import db from '../configs/connectData.js';
 // Không cần import Op vì GenericModel không hỗ trợ Sequelize operators
 
 // ==================== API PHÂN CÔNG LỊCH LÀM VIỆC ====================
 
-// Tạo lịch làm việc cho bác sĩ
+// Tạo lịch làm việc cho nhân viên (bác sĩ hoặc nhân viên khác)
 export const createLichLamViec = async (req, res) => {
     try {
-        const { id_bac_si, ngay_lam_viec, ca_lam_viec, gio_bat_dau, gio_ket_thuc, ghi_chu } = req.body;
+        const { id_nguoi_dung, ngay_lam_viec, ca, id_phong_kham, id_nguoi_tao } = req.body;
+        const idNguoiTao = id_nguoi_tao || req.user?.id_nguoi_dung;
 
-        if (!id_bac_si || !ngay_lam_viec || !ca_lam_viec) {
-            return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc" });
+        if (!id_nguoi_dung || !ngay_lam_viec || !ca) {
+            return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc: id_nguoi_dung, ngay_lam_viec, ca" });
         }
 
-        // Kiểm tra bác sĩ tồn tại
-        const bacSi = await BacSi.findOne({ id_bac_si });
-        if (!bacSi) {
-            return res.status(404).json({ success: false, message: "Bác sĩ không tồn tại" });
+        // Kiểm tra người dùng tồn tại
+        const nguoiDung = await NguoiDung.findOne({ id_nguoi_dung });
+        if (!nguoiDung) {
+            return res.status(404).json({ success: false, message: "Người dùng không tồn tại" });
+        }
+
+        // Kiểm tra và validate chuyên khoa nếu có phòng khám
+        if (id_phong_kham) {
+            const phongKham = await PhongKham.findOne({ id_phong_kham });
+            if (!phongKham) {
+                return res.status(404).json({ success: false, message: "Phòng khám không tồn tại" });
+            }
+            
+            // Kiểm tra trạng thái phòng khám
+            if (phongKham.trang_thai !== 'HoatDong') {
+                return res.status(400).json({ success: false, message: `Phòng khám đang ở trạng thái ${phongKham.trang_thai}, không thể phân công lịch` });
+            }
+            
+            // Nếu phòng khám có chuyên khoa, kiểm tra bác sĩ có cùng chuyên khoa không
+            if (phongKham.id_chuyen_khoa) {
+                const bacSi = await BacSi.findOne({ id_bac_si: id_nguoi_dung });
+                if (!bacSi) {
+                    return res.status(400).json({ success: false, message: "Người dùng không phải là bác sĩ" });
+                }
+                
+                if (bacSi.id_chuyen_khoa !== phongKham.id_chuyen_khoa) {
+                    return res.status(400).json({ 
+                        success: false, 
+                        message: "Chuyên khoa của bác sĩ không khớp với chuyên khoa của phòng khám" 
+                    });
+                }
+            }
         }
 
         // Kiểm tra trùng lịch
         const existingSchedule = await LichLamViec.findOne({
-            id_bac_si,
+            id_nguoi_dung,
             ngay_lam_viec,
-            ca_lam_viec
+            ca
         });
 
         if (existingSchedule) {
-            return res.status(400).json({ success: false, message: "Bác sĩ đã có lịch làm việc trong ca này" });
+            return res.status(400).json({ success: false, message: "Người dùng đã có lịch làm việc trong ca này" });
         }
 
+        // Tạo id_lich_lam_viec
+        const idLichLamViec = `L_${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
         const lichLamViec = await LichLamViec.create({
-            id_bac_si,
+            id_lich_lam_viec: idLichLamViec,
+            id_nguoi_dung,
             ngay_lam_viec,
-            ca_lam_viec,
-            gio_bat_dau: gio_bat_dau || null,
-            gio_ket_thuc: gio_ket_thuc || null,
-            ghi_chu: ghi_chu || null,
-            trang_thai: 'Dang_Lam'
+            ca,
+            id_nguoi_tao: idNguoiTao || null,
+            id_phong_kham: id_phong_kham || null
         });
+
+        // Query khung giờ theo ca
+        const khungGios = await KhungGioKham.findAll({ ca: lichLamViec.ca });
 
         res.status(201).json({ 
             success: true, 
             message: "Tạo lịch làm việc thành công", 
-            data: lichLamViec 
+            data: {
+                ...lichLamViec,
+                khung_gios: khungGios || []
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+// Đổi ca làm việc
+export const swapCa = async (req, res) => {
+    try {
+        const { id_lich_lam_viec_1, id_lich_lam_viec_2 } = req.body;
+
+        if (!id_lich_lam_viec_1 || !id_lich_lam_viec_2) {
+            return res.status(400).json({ success: false, message: "Thiếu thông tin: cần 2 id lịch làm việc để đổi" });
+        }
+
+        // Lấy 2 lịch làm việc
+        const lich1 = await LichLamViec.findOne({ id_lich_lam_viec: id_lich_lam_viec_1 });
+        const lich2 = await LichLamViec.findOne({ id_lich_lam_viec: id_lich_lam_viec_2 });
+
+        if (!lich1 || !lich2) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy một trong hai lịch làm việc" });
+        }
+
+        // Kiểm tra trùng lịch trước khi đổi
+        const checkTrung1 = await LichLamViec.findOne({
+            id_nguoi_dung: lich2.id_nguoi_dung,
+            ngay_lam_viec: lich1.ngay_lam_viec,
+            ca: lich1.ca
+        });
+
+        const checkTrung2 = await LichLamViec.findOne({
+            id_nguoi_dung: lich1.id_nguoi_dung,
+            ngay_lam_viec: lich2.ngay_lam_viec,
+            ca: lich2.ca
+        });
+
+        if (checkTrung1 && checkTrung1.id_lich_lam_viec !== id_lich_lam_viec_2) {
+            return res.status(400).json({ success: false, message: "Người dùng thứ 2 đã có lịch trong ca này" });
+        }
+
+        if (checkTrung2 && checkTrung2.id_lich_lam_viec !== id_lich_lam_viec_1) {
+            return res.status(400).json({ success: false, message: "Người dùng thứ 1 đã có lịch trong ca này" });
+        }
+
+        // Đổi ca: hoán đổi id_nguoi_dung và ca giữa 2 lịch
+        const tempNguoiDung = lich1.id_nguoi_dung;
+        const tempCa = lich1.ca;
+
+        await LichLamViec.update(
+            { id_nguoi_dung: lich2.id_nguoi_dung, ca: lich2.ca },
+            id_lich_lam_viec_1
+        );
+
+        await LichLamViec.update(
+            { id_nguoi_dung: tempNguoiDung, ca: tempCa },
+            id_lich_lam_viec_2
+        );
+
+        // Lấy lại 2 lịch đã đổi và query khung giờ
+        const lich1Updated = await LichLamViec.findOne({ id_lich_lam_viec: id_lich_lam_viec_1 });
+        const lich2Updated = await LichLamViec.findOne({ id_lich_lam_viec: id_lich_lam_viec_2 });
+        
+        const khungGios1 = await KhungGioKham.findAll({ ca: lich1Updated.ca });
+        const khungGios2 = await KhungGioKham.findAll({ ca: lich2Updated.ca });
+
+        res.status(200).json({ 
+            success: true, 
+            message: "Đổi ca làm việc thành công",
+            data: {
+                lich1: {
+                    ...lich1Updated,
+                    khung_gios: khungGios1 || []
+                },
+                lich2: {
+                    ...lich2Updated,
+                    khung_gios: khungGios2 || []
+                }
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+// Phân công hàng loạt cho tất cả nhân viên
+export const phanCongHangLoat = async (req, res) => {
+    try {
+        const { danh_sach_phan_cong } = req.body;
+
+        if (!Array.isArray(danh_sach_phan_cong) || danh_sach_phan_cong.length === 0) {
+            return res.status(400).json({ success: false, message: "Danh sách phân công không hợp lệ" });
+        }
+
+        const idNguoiTao = req.user?.id_nguoi_dung;
+        const ketQua = [];
+        const loi = [];
+
+        for (const pc of danh_sach_phan_cong) {
+            const { id_nguoi_dung, ngay_lam_viec, ca, id_phong_kham } = pc;
+
+            if (!id_nguoi_dung || !ngay_lam_viec || !ca) {
+                loi.push({ ...pc, error: "Thiếu thông tin bắt buộc" });
+                continue;
+            }
+
+            // Kiểm tra người dùng tồn tại
+            const nguoiDung = await NguoiDung.findOne({ id_nguoi_dung });
+            if (!nguoiDung) {
+                loi.push({ ...pc, error: "Người dùng không tồn tại" });
+                continue;
+            }
+
+            // Kiểm tra trùng lịch
+            const existingSchedule = await LichLamViec.findOne({
+                id_nguoi_dung,
+                ngay_lam_viec,
+                ca
+            });
+
+            if (existingSchedule) {
+                loi.push({ ...pc, error: "Đã có lịch làm việc trong ca này" });
+                continue;
+            }
+
+            try {
+                const idLichLamViec = `L_${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                const lichLamViec = await LichLamViec.create({
+                    id_lich_lam_viec: idLichLamViec,
+                    id_nguoi_dung,
+                    ngay_lam_viec,
+                    ca,
+                    id_nguoi_tao: idNguoiTao || null,
+                    id_phong_kham: id_phong_kham || null
+                });
+                // Query khung giờ theo ca
+                const khungGios = await KhungGioKham.findAll({ ca });
+                ketQua.push({
+                    ...lichLamViec,
+                    khung_gios: khungGios || []
+                });
+            } catch (err) {
+                loi.push({ ...pc, error: err.message });
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: `Phân công thành công ${ketQua.length}/${danh_sach_phan_cong.length} lịch làm việc`,
+            data: {
+                thanhCong: ketQua,
+                thatBai: loi
+            }
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -62,10 +252,17 @@ export const updateLichLamViec = async (req, res) => {
 
         const updated = await LichLamViec.update(updateData, id_lich_lam_viec);
         
+        // Lấy lại lịch đã cập nhật để query khung giờ
+        const lichUpdated = await LichLamViec.findOne({ id_lich_lam_viec });
+        const khungGios = await KhungGioKham.findAll({ ca: lichUpdated.ca });
+        
         res.status(200).json({ 
             success: true, 
             message: "Cập nhật lịch làm việc thành công", 
-            data: updated 
+            data: {
+                ...lichUpdated,
+                khung_gios: khungGios || []
+            }
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -93,15 +290,15 @@ export const deleteLichLamViec = async (req, res) => {
     }
 };
 
-// Lấy tất cả lịch làm việc với thông tin bác sĩ
+// Lấy tất cả lịch làm việc
 export const getAllLichLamViec = async (req, res) => {
     try {
-        const { page = 1, limit = 10, id_bac_si, ngay_bat_dau, ngay_ket_thuc } = req.query;
+        const { page = 1, limit = 10, id_nguoi_dung, ngay_bat_dau, ngay_ket_thuc } = req.query;
         
         let whereCondition = {};
         
-        if (id_bac_si) {
-            whereCondition.id_bac_si = id_bac_si;
+        if (id_nguoi_dung) {
+            whereCondition.id_nguoi_dung = id_nguoi_dung;
         }
         
         // Tạm thời bỏ qua filter ngày vì GenericModel không hỗ trợ Op.between
@@ -112,16 +309,37 @@ export const getAllLichLamViec = async (req, res) => {
         //     };
         // }
 
-        const data = await LichLamViec.findAll(whereCondition);
+        // Sử dụng getAll nếu không có điều kiện, vì findAll({}) sẽ tạo SQL không hợp lệ
+        const data = Object.keys(whereCondition).length > 0 
+            ? await LichLamViec.findAll(whereCondition)
+            : await LichLamViec.getAll();
+        
+        // Query khung giờ theo ca và gắn vào từng lịch làm việc
+        const dataWithKhungGio = await Promise.all(
+            data.map(async (lich) => {
+                // Query các khung giờ thuộc ca này (chỉ query nếu có ca)
+                if (lich.ca) {
+                    const khungGios = await KhungGioKham.findAll({ ca: lich.ca });
+                    return {
+                        ...lich,
+                        khung_gios: khungGios || []
+                    };
+                }
+                return {
+                    ...lich,
+                    khung_gios: []
+                };
+            })
+        );
         
         res.status(200).json({
             success: true,
-            data: data,
+            data: dataWithKhungGio,
             pagination: {
-                total: data.length,
+                total: dataWithKhungGio.length,
                 page: parseInt(page),
                 limit: parseInt(limit),
-                totalPages: Math.ceil(data.length / limit)
+                totalPages: Math.ceil(dataWithKhungGio.length / limit)
             }
         });
     } catch (error) {
@@ -134,7 +352,7 @@ export const getAllLichLamViec = async (req, res) => {
 // Lấy tất cả đơn xin nghỉ phép
 export const getAllXinNghiPhep = async (req, res) => {
     try {
-        const { page = 1, limit = 10, trang_thai, id_bac_si } = req.query;
+        const { page = 1, limit = 10, trang_thai, id_nguoi_dung } = req.query;
         
         let whereCondition = {};
         
@@ -142,20 +360,35 @@ export const getAllXinNghiPhep = async (req, res) => {
             whereCondition.trang_thai = trang_thai;
         }
         
-        if (id_bac_si) {
-            whereCondition.id_bac_si = id_bac_si;
+        if (id_nguoi_dung) {
+            whereCondition.id_nguoi_dung = id_nguoi_dung;
         }
 
         const data = await XinNghiPhep.findAll(whereCondition);
         
+        // Join với NguoiDung để lấy thông tin ho_ten
+        const dataWithInfo = await Promise.all(
+            data.map(async (item) => {
+                try {
+                    const nguoiDung = await NguoiDung.findOne({ id_nguoi_dung: item.id_nguoi_dung });
+                    return {
+                        ...item,
+                        ho_ten: nguoiDung?.ho_ten || null
+                    };
+                } catch (err) {
+                    return item;
+                }
+            })
+        );
+        
         res.status(200).json({
             success: true,
-            data: data,
+            data: dataWithInfo,
             pagination: {
-                total: data.length,
+                total: dataWithInfo.length,
                 page: parseInt(page),
                 limit: parseInt(limit),
-                totalPages: Math.ceil(data.length / limit)
+                totalPages: Math.ceil(dataWithInfo.length / limit)
             }
         });
     } catch (error) {
@@ -215,20 +448,23 @@ export const getThongKeTongQuan = async (req, res) => {
         // }
 
         // Thống kê lịch làm việc
-        const allLichLamViec = await LichLamViec.findAll(whereCondition);
+        const allLichLamViec = Object.keys(whereCondition).length > 0 
+            ? await LichLamViec.findAll(whereCondition)
+            : await LichLamViec.getAll();
         const totalLichLamViec = allLichLamViec.length;
         
         // Thống kê theo ca
         const lichLamViecTheoCa = {};
         allLichLamViec.forEach(lich => {
-            if (!lichLamViecTheoCa[lich.ca_lam_viec]) {
-                lichLamViecTheoCa[lich.ca_lam_viec] = 0;
+            const ca = lich.ca || 'Sang'; // Default to 'Sang' if ca is missing
+            if (!lichLamViecTheoCa[ca]) {
+                lichLamViecTheoCa[ca] = 0;
             }
-            lichLamViecTheoCa[lich.ca_lam_viec]++;
+            lichLamViecTheoCa[ca]++;
         });
 
         // Thống kê đơn xin nghỉ phép
-        const allXinNghiPhep = await XinNghiPhep.findAll();
+        const allXinNghiPhep = await XinNghiPhep.getAll();
         const totalXinNghiPhep = allXinNghiPhep.length;
         
         // Thống kê theo trạng thái
@@ -271,14 +507,19 @@ export const getBaoCaoLichLamViecBacSi = async (req, res) => {
         //     };
         // }
 
-        const allLichLamViec = await LichLamViec.findAll(whereCondition);
+        const allLichLamViec = Object.keys(whereCondition).length > 0 
+            ? await LichLamViec.findAll(whereCondition)
+            : await LichLamViec.getAll();
         
-        // Thống kê theo bác sĩ
+        // Thống kê theo bác sĩ (sử dụng id_nguoi_dung vì bảng lichlamviec không có id_bac_si)
         const baoCaoTheoBacSi = {};
         allLichLamViec.forEach(lich => {
-            if (!baoCaoTheoBacSi[lich.id_bac_si]) {
-                baoCaoTheoBacSi[lich.id_bac_si] = {
-                    id_bac_si: lich.id_bac_si,
+            const idNguoiDung = lich.id_nguoi_dung;
+            if (!idNguoiDung) return; // Skip if id_nguoi_dung is missing
+            
+            if (!baoCaoTheoBacSi[idNguoiDung]) {
+                baoCaoTheoBacSi[idNguoiDung] = {
+                    id_nguoi_dung: idNguoiDung,
                     so_ca_lam: 0,
                     ca_sang: 0,
                     ca_chieu: 0,
@@ -286,14 +527,15 @@ export const getBaoCaoLichLamViecBacSi = async (req, res) => {
                 };
             }
             
-            baoCaoTheoBacSi[lich.id_bac_si].so_ca_lam++;
+            baoCaoTheoBacSi[idNguoiDung].so_ca_lam++;
             
-            if (lich.ca_lam_viec === 'Sang') {
-                baoCaoTheoBacSi[lich.id_bac_si].ca_sang++;
-            } else if (lich.ca_lam_viec === 'Chieu') {
-                baoCaoTheoBacSi[lich.id_bac_si].ca_chieu++;
-            } else if (lich.ca_lam_viec === 'Toi') {
-                baoCaoTheoBacSi[lich.id_bac_si].ca_toi++;
+            const ca = lich.ca || 'Sang'; // Default to 'Sang' if ca is missing
+            if (ca === 'Sang') {
+                baoCaoTheoBacSi[idNguoiDung].ca_sang++;
+            } else if (ca === 'Chieu') {
+                baoCaoTheoBacSi[idNguoiDung].ca_chieu++;
+            } else if (ca === 'Toi') {
+                baoCaoTheoBacSi[idNguoiDung].ca_toi++;
             }
         });
 
@@ -334,10 +576,277 @@ export const getNhanVienPhanCongById = async (req, res) => {
 export const updateNhanVienPhanCong = async (req, res) => {
     try {
         const { id_nhan_vien_phan_cong } = req.params;
-        const dataUpdate = req.body;
+        const dataUpdate = req.body; 
 
         const updated = await NhanVienPhanCong.update(dataUpdate, id_nhan_vien_phan_cong);
         res.status(200).json({ success: true, message: "Cập nhật thành công", data: updated });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+// Lấy danh sách bác sĩ available (chưa phân công, chưa nghỉ phép) theo ngày, ca và chuyên khoa
+export const getAvailableBacSi = async (req, res) => {
+    try {
+        const { ngay_lam_viec, ca, id_chuyen_khoa } = req.query;
+
+        if (!ngay_lam_viec) {
+            return res.status(400).json({ success: false, message: "Thiếu thông tin: ngay_lam_viec là bắt buộc" });
+        }
+
+        // Nếu có ca thì filter theo ca, nếu không có ca thì xem tất cả các ca
+        const caCondition = ca ? 'AND llv.ca = ?' : '';
+        let query = `
+            SELECT 
+                bs.id_bac_si,
+                bs.id_chuyen_khoa,
+                bs.chuyen_mon,
+                bs.chuc_danh,
+                nd.ho_ten,
+                nd.email,
+                nd.so_dien_thoai,
+                ck.ten_chuyen_khoa,
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM lichlamviec llv 
+                        WHERE llv.id_nguoi_dung = bs.id_bac_si 
+                        AND llv.ngay_lam_viec = ?
+                        ${caCondition}
+                    ) THEN 'da_phan_cong'
+                    WHEN EXISTS (
+                        SELECT 1 FROM xinnghiphep xnp 
+                        WHERE xnp.id_nguoi_dung = bs.id_bac_si 
+                        AND xnp.trang_thai IN ('Da_Duyet', 'Cho_Duyet')
+                        AND ? BETWEEN xnp.ngay_bat_dau AND xnp.ngay_ket_thuc
+                    ) THEN 'nghi_phep'
+                    ELSE 'available'
+                END as trang_thai
+            FROM bacsi bs
+            INNER JOIN nguoidung nd ON bs.id_bac_si = nd.id_nguoi_dung
+            LEFT JOIN chuyenkhoa ck ON bs.id_chuyen_khoa = ck.id_chuyen_khoa
+            WHERE bs.dang_lam_viec = 1
+        `;
+
+        const values = [ngay_lam_viec];
+        if (ca) {
+            values.push(ca);
+        }
+        values.push(ngay_lam_viec);
+
+        if (id_chuyen_khoa) {
+            query += ` AND bs.id_chuyen_khoa = ?`;
+            values.push(id_chuyen_khoa);
+        }
+
+        query += ` ORDER BY nd.ho_ten ASC`;
+
+        db.query(query, values, (err, result) => {
+            if (err) {
+                console.error("Error fetching available bac si:", err);
+                return res.status(500).json({ success: false, message: "Lỗi server", error: err.message });
+            }
+            
+            const available = result.filter(bs => bs.trang_thai === 'available');
+            const daPhanCong = result.filter(bs => bs.trang_thai === 'da_phan_cong');
+            const nghiPhep = result.filter(bs => bs.trang_thai === 'nghi_phep');
+
+            res.status(200).json({ 
+                success: true, 
+                data: {
+                    available,
+                    da_phan_cong: daPhanCong,
+                    nghi_phep: nghiPhep,
+                    all: result
+                }
+            });
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+// Lấy danh sách chuyên gia dinh dưỡng theo chuyên ngành dinh dưỡng
+export const getChuyenGiaDinhDuongByChuyenNganh = async (req, res) => {
+    try {
+        const { id_chuyen_nganh, ngay_lam_viec, ca, search } = req.query;
+
+        // Nếu có ca thì filter theo ca, nếu không có ca thì xem tất cả các ca
+        const caCondition = ca ? 'AND llv.ca = ?' : '';
+        let query = `
+            SELECT 
+                cg.id_chuyen_gia,
+                cg.hoc_vi,
+                cg.so_chung_chi_hang_nghe,
+                cg.linh_vuc_chuyen_sau,
+                cg.gioi_thieu_ban_than,
+                cg.chuc_vu,
+                nd.ho_ten,
+                nd.email,
+                nd.so_dien_thoai,
+                cnd.ten_chuyen_nganh,
+                cnd.id_chuyen_nganh,
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM lichlamviec llv 
+                        WHERE llv.id_nguoi_dung = cg.id_chuyen_gia 
+                        ${ngay_lam_viec ? 'AND llv.ngay_lam_viec = ?' : ''}
+                        ${caCondition}
+                    ) THEN 'da_phan_cong'
+                    WHEN EXISTS (
+                        SELECT 1 FROM xinnghiphep xnp 
+                        WHERE xnp.id_nguoi_dung = cg.id_chuyen_gia 
+                        AND xnp.trang_thai IN ('Da_Duyet', 'Cho_Duyet')
+                        ${ngay_lam_viec ? 'AND ? BETWEEN xnp.ngay_bat_dau AND xnp.ngay_ket_thuc' : ''}
+                    ) THEN 'nghi_phep'
+                    ELSE 'available'
+                END as trang_thai
+            FROM chuyengiadinhduong cg
+            INNER JOIN nguoidung nd ON cg.id_chuyen_gia = nd.id_nguoi_dung
+            INNER JOIN chuyengia_chuyennganhdinhduong cg_cnd ON cg.id_chuyen_gia = cg_cnd.id_chuyen_gia
+            INNER JOIN chuyennganhdinhduong cnd ON cg_cnd.id_chuyen_nganh = cnd.id_chuyen_nganh
+            WHERE 1=1
+        `;
+
+        const values = [];
+        
+        if (id_chuyen_nganh) {
+            query += ` AND cnd.id_chuyen_nganh = ?`;
+            values.push(id_chuyen_nganh);
+        }
+
+        if (search) {
+            query += ` AND (nd.ho_ten LIKE ? OR cg.linh_vuc_chuyen_sau LIKE ? OR cnd.ten_chuyen_nganh LIKE ?)`;
+            const searchPattern = `%${search}%`;
+            values.push(searchPattern, searchPattern, searchPattern);
+        }
+
+        if (ngay_lam_viec) {
+            // Thêm ngay_lam_viec vào values nếu có
+            if (ca) {
+                values.push(ngay_lam_viec, ca, ngay_lam_viec);
+            } else {
+                values.push(ngay_lam_viec, ngay_lam_viec);
+            }
+        }
+
+        query += ` ORDER BY nd.ho_ten ASC`;
+
+        db.query(query, values, (err, result) => {
+            if (err) {
+                console.error("Error fetching chuyên gia dinh dưỡng:", err);
+                return res.status(500).json({ success: false, message: "Lỗi server", error: err.message });
+            }
+            
+            const available = result.filter(cg => cg.trang_thai === 'available');
+            const daPhanCong = result.filter(cg => cg.trang_thai === 'da_phan_cong');
+            const nghiPhep = result.filter(cg => cg.trang_thai === 'nghi_phep');
+
+            res.status(200).json({ 
+                success: true, 
+                data: {
+                    available,
+                    da_phan_cong: daPhanCong,
+                    nghi_phep: nghiPhep,
+                    all: result
+                }
+            });
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+// Lấy danh sách nhân viên khác theo vai trò
+export const getNhanVienKhacByVaiTro = async (req, res) => {
+    try {
+        const { vai_tro, ngay_lam_viec, ca, search } = req.query;
+
+        // Nếu có ca thì filter theo ca, nếu không có ca thì xem tất cả các ca
+        const caCondition = ca ? 'AND llv.ca = ?' : '';
+        let query = `
+            SELECT DISTINCT
+                nd.id_nguoi_dung,
+                nd.ho_ten,
+                nd.email,
+                nd.so_dien_thoai,
+                nd.vai_tro,
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM lichlamviec llv 
+                        WHERE llv.id_nguoi_dung = nd.id_nguoi_dung 
+                        ${ngay_lam_viec ? 'AND llv.ngay_lam_viec = ?' : ''}
+                        ${caCondition}
+                    ) THEN 'da_phan_cong'
+                    WHEN EXISTS (
+                        SELECT 1 FROM xinnghiphep xnp 
+                        WHERE xnp.id_nguoi_dung = nd.id_nguoi_dung 
+                        AND xnp.trang_thai IN ('Da_Duyet', 'Cho_Duyet')
+                        ${ngay_lam_viec ? 'AND ? BETWEEN xnp.ngay_bat_dau AND xnp.ngay_ket_thuc' : ''}
+                    ) THEN 'nghi_phep'
+                    ELSE 'available'
+                END as trang_thai
+            FROM nguoidung nd
+            LEFT JOIN bacsi bs ON nd.id_nguoi_dung = bs.id_bac_si
+            LEFT JOIN chuyengiadinhduong cg ON nd.id_nguoi_dung = cg.id_chuyen_gia
+            WHERE bs.id_bac_si IS NULL 
+            AND cg.id_chuyen_gia IS NULL
+            AND nd.vai_tro IN ('nhan_vien_quay', 'nhan_vien_phan_cong')
+        `;
+
+        const values = [];
+
+        if (vai_tro) {
+            query += ` AND nd.vai_tro = ?`;
+            values.push(vai_tro);
+        }
+
+        if (search) {
+            query += ` AND (nd.ho_ten LIKE ? OR nd.email LIKE ?)`;
+            const searchPattern = `%${search}%`;
+            values.push(searchPattern, searchPattern);
+        }
+
+        if (ngay_lam_viec) {
+            // Thêm ngay_lam_viec vào values nếu có
+            if (ca) {
+                values.push(ngay_lam_viec, ca, ngay_lam_viec);
+            } else {
+                values.push(ngay_lam_viec, ngay_lam_viec);
+            }
+        }
+
+        query += ` ORDER BY nd.ho_ten ASC`;
+
+        db.query(query, values, (err, result) => {
+            if (err) {
+                console.error("Error fetching nhân viên khác:", err);
+                return res.status(500).json({ success: false, message: "Lỗi server", error: err.message });
+            }
+            
+            const available = result.filter(nv => nv.trang_thai === 'available');
+            const daPhanCong = result.filter(nv => nv.trang_thai === 'da_phan_cong');
+            const nghiPhep = result.filter(nv => nv.trang_thai === 'nghi_phep');
+
+            res.status(200).json({ 
+                success: true, 
+                data: {
+                    available,
+                    da_phan_cong: daPhanCong,
+                    nghi_phep: nghiPhep,
+                    all: result
+                }
+            });
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+// Lấy tất cả chuyên ngành dinh dưỡng
+export const getAllChuyenNganhDinhDuong = async (req, res) => {
+    try {
+        const data = await ChuyenNganhDinhDuong.getAll();
+        res.status(200).json({ success: true, data });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }

@@ -320,11 +320,27 @@ const getUserById = async (req, res) => {
 // Lấy danh sách người dùng theo vai trò
 const getUsersByRole = async (req, res) => {
     try {
-        const { vai_tro } = req.body;
-        let users = await NguoiDung.findAll({ vai_tro , trang_thai_hoat_dong : true });
+        const { role, vai_tro } = req.query;
+        const roleToSearch = role || vai_tro;
+        
+        if (!roleToSearch) {
+            return res.status(400).json({
+                success: false,
+                message: "Thiếu tham số vai trò"
+            });
+        }
+        
+        let users = await NguoiDung.findAll({ vai_tro: roleToSearch, trang_thai_hoat_dong: true });
+        
+        // Ẩn mật khẩu trong response
+        const usersWithoutPassword = users.map(user => {
+            const { mat_khau, ...userWithoutPassword } = user;
+            return userWithoutPassword;
+        });
+        
         res.status(200).json({
             success: true,
-            data: users
+            data: usersWithoutPassword
         });
     } catch (error) {
         res.status(500).json({
@@ -336,38 +352,58 @@ const getUsersByRole = async (req, res) => {
 };
 
 
-// Tìm kiếm người dùng
-// const searchUsers = async (req, res) => {
-//     try {
-//         const { ho_ten, vai_tro } = req.query;
+// Tìm kiếm người dùng nâng cao (cho chat)
+const searchUsersForChat = async (req, res) => {
+    try {
+        const { 
+            search = '', 
+            vai_tro = '', 
+            exclude_id 
+        } = req.query;
         
-//         if (!ho_ten) {
-//             return res.status(400).json({ 
-//                 success: false, 
-//                 message: "Vui lòng nhập từ khóa tìm kiếm." 
-//             });
-//         }
-
-//         const users = await NguoiDung.findOne(ho_ten, vai_tro);
-
-//         // Ẩn mật khẩu
-//         const usersWithoutPassword = users.map(user => {
-//             const { mat_khau, ...userWithoutPassword } = user;
-//             return userWithoutPassword;
-//         });
-
-//         res.status(200).json({
-//             success: true,
-//             data: usersWithoutPassword
-//         });
-//     } catch (error) {
-//         res.status(500).json({
-//             success: false,
-//             message: "Đã xảy ra lỗi.",
-//             error: error.message
-//         });
-//     }
-// };
+        let users = await NguoiDung.findAll({ trang_thai_hoat_dong: true });
+        
+        // Lọc theo exclude_id (loại trừ chính mình)
+        if (exclude_id) {
+            users = users.filter(user => user.id_nguoi_dung !== exclude_id);
+        }
+        
+        // Lọc theo vai trò nếu có
+        if (vai_tro) {
+            users = users.filter(user => user.vai_tro === vai_tro);
+        }
+        
+        // Tìm kiếm theo từ khóa (tên, email, số điện thoại)
+        if (search) {
+            const searchLower = search.toLowerCase();
+            users = users.filter(user => {
+                const hoTen = (user.ho_ten || '').toLowerCase();
+                const email = (user.email || '').toLowerCase();
+                const soDienThoai = (user.so_dien_thoai || '').toLowerCase();
+                return hoTen.includes(searchLower) || 
+                       email.includes(searchLower) || 
+                       soDienThoai.includes(searchLower);
+            });
+        }
+        
+        // Ẩn mật khẩu trong response
+        const usersWithoutPassword = users.map(user => {
+            const { mat_khau, ...userWithoutPassword } = user;
+            return userWithoutPassword;
+        });
+        
+        res.status(200).json({
+            success: true,
+            data: usersWithoutPassword
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Đã xảy ra lỗi.",
+            error: error.message
+        });
+    }
+};
 
 // Cập nhật thông tin người dùng
 const updateUser = async (req, res) => {
@@ -590,7 +626,7 @@ export {
     getUserById,
     getUsersByRole,
     getAllUsers,
-    // searchUsers,
+    searchUsersForChat,
     updateUser,
     updateUserStatus,
     changePassword,

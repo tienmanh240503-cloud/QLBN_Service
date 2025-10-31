@@ -1,4 +1,4 @@
-import { LichLamViec } from "../models/index.js";
+import { LichLamViec, KhungGioKham } from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
 
 // Tạo lịch làm việc mới
@@ -20,7 +20,17 @@ export const createLichLamViec = async (req, res) => {
             ca
         });
 
-        return res.status(201).json({ success: true, message: "Thêm lịch làm việc thành công", data: lich });
+        // Query khung giờ theo ca
+        const khungGios = await KhungGioKham.findAll({ ca });
+
+        return res.status(201).json({ 
+            success: true, 
+            message: "Thêm lịch làm việc thành công", 
+            data: {
+                ...lich,
+                khung_gios: khungGios || []
+            }
+        });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }
@@ -30,7 +40,19 @@ export const createLichLamViec = async (req, res) => {
 export const getAllLichLamViec = async (req, res) => {
     try {
         const liches = await LichLamViec.getAll();
-        return res.status(200).json({ success: true, data: liches });
+        
+        // Query khung giờ theo ca và gắn vào từng lịch làm việc
+        const dataWithKhungGio = await Promise.all(
+            liches.map(async (lich) => {
+                const khungGios = await KhungGioKham.findAll({ ca: lich.ca });
+                return {
+                    ...lich,
+                    khung_gios: khungGios || []
+                };
+            })
+        );
+        
+        return res.status(200).json({ success: true, data: dataWithKhungGio });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }
@@ -42,7 +64,17 @@ export const getLichLamViecById = async (req, res) => {
         const { id_lich_lam_viec } = req.params;
         const lich = await LichLamViec.getById(id_lich_lam_viec);
         if (!lich) return res.status(404).json({ success: false, message: "Không tìm thấy lịch làm việc" });
-        return res.status(200).json({ success: true, data: lich });
+        
+        // Query khung giờ theo ca
+        const khungGios = await KhungGioKham.findAll({ ca: lich.ca });
+        
+        return res.status(200).json({ 
+            success: true, 
+            data: {
+                ...lich,
+                khung_gios: khungGios || []
+            }
+        });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }
@@ -58,7 +90,18 @@ export const updateLichLamViec = async (req, res) => {
         const { id_nguoi_dung, ngay_lam_viec, ca } = req.body;
         const updateLich = await LichLamViec.update({ id_nguoi_dung, ngay_lam_viec, ca }, id_lich_lam_viec);
 
-        return res.status(200).json({ success: true, message: "Cập nhật thành công", data: updateLich });
+        // Query khung giờ theo ca (dùng ca từ request hoặc ca hiện tại)
+        const caToUse = ca || (await LichLamViec.getById(id_lich_lam_viec)).ca;
+        const khungGios = await KhungGioKham.findAll({ ca: caToUse });
+
+        return res.status(200).json({ 
+            success: true, 
+            message: "Cập nhật thành công", 
+            data: {
+                ...updateLich,
+                khung_gios: khungGios || []
+            }
+        });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }
@@ -87,7 +130,19 @@ export const getLichLamViecByNgay = async (req, res) => {
             const lvDate = new Date(l.ngay_lam_viec).toISOString().slice(0,10);
             return lvDate === ngay;
         });
-        return res.status(200).json({ success: true, data: filtered });
+        
+        // Query khung giờ cho từng lịch
+        const dataWithKhungGio = await Promise.all(
+            filtered.map(async (lich) => {
+                const khungGios = await KhungGioKham.findAll({ ca: lich.ca });
+                return {
+                    ...lich,
+                    khung_gios: khungGios || []
+                };
+            })
+        );
+        
+        return res.status(200).json({ success: true, data: dataWithKhungGio });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
@@ -123,34 +178,16 @@ export const getLichLamViecByWeekforBacSi = async (req, res) => {
             return lvStr >= startStr && lvStr <= endStr;
         });
 
-        // Thêm thông tin giờ làm việc cho mỗi ca
-        const result = filtered.map(l => {
-            let gio_bat_dau, gio_ket_thuc;
-            
-            switch(l.ca) {
-                case 'Sang':
-                    gio_bat_dau = '07:00';
-                    gio_ket_thuc = '12:00';
-                    break;
-                case 'Chieu':
-                    gio_bat_dau = '13:00';
-                    gio_ket_thuc = '18:00';
-                    break;
-                case 'Toi':
-                    gio_bat_dau = '18:00';
-                    gio_ket_thuc = '22:00';
-                    break;
-                default:
-                    gio_bat_dau = '08:00';
-                    gio_ket_thuc = '17:00';
-            }
-            
-            return {
-                ...l,
-                gio_bat_dau,
-                gio_ket_thuc
-            };
-        });
+        // Query khung giờ cho từng lịch thay vì hardcode
+        const result = await Promise.all(
+            filtered.map(async (l) => {
+                const khungGios = await KhungGioKham.findAll({ ca: l.ca });
+                return {
+                    ...l,
+                    khung_gios: khungGios || []
+                };
+            })
+        );
 
         return res.status(200).json({ success: true, data: result });
     } catch (error) {
@@ -183,7 +220,18 @@ export const getLichLamViecByWeek = async (req, res) => {
         if (filtered.length === 0) 
             return res.status(404).json({ success: false, message: "Không tìm thấy lịch làm việc" });
 
-        return res.status(200).json({ success: true, data: filtered });
+        // Query khung giờ cho từng lịch
+        const dataWithKhungGio = await Promise.all(
+            filtered.map(async (lich) => {
+                const khungGios = await KhungGioKham.findAll({ ca: lich.ca });
+                return {
+                    ...lich,
+                    khung_gios: khungGios || []
+                };
+            })
+        );
+
+        return res.status(200).json({ success: true, data: dataWithKhungGio });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
@@ -202,7 +250,18 @@ export const getLichLamViecByMonth = async (req, res) => {
             return (d.getMonth() + 1) === parseInt(thang) && d.getFullYear() === parseInt(nam);
         });
 
-        return res.status(200).json({ success: true, data: filtered });
+        // Query khung giờ cho từng lịch
+        const dataWithKhungGio = await Promise.all(
+            filtered.map(async (lich) => {
+                const khungGios = await KhungGioKham.findAll({ ca: lich.ca });
+                return {
+                    ...lich,
+                    khung_gios: khungGios || []
+                };
+            })
+        );
+
+        return res.status(200).json({ success: true, data: dataWithKhungGio });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
@@ -219,7 +278,18 @@ export const getLichLamViecByYear = async (req, res) => {
             return d.getFullYear() === parseInt(nam);
         });
 
-        return res.status(200).json({ success: true, data: filtered });
+        // Query khung giờ cho từng lịch
+        const dataWithKhungGio = await Promise.all(
+            filtered.map(async (lich) => {
+                const khungGios = await KhungGioKham.findAll({ ca: lich.ca });
+                return {
+                    ...lich,
+                    khung_gios: khungGios || []
+                };
+            })
+        );
+
+        return res.status(200).json({ success: true, data: dataWithKhungGio });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }

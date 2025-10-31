@@ -1,4 +1,4 @@
-import { HoaDon, ChiTietHoaDon, DichVu } from "../models/index.js";
+import { HoaDon, ChiTietHoaDon, DichVu, CuocHenKhamBenh, CuocHenTuVan } from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
 
 // Tạo hóa đơn
@@ -33,6 +33,24 @@ export const createHoaDon = async (req, res) => {
                 so_luong: ct.so_luong,
                 don_gia: ct.don_gia
             });
+        }
+
+        // Tự động cập nhật trạng thái cuộc hẹn thành "da_hoan_thanh" khi tạo hóa đơn thành công
+        if (id_cuoc_hen_kham) {
+            try {
+                await CuocHenKhamBenh.update({ trang_thai: 'da_hoan_thanh' }, id_cuoc_hen_kham);
+            } catch (error) {
+                console.error("Error updating cuoc hen kham status:", error);
+                // Không throw error để không làm ảnh hưởng đến việc tạo hóa đơn
+            }
+        }
+        if (id_cuoc_hen_tu_van) {
+            try {
+                await CuocHenTuVan.update({ trang_thai: 'da_hoan_thanh' }, id_cuoc_hen_tu_van);
+            } catch (error) {
+                console.error("Error updating cuoc hen tu van status:", error);
+                // Không throw error để không làm ảnh hưởng đến việc tạo hóa đơn
+            }
         }
 
         return res.status(201).json({

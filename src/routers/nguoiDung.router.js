@@ -5,6 +5,7 @@ import {
     getUserById,
     getUsersByRole,
     getAllUsers,
+    searchUsersForChat,
     updateUser,
     updateUserStatus,
     changePassword,
@@ -33,6 +34,9 @@ router.get('/all', verify, getAllUsers);
 
 // Lấy danh sách người dùng theo vai trò
 router.get('/vai_tro/', verify, getUsersByRole);
+
+// Tìm kiếm người dùng nâng cao (cho chat)
+router.get('/search/chat', verify, searchUsersForChat);
 
 // Lấy thông tin người dùng theo ID
 router.get('/:id_nguoi_dung', getUserById);

@@ -8,6 +8,12 @@ import {
     updateLichLamViec,
     deleteLichLamViec,
     getAllLichLamViec,
+    swapCa,
+    phanCongHangLoat,
+    getAvailableBacSi,
+    getChuyenGiaDinhDuongByChuyenNganh,
+    getNhanVienKhacByVaiTro,
+    getAllChuyenNganhDinhDuong,
     // API Quản lý đơn xin nghỉ phép
     getAllXinNghiPhep,
     updateTrangThaiXinNghiPhep,
@@ -26,7 +32,13 @@ router.put('/:id_nhan_vien_phan_cong', verify, updateNhanVienPhanCong);
 
 // ==================== API PHÂN CÔNG LỊCH LÀM VIỆC ====================
 router.post('/lich-lam-viec', verify, createLichLamViec);
+router.post('/lich-lam-viec/swap', verify, swapCa); // Đổi ca làm việc
+router.post('/lich-lam-viec/phan-cong-hang-loat', verify, phanCongHangLoat); // Phân công hàng loạt
 router.get('/lich-lam-viec/all', verify, getAllLichLamViec);
+router.get('/bac-si/available', verify, getAvailableBacSi); // Lấy danh sách bác sĩ available theo chuyên khoa
+router.get('/chuyen-gia-dinh-duong/available', verify, getChuyenGiaDinhDuongByChuyenNganh); // Lấy danh sách chuyên gia dinh dưỡng theo chuyên ngành
+router.get('/nhan-vien-khac/available', verify, getNhanVienKhacByVaiTro); // Lấy danh sách nhân viên khác theo vai trò
+router.get('/chuyen-nganh-dinh-duong/all', verify, getAllChuyenNganhDinhDuong); // Lấy tất cả chuyên ngành dinh dưỡng
 router.put('/lich-lam-viec/:id_lich_lam_viec', verify, updateLichLamViec);
 router.delete('/lich-lam-viec/:id_lich_lam_viec', verify, deleteLichLamViec);
 

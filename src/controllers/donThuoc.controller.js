@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Tạo đơn thuốc
 export const createDonThuoc = async (req, res) => {
     try {
-        const { id_ho_so, ghi_chu, chi_tiet } = req.body;
+        const { id_ho_so, id_lich_su, ghi_chu, chi_tiet } = req.body;
 
         if (!id_ho_so || !chi_tiet || chi_tiet.length === 0) {
             return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc" });
@@ -14,9 +14,17 @@ export const createDonThuoc = async (req, res) => {
             return res.status(404).json({ success: false, message: "Hồ sơ khám không tồn tại" });
         }
 
+        // Kiểm tra id_lich_su nếu có
+        if (id_lich_su) {
+            const lichSu = await LichSuKham.findOne({ id_lich_su });
+            if (!lichSu) {
+                return res.status(404).json({ success: false, message: "Lịch sử khám không tồn tại" });
+            }
+        }
+
         const Id = `DT_${uuidv4()}`;
 
-        const donThuoc = await DonThuoc.create({id_don_thuoc : Id, id_ho_so, ghi_chu , trang_thai : "dang_su_dung"});
+        const donThuoc = await DonThuoc.create({id_don_thuoc : Id, id_ho_so, id_lich_su, ghi_chu , trang_thai : "dang_su_dung"});
 
         const details = [];
         for (const ct of chi_tiet) {
