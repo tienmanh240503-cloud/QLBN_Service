@@ -145,9 +145,11 @@ export const getLichSuTuVanByBenhNhan = async (req, res) => {
                     ...cuocHen,
                     chuyenGia: chuyenGia ? {
                         id_chuyen_gia: chuyenGia.id_chuyen_gia,
-                        bang_cap: chuyenGia.bang_cap,
-                        kinh_nghiem: chuyenGia.kinh_nghiem,
-                        chuyen_mon: chuyenGia.chuyen_mon
+                        hoc_vi: chuyenGia.hoc_vi,
+                        so_chung_chi_hang_nghe: chuyenGia.so_chung_chi_hang_nghe,
+                        linh_vuc_chuyen_sau: chuyenGia.linh_vuc_chuyen_sau,
+                        gioi_thieu_ban_than: chuyenGia.gioi_thieu_ban_than,
+                        chuc_vu: chuyenGia.chuc_vu
                     } : null,
                     khungGio: khungGio ? {
                         id_khung_gio: khungGio.id_khung_gio,
@@ -187,5 +189,47 @@ export const deleteCuocHenTuVan = async (req, res) => {
         return res.status(200).json({ success: true, message: "Xóa cuộc hẹn thành công" });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+// Đếm số lượng appointments đã đặt cho một khung giờ cụ thể (tư vấn)
+export const countAppointmentsByTimeSlotTuVan = async (req, res) => {
+    try {
+        const { id_chuyen_gia, id_khung_gio, ngay_kham } = req.query;
+        
+        if (!id_chuyen_gia || !id_khung_gio || !ngay_kham) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Thiếu tham số bắt buộc: id_chuyen_gia, id_khung_gio, ngay_kham" 
+            });
+        }
+
+        // Đếm số lượng appointments đã đặt (chỉ tính các trạng thái đã đặt hoặc đã hoàn thành)
+        const appointments = await CuocHenTuVan.findAll({ 
+            id_chuyen_gia,
+            id_khung_gio,
+            ngay_kham
+        });
+
+        // Lọc các appointments có trạng thái hợp lệ (đã đặt hoặc đã hoàn thành)
+        const validAppointments = appointments.filter(apt => 
+            apt.trang_thai === 'da_dat' || apt.trang_thai === 'da_hoan_thanh'
+        );
+
+        return res.status(200).json({ 
+            success: true, 
+            data: {
+                count: validAppointments.length,
+                max_count: 2 // Tối đa 2 người đặt
+            }
+        });
+        
+    } catch (error) {
+        console.error("Error in countAppointmentsByTimeSlotTuVan:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Lỗi server", 
+            error: error.message 
+        });
     }
 };

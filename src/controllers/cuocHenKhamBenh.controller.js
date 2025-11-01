@@ -409,3 +409,45 @@ export const getCuocHenKhamByDateAndCa = async (req, res) => {
         });
     }
 };
+
+// Đếm số lượng appointments đã đặt cho một khung giờ cụ thể
+export const countAppointmentsByTimeSlot = async (req, res) => {
+    try {
+        const { id_bac_si, id_khung_gio, ngay_kham } = req.query;
+        
+        if (!id_bac_si || !id_khung_gio || !ngay_kham) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Thiếu tham số bắt buộc: id_bac_si, id_khung_gio, ngay_kham" 
+            });
+        }
+
+        // Đếm số lượng appointments đã đặt (chỉ tính các trạng thái đã đặt hoặc đã hoàn thành)
+        const appointments = await CuocHenKhamBenh.findAll({ 
+            id_bac_si,
+            id_khung_gio,
+            ngay_kham
+        });
+
+        // Lọc các appointments có trạng thái hợp lệ (đã đặt hoặc đã hoàn thành)
+        const validAppointments = appointments.filter(apt => 
+            apt.trang_thai === 'da_dat' || apt.trang_thai === 'da_hoan_thanh'
+        );
+
+        return res.status(200).json({ 
+            success: true, 
+            data: {
+                count: validAppointments.length,
+                max_count: 2 // Tối đa 2 người đặt
+            }
+        });
+        
+    } catch (error) {
+        console.error("Error in countAppointmentsByTimeSlot:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Lỗi server", 
+            error: error.message 
+        });
+    }
+};

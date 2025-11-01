@@ -37,7 +37,8 @@ export const getKetQuaByChiDinh = async (req, res) => {
     try {
         const { id_chi_dinh } = req.params;
         const ketqua = await KetQuaXetNghiem.findOne({id_chi_dinh});
-        if (!ketqua) return res.status(404).json({ success: false, message: "Không tìm thấy kết quả" });
+        // Nếu chưa có kết quả, trả về null thay vì lỗi 404
+        if (!ketqua) return res.status(200).json({ success: true, data: null });
         return res.status(200).json({ success: true, data: ketqua });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });

@@ -29,6 +29,7 @@ import xinNghiPhepRouter from './src/routers/xinNghiPhep.router.js';
 import uploadRouter from './src/routers/upload.route.js';
 import phongKhamRouter from './src/routers/phongKham.router.js';
 import tinNhanRouter from './src/routers/tinNhan.router.js';
+import medicalChatRouter from './src/routers/medicalChat.router.js';
 // import quanTriVienRouter from './src/routers/quanTriVien.router.js';
 import cors from 'cors';
 dotenv.config();
@@ -65,6 +66,7 @@ app.use('/xin-nghi-phep', xinNghiPhepRouter);
 app.use('/upload', uploadRouter);
 app.use('/phong-kham', phongKhamRouter);
 app.use('/chat', tinNhanRouter);
+app.use('/medical-chat', medicalChatRouter);
 // app.use('/quan-tri-vien', quanTriVienRouter);
 
 async function main() {

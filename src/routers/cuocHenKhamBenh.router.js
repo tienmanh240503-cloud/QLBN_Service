@@ -7,7 +7,8 @@ import {
     getCuocHenKhamByBacSi,
     getCuocHenKhamById, 
     getLichSuKhamBenhFull,
-    getCuocHenKhamByDateAndCa
+    getCuocHenKhamByDateAndCa,
+    countAppointmentsByTimeSlot
 } from '../controllers/cuocHenKhamBenh.controller.js';
 import { verify } from '../middlewares/verifyToken.middleware.js';
 
@@ -30,6 +31,9 @@ router.get('/bac-si/:id_bac_si', verify, getCuocHenKhamByBacSi);
 
 // Lấy cuộc hẹn theo ngày và ca
 router.get('/filter/date-ca', verify, getCuocHenKhamByDateAndCa);
+
+// Đếm số lượng appointments đã đặt cho một khung giờ
+router.get('/count/time-slot', verify, countAppointmentsByTimeSlot);
 
 router.post("/benh-nhan/:id_benh_nhan/loc", verify, getCuocHenByBenhNhanAndTrangThai); 
 
