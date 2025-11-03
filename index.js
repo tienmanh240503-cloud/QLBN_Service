@@ -30,6 +30,12 @@ import uploadRouter from './src/routers/upload.route.js';
 import phongKhamRouter from './src/routers/phongKham.router.js';
 import tinNhanRouter from './src/routers/tinNhan.router.js';
 import medicalChatRouter from './src/routers/medicalChat.router.js';
+import dashboardRouter from './src/routers/dashboard.router.js';
+import thongBaoRouter from './src/routers/thongBao.router.js';
+import yeuCauEmailRouter from './src/routers/yeuCauEmail.router.js';
+import thucDonChiTietRouter from './src/routers/thucDonChiTiet.router.js';
+import theoDoiTienDoRouter from './src/routers/theoDoiTienDo.router.js';
+import monAnThamKhaoRouter from './src/routers/monAnThamKhao.router.js';
 // import quanTriVienRouter from './src/routers/quanTriVien.router.js';
 import cors from 'cors';
 dotenv.config();
@@ -67,6 +73,12 @@ app.use('/upload', uploadRouter);
 app.use('/phong-kham', phongKhamRouter);
 app.use('/chat', tinNhanRouter);
 app.use('/medical-chat', medicalChatRouter);
+app.use('/dashboard', dashboardRouter);
+app.use('/thong-bao', thongBaoRouter);
+app.use('/yeu-cau-email', yeuCauEmailRouter);
+app.use('/thuc-don-chi-tiet', thucDonChiTietRouter);
+app.use('/theo-doi-tien-do', theoDoiTienDoRouter);
+app.use('/mon-an-tham-khao', monAnThamKhaoRouter);
 // app.use('/quan-tri-vien', quanTriVienRouter);
 
 async function main() {

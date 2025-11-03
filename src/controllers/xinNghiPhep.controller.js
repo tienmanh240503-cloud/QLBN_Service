@@ -13,14 +13,16 @@ export const createXinNghiPhep = async (req, res) => {
             });
         }
 
-        // Validate id_nguoi_dung format (should start with BS_, YT_, QL_, or AD_)
-        const validPrefixes = ['BS_', 'YT_', 'QL_', 'AD_'];
-        const isValidId = validPrefixes.some(prefix => id_nguoi_dung.startsWith(prefix));
+        // Validate id_nguoi_dung format (should start with BS_, YT_, QL_, AD_, CG_, NVQ_, or NVP_)
+        const validPrefixes = ['BS_', 'YT_', 'QL_', 'AD_', 'CG_', 'NVQ_', 'NVP_'];
+        // Hỗ trợ cả ID cũ như NV_quay001 (backward compatibility)
+        const isValidId = validPrefixes.some(prefix => id_nguoi_dung.startsWith(prefix)) ||
+                         id_nguoi_dung.startsWith('NV_');
         
         if (!isValidId) {
             return res.status(400).json({ 
                 success: false, 
-                message: "ID người dùng không hợp lệ. Chỉ hỗ trợ bác sĩ, y tá, quản lý và admin" 
+                message: "ID người dùng không hợp lệ. Chỉ hỗ trợ bác sĩ, y tá, quản lý, admin, chuyên gia dinh dưỡng, nhân viên quầy và nhân viên phân công" 
             });
         }
 
@@ -87,7 +89,7 @@ export const getXinNghiPhepById = async (req, res) => {
     }
 };
 
-// Lấy đơn xin nghỉ phép theo người dùng (bác sĩ, y tá, quản lý, admin)
+// Lấy đơn xin nghỉ phép theo người dùng (bác sĩ, y tá, quản lý, admin, chuyên gia dinh dưỡng, nhân viên quầy, nhân viên phân công)
 export const getXinNghiPhepByNguoiDung = async (req, res) => {
     try {
         const { id_nguoi_dung } = req.params;
@@ -99,14 +101,16 @@ export const getXinNghiPhepByNguoiDung = async (req, res) => {
             });
         }
 
-        // Validate id_nguoi_dung format (should start with BS_, YT_, QL_, or AD_)
-        const validPrefixes = ['BS_', 'YT_', 'QL_', 'AD_'];
-        const isValidId = validPrefixes.some(prefix => id_nguoi_dung.startsWith(prefix));
+        // Validate id_nguoi_dung format (should start with BS_, YT_, QL_, AD_, CG_, NVQ_, or NVP_)
+        const validPrefixes = ['BS_', 'YT_', 'QL_', 'AD_', 'CG_', 'NVQ_', 'NVP_'];
+        // Hỗ trợ cả ID cũ như NV_quay001 (backward compatibility)
+        const isValidId = validPrefixes.some(prefix => id_nguoi_dung.startsWith(prefix)) ||
+                         id_nguoi_dung.startsWith('NV_');
         
         if (!isValidId) {
             return res.status(400).json({ 
                 success: false, 
-                message: "ID người dùng không hợp lệ. Chỉ hỗ trợ bác sĩ, y tá, quản lý và admin" 
+                message: "ID người dùng không hợp lệ. Chỉ hỗ trợ bác sĩ, y tá, quản lý, admin, chuyên gia dinh dưỡng, nhân viên quầy và nhân viên phân công" 
             });
         }
 

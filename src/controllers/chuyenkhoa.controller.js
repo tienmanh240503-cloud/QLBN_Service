@@ -100,12 +100,52 @@ export const updateChuyenKhoa = async (req, res) => {
         const ck = await ChuyenKhoa.getById(id_chuyen_khoa);
         if (!ck) return res.status(404).json({ success: false, message: "Không tìm thấy chuyên khoa" });
 
-        if (Object.keys(req.body).length === 0) {
+        const { ten_chuyen_khoa, mo_ta, thiet_bi, thoi_gian_hoat_dong } = req.body;
+        const file = req.file;
+
+        // Nếu không có dữ liệu và không có file mới
+        if (!ten_chuyen_khoa && !mo_ta && !thiet_bi && !thoi_gian_hoat_dong && !file) {
             return res.status(400).json({ success: false, message: "Không có dữ liệu để cập nhật" });
         }
 
+        const updateData = {};
+        if (ten_chuyen_khoa) updateData.ten_chuyen_khoa = ten_chuyen_khoa;
+        if (mo_ta !== undefined) updateData.mo_ta = mo_ta;
+        if (thiet_bi !== undefined) updateData.thiet_bi = thiet_bi;
+        if (thoi_gian_hoat_dong !== undefined) updateData.thoi_gian_hoat_dong = thoi_gian_hoat_dong;
+
+        // Xử lý upload file nếu có
+        if (file) {
+            try {
+                // Chuyển đổi buffer thành base64
+                const dataUrl = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+                const fileName = `chuyenkhoa_${Date.now()}`;
+
+                // Upload lên Cloudinary
+                const result = await new Promise((resolve, reject) => {
+                    cloudinary.uploader.upload(dataUrl, {
+                        public_id: fileName,
+                        resource_type: 'auto',
+                        folder: "QLBN/ChuyenKhoa"
+                    }, (err, result) => {
+                        if (err) reject(err);
+                        else resolve(result);
+                    });
+                });
+
+                updateData.hinh_anh = result.secure_url;
+            } catch (uploadError) {
+                console.error("Lỗi upload hình ảnh chuyên khoa:", uploadError);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "Lỗi khi upload hình ảnh", 
+                    error: uploadError.message 
+                });
+            }
+        }
+
         const updateCK = await ChuyenKhoa.update(
-            req.body,
+            updateData,
             id_chuyen_khoa
         );
         return res.status(200).json({ success: true, message: "Cập nhật thành công", data: updateCK });

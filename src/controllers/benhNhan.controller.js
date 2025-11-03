@@ -44,8 +44,32 @@ export const getBenhNhanById = async (req, res) => {
 // Lấy tất cả bệnh nhân
 export const getAllBenhNhan = async (req, res) => {
     try {
-        const benhNhans = await BenhNhan.findAll();
-        res.status(200).json({ success: true, data: benhNhans });
+        const benhNhans = await BenhNhan.getAll();
+        const allNguoiDung = await NguoiDung.getAll();
+        
+        // Map bệnh nhân với thông tin người dùng
+        const fullBenhNhans = benhNhans.map(benhNhan => {
+            const nguoiDung = allNguoiDung.find(nd => nd.id_nguoi_dung === benhNhan.id_benh_nhan);
+            
+            return {
+                ...benhNhan,
+                ten_dang_nhap: nguoiDung?.ten_dang_nhap || "",
+                email: nguoiDung?.email || "",
+                so_dien_thoai: nguoiDung?.so_dien_thoai || "",
+                ho_ten: nguoiDung?.ho_ten || "",
+                ngay_sinh: nguoiDung?.ngay_sinh || "",
+                gioi_tinh: nguoiDung?.gioi_tinh || "",
+                so_cccd: nguoiDung?.so_cccd || "",
+                dia_chi: nguoiDung?.dia_chi || "",
+                anh_dai_dien: nguoiDung?.anh_dai_dien || "",
+                vai_tro: nguoiDung?.vai_tro || "",
+                trang_thai_hoat_dong: nguoiDung?.trang_thai_hoat_dong || "",
+                thoi_gian_tao: nguoiDung?.thoi_gian_tao || "",
+                thoi_gian_cap_nhat: nguoiDung?.thoi_gian_cap_nhat || "",
+            };
+        });
+        
+        res.status(200).json({ success: true, data: fullBenhNhans });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }

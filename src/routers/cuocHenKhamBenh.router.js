@@ -8,14 +8,23 @@ import {
     getCuocHenKhamById, 
     getLichSuKhamBenhFull,
     getCuocHenKhamByDateAndCa,
-    countAppointmentsByTimeSlot
+    countAppointmentsByTimeSlot,
+    getAllCuocHenKhamBenh
 } from '../controllers/cuocHenKhamBenh.controller.js';
 import { verify } from '../middlewares/verifyToken.middleware.js';
 
 const router = express.Router();
 
+// Test route to verify router is working
+router.get('/test', (req, res) => {
+    res.json({ success: true, message: 'Router is working' });
+});
+
 // Tạo cuộc hẹn mới
 router.post('/', verify, createCuocHenKham);
+
+// Lấy tất cả cuộc hẹn khám bệnh
+router.get('/', verify, getAllCuocHenKhamBenh);
 
 // Lấy tất cả cuộc hẹn của bệnh nhân
 router.get('/benh-nhan/:id_benh_nhan', verify, getCuocHenKhamByBenhNhan);

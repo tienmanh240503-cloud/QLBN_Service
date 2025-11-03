@@ -3,6 +3,7 @@ import { CuocTroChuyen, TinNhan, NguoiDung, BenhNhan, BacSi, ChuyenGiaDinhDuong 
 import cloudinary from '../configs/cloudinary.config.js';
 import { DB_CONFID } from '../configs/db.config.js';
 import mysql from 'mysql2/promise';
+import { createChatNotification } from '../helpers/notificationHelper.js';
 
 // Tạo hoặc lấy cuộc trò chuyện giữa 2 người
 export const getOrCreateConversation = async (req, res) => {
@@ -342,7 +343,55 @@ export const sendMessage = async (req, res) => {
              WHERE t.id_tin_nhan COLLATE utf8mb4_general_ci = ?`,
             [id_tin_nhan]
         );
+        
+        // Lấy thông tin cuộc trò chuyện để tìm người nhận
+        const [conversationDetails] = await connection.execute(
+            `SELECT * FROM cuoctrochuyen WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ?`,
+            [id_cuoc_tro_chuyen]
+        );
         await connection.end();
+
+        // Tạo thông báo cho người nhận (không phải người gửi)
+        if (conversationDetails.length > 0) {
+            const conversation = conversationDetails[0];
+            let id_nguoi_nhan = null;
+            
+            // Xác định người nhận dựa trên cuộc trò chuyện
+            if (conversation.id_benh_nhan && conversation.id_benh_nhan !== id_nguoi_gui) {
+                id_nguoi_nhan = conversation.id_benh_nhan;
+            } else if (conversation.id_bac_si && conversation.id_bac_si !== id_nguoi_gui) {
+                id_nguoi_nhan = conversation.id_bac_si;
+            } else if (conversation.id_chuyen_gia_dinh_duong && conversation.id_chuyen_gia_dinh_duong !== id_nguoi_gui) {
+                id_nguoi_nhan = conversation.id_chuyen_gia_dinh_duong;
+            }
+            
+            // Nếu không tìm thấy người nhận từ conversation, tìm từ tin nhắn trong conversation
+            if (!id_nguoi_nhan) {
+                const connection2 = await mysql.createConnection(DB_CONFID.mysql_connect);
+                const [otherMessages] = await connection2.execute(
+                    `SELECT DISTINCT id_nguoi_gui FROM tinnhan 
+                     WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ? 
+                     AND id_nguoi_gui COLLATE utf8mb4_general_ci != ? 
+                     LIMIT 1`,
+                    [id_cuoc_tro_chuyen, id_nguoi_gui]
+                );
+                await connection2.end();
+                
+                if (otherMessages.length > 0) {
+                    id_nguoi_nhan = otherMessages[0].id_nguoi_gui;
+                }
+            }
+            
+            // Tạo thông báo nếu có người nhận
+            if (id_nguoi_nhan) {
+                await createChatNotification(
+                    id_nguoi_gui,
+                    id_nguoi_nhan,
+                    id_cuoc_tro_chuyen,
+                    noi_dung || (file ? file.originalname : '')
+                );
+            }
+        }
 
         res.status(201).json({
             success: true,

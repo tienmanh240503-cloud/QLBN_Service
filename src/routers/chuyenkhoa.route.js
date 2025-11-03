@@ -21,8 +21,8 @@ router.get("/", getAllChuyenKhoa);
 // Lấy chi tiết chuyên khoa theo ID
 router.get("/:id_chuyen_khoa", getChuyenKhoaById);
 
-// Cập nhật chuyên khoa
-router.put("/:id_chuyen_khoa", verify, updateChuyenKhoa);
+// Cập nhật chuyên khoa (hỗ trợ upload ảnh)
+router.put("/:id_chuyen_khoa", verify, uploader.single("image"), updateChuyenKhoa);
 
 
 // Xóa chuyên khoa

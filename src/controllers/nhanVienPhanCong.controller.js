@@ -35,7 +35,7 @@ export const createLichLamViec = async (req, res) => {
             // Nếu phòng khám có chuyên khoa, kiểm tra bác sĩ có cùng chuyên khoa không
             if (phongKham.id_chuyen_khoa) {
                 const bacSi = await BacSi.findOne({ id_bac_si: id_nguoi_dung });
-                if (!bacSi) {
+        if (!bacSi) {
                     return res.status(400).json({ success: false, message: "Người dùng không phải là bác sĩ" });
                 }
                 
@@ -576,7 +576,7 @@ export const getNhanVienPhanCongById = async (req, res) => {
 export const updateNhanVienPhanCong = async (req, res) => {
     try {
         const { id_nhan_vien_phan_cong } = req.params;
-        const dataUpdate = req.body; 
+        const dataUpdate = req.body;
 
         const updated = await NhanVienPhanCong.update(dataUpdate, id_nhan_vien_phan_cong);
         res.status(200).json({ success: true, message: "Cập nhật thành công", data: updated });

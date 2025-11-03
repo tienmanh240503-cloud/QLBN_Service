@@ -1,17 +1,40 @@
 import { CuocHenKhamBenh, BenhNhan, NguoiDung, BacSi, ChuyenKhoa, KhungGioKham, HoaDon, ChiTietDonThuoc, DonThuoc ,ChiTietHoaDon, HoSoKhamBenh , DichVu} from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
+import { createAppointmentNotification } from '../helpers/notificationHelper.js';
 // Tạo cuộc hẹn khám bệnh
 export const createCuocHenKham = async (req, res) => {
+    console.log("✅ createCuocHenKham controller called - Route is working!");
+    console.log("Request method:", req.method);
+    console.log("Request path:", req.path);
+    console.log("Request body:", req.body);
     try {
         const id_nguoi_dung = req.decoded.info.id_nguoi_dung;
-        const { id_bac_si, id_chuyen_khoa, id_khung_gio, ngay_kham, loai_hen, ly_do_kham, trieu_chung } = req.body;
+        const vai_tro = req.decoded.vai_tro;
+        const { id_benh_nhan, id_bac_si, id_chuyen_khoa, id_khung_gio, ngay_kham, loai_hen, ly_do_kham, trieu_chung } = req.body;
 
         if (!id_khung_gio || !ngay_kham) {
             return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc" });
         }
 
-        // Kiểm tra bệnh nhân
-        const benhNhan = await BenhNhan.findOne({ id_benh_nhan : id_nguoi_dung });
+        // Xác định id_benh_nhan: 
+        // - Nếu là nhân viên quầy/admin và có id_benh_nhan trong body -> dùng id_benh_nhan từ body
+        // - Ngược lại, dùng id_nguoi_dung từ token (bệnh nhân tự đặt lịch)
+        let idBenhNhanFinal = id_nguoi_dung;
+        if ((vai_tro === "NhanVienQuay" || vai_tro === "Admin") && id_benh_nhan) {
+            idBenhNhanFinal = id_benh_nhan;
+        }
+
+        console.log("Debug - vai_tro:", vai_tro);
+        console.log("Debug - id_benh_nhan from body:", id_benh_nhan);
+        console.log("Debug - id_nguoi_dung from token:", id_nguoi_dung);
+        console.log("Debug - idBenhNhanFinal:", idBenhNhanFinal);
+
+        // Kiểm tra bệnh nhân - thử dùng getById trước, nếu không có thì dùng findOne
+        let benhNhan = await BenhNhan.getById(idBenhNhanFinal);
+        if (!benhNhan) {
+            benhNhan = await BenhNhan.findOne({ id_benh_nhan : idBenhNhanFinal });
+        }
+        console.log("Debug - benhNhan found:", benhNhan ? "YES" : "NO");
         if (!benhNhan) {
             return res.status(404).json({ success: false, message: "Bệnh nhân không tồn tại" });
         }
@@ -35,8 +58,13 @@ export const createCuocHenKham = async (req, res) => {
             return res.status(404).json({ success: false, message: "Khung giờ không tồn tại" });
         }
         console.log(khungGio);
-        // Check trùng lịch cho bệnh nhân
-        const lich = await CuocHenKhamBenh.findOne({ id_bac_si , id_khung_gio, ngay_kham });
+        // Check trùng lịch cho bệnh nhân (chỉ tính các lịch chưa hủy)
+        const allLich = await CuocHenKhamBenh.findAll({ 
+            id_benh_nhan: idBenhNhanFinal,
+            id_khung_gio, 
+            ngay_kham
+        });
+        const lich = allLich.find(l => l.trang_thai !== 'da_huy');
         if (lich) {
             return res.status(400).json({ success: false, message: "Bệnh nhân đã có cuộc hẹn trong khung giờ này" });
         }
@@ -45,7 +73,7 @@ export const createCuocHenKham = async (req, res) => {
         const Id = `CH_${uuidv4()}`;
         // ✅ Tạo cuộc hẹn
         const cuocHen = await CuocHenKhamBenh.create({
-            id_benh_nhan : id_nguoi_dung,
+            id_benh_nhan : idBenhNhanFinal,
             id_cuoc_hen : Id,
             id_bac_si : id_bac_si|| null,
             id_chuyen_khoa: id_chuyen_khoa || null,
@@ -56,6 +84,28 @@ export const createCuocHenKham = async (req, res) => {
             trieu_chung: trieu_chung || null,
             trang_thai: "da_dat"
         });
+
+        // Tạo thông báo cho bệnh nhân
+        await createAppointmentNotification(
+            idBenhNhanFinal,
+            'da_dat',
+            Id,
+            ngay_kham,
+            id_bac_si,
+            null
+        );
+
+        // Tạo thông báo cho bác sĩ (nếu có)
+        if (id_bac_si) {
+            await createAppointmentNotification(
+                id_bac_si,
+                'da_dat',
+                Id,
+                ngay_kham,
+                id_bac_si,
+                null
+            );
+        }
 
         return res.status(201).json({ success: true, message: "Tạo cuộc hẹn khám bệnh thành công", data: cuocHen });
 
@@ -306,6 +356,29 @@ export const updateTrangThaiCuocHenKham = async (req, res) => {
 
         const updated = await CuocHenKhamBenh.update({trang_thai}, id_cuoc_hen);
         console.log(updated);
+
+        // Tạo thông báo cho bệnh nhân khi trạng thái thay đổi
+        await createAppointmentNotification(
+            cuocHen.id_benh_nhan,
+            trang_thai,
+            id_cuoc_hen,
+            cuocHen.ngay_kham,
+            cuocHen.id_bac_si,
+            null
+        );
+
+        // Tạo thông báo cho bác sĩ (nếu có) khi trạng thái thay đổi
+        if (cuocHen.id_bac_si && cuocHen.id_bac_si !== cuocHen.id_benh_nhan) {
+            await createAppointmentNotification(
+                cuocHen.id_bac_si,
+                trang_thai,
+                id_cuoc_hen,
+                cuocHen.ngay_kham,
+                cuocHen.id_bac_si,
+                null
+            );
+        }
+
         return res.status(200).json({ success: true, message: "Cập nhật trạng thái thành công", data: updated });
 
     } catch (error) {
@@ -444,6 +517,24 @@ export const countAppointmentsByTimeSlot = async (req, res) => {
         
     } catch (error) {
         console.error("Error in countAppointmentsByTimeSlot:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Lỗi server", 
+            error: error.message 
+        });
+    }
+};
+
+// Lấy tất cả cuộc hẹn khám bệnh
+export const getAllCuocHenKhamBenh = async (req, res) => {
+    try {
+        const appointments = await CuocHenKhamBenh.getAll();
+        return res.status(200).json({ 
+            success: true, 
+            data: appointments || [] 
+        });
+    } catch (error) {
+        console.error("Error in getAllCuocHenKhamBenh:", error);
         return res.status(500).json({ 
             success: false, 
             message: "Lỗi server", 

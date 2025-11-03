@@ -10,8 +10,8 @@ class GenericModel {
         this.primaryKey = primaryKey;
     }
 
-    async getAll(page, pageSize, sortField = this.primaryKey, sortOrder = 'ASC') {
-        return await getAll(this.table, page, pageSize, sortField, sortOrder);
+    async getAll(sortField = this.primaryKey, sortOrder = 'ASC') {
+        return await getAll(this.table, sortField, sortOrder);
     }
 
     async getById(id) {

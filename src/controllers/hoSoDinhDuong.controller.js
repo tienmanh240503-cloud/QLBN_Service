@@ -61,6 +61,16 @@ export const createHoSoDinhDuong = async (req, res) => {
     }
 };
 
+// Lấy tất cả hồ sơ dinh dưỡng
+export const getAllHoSoDinhDuong = async (req, res) => {
+    try {
+        const hoSo = await HoSoDinhDuong.getAll();
+        res.status(200).json({ success: true, data: hoSo });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
+    }
+};
+
 export const getHoSoDinhDuongById = async (req, res) => {
     try {
         const { id_ho_so } = req.params;

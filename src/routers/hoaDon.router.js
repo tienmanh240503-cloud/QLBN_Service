@@ -6,7 +6,8 @@ import {
     getHoaDonByCuocHenTuVan,
     updateThanhToan,
     deleteHoaDon,
-    getAllHoaDon
+    getAllHoaDon,
+    searchHoaDon
 } from '../controllers/hoaDon.controller.js';
 import { verify } from '../middlewares/verifyToken.middleware.js';
 
@@ -15,7 +16,10 @@ const router = express.Router();
 // Tạo hóa đơn mới
 router.post('/', verify, createHoaDon);
 
-// Lấy tất cả hóa đơn
+// Tìm kiếm hóa đơn nâng cao
+router.get('/search', verify, searchHoaDon);
+
+// Lấy tất cả hóa đơn (có filter)
 router.get('/', verify, getAllHoaDon);
 
 // Lấy hóa đơn theo id_hoa_don

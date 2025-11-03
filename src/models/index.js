@@ -28,6 +28,13 @@ const LichSuTuVan = new GenericModel('lichsutuvan', 'id_lich_su');
 const XinNghiPhep = new GenericModel('xinnghiphep', 'id_xin_nghi');
 const PhongKham = new GenericModel('phongkham', 'id_phong_kham');
 const ChuyenNganhDinhDuong = new GenericModel('chuyennganhdinhduong', 'id_chuyen_nganh');
+const ThongBao = new GenericModel('thongbao', 'id_thong_bao');
+const QuanTriVien = new GenericModel('quan_tri_vien', 'id_quan_tri_vien');
+const YeuCauEmail = new GenericModel('yeu_cau_email', 'id_yeu_cau');
+const LichSuGuiEmail = new GenericModel('lich_su_gui_email', 'id_lich_su');
+const ThucDonChiTiet = new GenericModel('thucdon_chi_tiet', 'id_thuc_don');
+const TheoDoiTienDo = new GenericModel('theodoi_tien_do', 'id_theo_doi');
+const MonAnThamKhao = new GenericModel('mon_an_tham_khao', 'id_mon_an');
 
 export {
     NguoiDung, BenhNhan, ChuyenKhoa, BacSi, ChuyenGiaDinhDuong, NhanVienQuay,
@@ -35,5 +42,6 @@ export {
     HoSoKhamBenh, HoSoDinhDuong, DonThuoc, Thuoc, ChiTietDonThuoc,
     ChiDinhXetNghiem, KetQuaXetNghiem, DichVu, HoaDon, ChiTietHoaDon,
     CuocTroChuyen, TinNhan, LichSuKham, LichSuTuVan, XinNghiPhep, PhongKham,
-    ChuyenNganhDinhDuong
+    ChuyenNganhDinhDuong, ThongBao, QuanTriVien, YeuCauEmail, LichSuGuiEmail,
+    ThucDonChiTiet, TheoDoiTienDo, MonAnThamKhao
 };

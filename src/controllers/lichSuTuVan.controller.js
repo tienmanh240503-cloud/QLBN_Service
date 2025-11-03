@@ -18,7 +18,19 @@ export const createLichSuTuVan = async (req, res) => {
             chieu,
             toi,
             cham_soc,
-            ghi_chu
+            ghi_chu,
+            // Các trường mới
+            muc_tieu_dinh_duong,
+            muc_do_hoat_dong,
+            che_do_an,
+            di_ung_thuc_pham,
+            bmr,
+            tdee,
+            protein_target,
+            carb_target,
+            fat_target,
+            ngay_tai_kham,
+            mo_ta_muc_tieu
         } = req.body;
 
         if (!id_benh_nhan || !id_ho_so || !thoi_gian_tu_van) {
@@ -54,7 +66,19 @@ export const createLichSuTuVan = async (req, res) => {
             chieu,
             toi,
             cham_soc,
-            ghi_chu
+            ghi_chu,
+            // Các trường mới
+            muc_tieu_dinh_duong,
+            muc_do_hoat_dong,
+            che_do_an,
+            di_ung_thuc_pham,
+            bmr,
+            tdee,
+            protein_target,
+            carb_target,
+            fat_target,
+            ngay_tai_kham,
+            mo_ta_muc_tieu
         });
 
         res.status(201).json({ success: true, message: "Tạo lịch sử tư vấn thành công.", data: lichSu });
@@ -91,6 +115,20 @@ export const getLichSuTuVanByBenhNhan = async (req, res) => {
     try {
         const { id_benh_nhan } = req.params;
         const lichSu = await LichSuTuVan.findAll({id_benh_nhan});
+        res.status(200).json({ success: true, data: lichSu });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
+    }
+};
+
+// Lấy lịch sử tư vấn theo cuộc hẹn
+export const getLichSuTuVanByCuocHen = async (req, res) => {
+    try {
+        const { id_cuoc_hen } = req.params;
+        const lichSu = await LichSuTuVan.findOne({id_cuoc_hen});
+        if (!lichSu) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy lịch sử tư vấn." });
+        }
         res.status(200).json({ success: true, data: lichSu });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
