@@ -37,7 +37,6 @@ export const createNotification = async (id_nguoi_nhan, tieu_de, noi_dung, loai_
         };
 
         const thongBao = await ThongBao.create(thongBaoData);
-        console.log(`Notification created: ${id_thong_bao} for user ${id_nguoi_nhan}`);
         
         return thongBao;
     } catch (error) {

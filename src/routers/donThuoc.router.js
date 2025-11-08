@@ -12,7 +12,7 @@ const router = express.Router();
 router.post('/', verify, createDonThuoc);
 
 // Lấy đơn thuốc + chi tiết theo hồ sơ khám
-// router.get('/ho-so/:id_ho_so', verify, getDonThuocByHoSo);
+router.get('/ho-so/:id_ho_so', verify, getDonThuocByHoSo);
 
 router.get('/lich-su/:id_lich_su', verify, getDonThuocByLichSu);
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1:3307
--- Thời gian đã tạo: Th10 03, 2025 lúc 09:38 AM
+-- Thời gian đã tạo: Th10 08, 2025 lúc 08:36 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -44,6 +44,7 @@ CREATE TABLE `bacsi` (
 --
 
 INSERT INTO `bacsi` (`id_bac_si`, `id_chuyen_khoa`, `chuyen_mon`, `so_giay_phep_hang_nghe`, `gioi_thieu_ban_than`, `so_nam_kinh_nghiem`, `dang_lam_viec`, `chuc_danh`, `chuc_vu`) VALUES
+('BS_4c76881e-ca8e-4806-b742-ba7624765fca', 'CK_g8h9i0j1-2k3l-4m5n-6o7p-8q9r0s1t2u3v', 'aa', 'aaa', 'aaaa', NULL, 1, 'aa', 'aa'),
 ('BS_5161a544-997b-4ff1-84ee-7659336016be', NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL),
 ('BS_5ad2c972-b614-41a3-9852-af4b9aef8685', 'CK_89a12b4f-6c8d-4e2a-9f1b-3d5e7a8b9c0d', 'Nội tiết - Đái tháo đường', 'BS001234567', 'Bác sĩ chuyên khoa Nội tiết với 8 năm kinh nghiệm điều trị bệnh đái tháo đường và các rối loạn chuyển hóa.', 8, 1, 'Bác sĩ chuyên khoa', 'Phó trưởng khoa'),
 ('BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'CK_b3ef44c8-85d0-45e5-b6aa-0b647153cbe5', 'Tim mạch - Can thiệp tim', 'BS002345678', 'Bác sĩ chuyên khoa Tim mạch với 12 năm kinh nghiệm trong can thiệp tim mạch và điều trị các bệnh lý tim.', 12, 1, 'Bác sĩ chuyên khoa', 'Trưởng khoa'),
@@ -76,6 +77,9 @@ CREATE TABLE `benhnhan` (
 
 INSERT INTO `benhnhan` (`id_benh_nhan`, `nghe_nghiep`, `thong_tin_bao_hiem`, `ten_nguoi_lien_he_khan_cap`, `sdt_nguoi_lien_he_khan_cap`, `tien_su_benh_ly`, `tinh_trang_suc_khoe_hien_tai`, `ma_BHYT`) VALUES
 ('BN_2b417c16-1cc1-46b1-809c-47b9007f2554', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+('BN_43ee82f9-b47d-4f7c-8cc7-03c3a79f72d7', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+('BN_63ff44ad-a567-41be-88ca-2a148a44772d', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+('BN_7c900d65-7564-4d2c-b83d-daca1ea63bd9', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('BN_9303ce6f-6ca8-4a17-9435-6b5e90a5144b', 'Giao vien', 'aaaaaa', 'Nguyen Tien Manh', '0906512691', 'aaaaaa', 'aaaaaa', 'BH3213213221'),
 ('BN_d14d07f0-60d8-4ab2-9d80-a4f0e9f80a26', 'Kỹ sư phần mềm', 'Bảo hiểm y tế công ty', 'Nguyễn Thị Lan', '0987654321', 'Tiền sử cao huyết áp, đái tháo đường type 2', 'Huyết áp ổn định, đường huyết kiểm soát tốt', 'DN123456789'),
 ('BN_e2f3g4h5-i6j7-8901-cdef-456789012345', 'Giáo viên', 'Bảo hiểm y tế nhà nước', 'Trần Văn Minh', '0912345678', 'Tiền sử viêm dạ dày', 'Sức khỏe ổn định, cần theo dõi định kỳ', 'GD987654321'),
@@ -105,9 +109,9 @@ CREATE TABLE `chidinhxetnghiem` (
 --
 
 INSERT INTO `chidinhxetnghiem` (`id_chi_dinh`, `id_cuoc_hen`, `ten_dich_vu`, `yeu_cau_ghi_chu`, `trang_thai`, `id_bac_si_chi_dinh`, `thoi_gian_chi_dinh`) VALUES
-('CD_269f9e04-ad0d-4794-a763-3c3e99441418', 'CH_b068ff79-437e-4410-80cf-1fa6872918a3', 'Xet nghiệm máu ', 'SAsSAsÁ', '', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', '2025-10-06 09:51:18'),
-('CD_4199eaa4-e109-45be-8ffd-79c5cbc5c6e5', 'CH_b068ff79-437e-4410-80cf-1fa6872918a3', 'Xet nghiệm máu ', 'aaaaaaaaaa', '', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', '2025-10-06 09:49:17'),
-('CD_86360a70-d62c-4502-ac36-308da3e080ea', 'CH_4853c4ab-44a1-4fd6-a191-48587939ef57', 'Xet nghiệm máu ', 'AAAAAAAAAAAA', '', 'BS_c76d606e-1664-4d60-92bb-929f65667587', '2025-10-31 02:57:32');
+('CD_269f9e04-ad0d-4794-a763-3c3e99441418', 'CH_b068ff79-437e-4410-80cf-1fa6872918a3', 'Xet nghiệm máu ', 'SAsSAsÁ', 'hoan_thanh', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', '2025-10-06 09:51:18'),
+('CD_4199eaa4-e109-45be-8ffd-79c5cbc5c6e5', 'CH_b068ff79-437e-4410-80cf-1fa6872918a3', 'Xet nghiệm máu ', 'aaaaaaaaaa', 'hoan_thanh', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', '2025-10-06 09:49:17'),
+('CD_86360a70-d62c-4502-ac36-308da3e080ea', 'CH_4853c4ab-44a1-4fd6-a191-48587939ef57', 'Xet nghiệm máu ', 'AAAAAAAAAAAA', 'cho_xu_ly', 'BS_c76d606e-1664-4d60-92bb-929f65667587', '2025-10-31 02:57:32');
 
 -- --------------------------------------------------------
 
@@ -158,6 +162,7 @@ CREATE TABLE `chitiethoadon` (
 --
 
 INSERT INTO `chitiethoadon` (`id_chi_tiet`, `id_hoa_don`, `id_dich_vu`, `so_luong`, `don_gia`) VALUES
+('DHD_2c0b8c9c-3d4c-4e4d-9d1f-4c6bf22000ac', 'HD_aa788631-3645-437b-98a8-22db5853f559', 'DV_m3n4o5p6-q7r8-9012-mnop-345678901234', 1, 200000.00),
 ('DHD_757acf46-759a-4a50-817e-0913e0324cd8', 'HD_36a76e4d-1478-4ab3-8f08-ecc0246870d5', 'DV_4ae3cb02-1fab-4155-9dd0-37018932ad84', 2, 2000000.00),
 ('DHD_9682b7fd-f940-4d63-96ba-2cb7ba64a25b', 'HD_c1e4f6e4-216a-404c-8497-5a397f49d6e9', 'DV_4ae3cb02-1fab-4155-9dd0-37018932ad84', 1, 200000.00),
 ('DHD_a3610019-4dc7-400f-9c0b-82002897f3a7', 'HD_97e5856c-5a12-496e-982d-222df32cca4d', 'DV_4ae3cb02-1fab-4155-9dd0-37018932ad84', 1, 200000.00),
@@ -316,7 +321,7 @@ CREATE TABLE `cuochentuvan` (
 --
 
 INSERT INTO `cuochentuvan` (`id_cuoc_hen`, `id_benh_nhan`, `id_chuyen_gia`, `id_khung_gio`, `ngay_kham`, `loai_dinh_duong`, `loai_hen`, `trang_thai`, `ly_do_tu_van`, `thoi_gian_tao`) VALUES
-('CH_2f8d0932-839d-422f-9da8-fe051ed9d6f5', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'KG_0c1d2e3f-4a5b-6789-0123-defa45678901', '2025-11-03', 'aaaaaaaa', 'truc_tiep', 'da_dat', 'aaaaaa', '2025-11-02 19:36:43');
+('CH_2f8d0932-839d-422f-9da8-fe051ed9d6f5', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'KG_0c1d2e3f-4a5b-6789-0123-defa45678901', '2025-11-03', 'aaaaaaaa', 'truc_tiep', 'da_hoan_thanh', 'aaaaaa', '2025-11-02 19:36:43');
 
 -- --------------------------------------------------------
 
@@ -343,9 +348,11 @@ INSERT INTO `cuoctrochuyen` (`id_cuoc_tro_chuyen`, `id_benh_nhan`, `id_bac_si`, 
 ('CTC_22a5710d-95b3-4fef-9a5f-ca4bdbf4317a', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', NULL, NULL, 'Cuộc trò chuyện: Trần Thị Lan - Nguyễn Văn C', 'dang_mo', '2025-10-31 16:09:39'),
 ('CTC_27e45059-86aa-461b-b337-d1d8548da184', 'BN_d14d07f0-60d8-4ab2-9d80-a4f0e9f80a26', 'BS_c76d606e-1664-4d60-92bb-929f65667587', NULL, 'Cuộc trò chuyện: TienManh - Nguyễn Văn A', 'dang_mo', '2025-10-31 23:03:53'),
 ('CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'Cuộc trò chuyện: Trần Thị Lan - TienManh', 'dang_mo', '2025-10-31 16:02:38'),
+('CTC_3efee32c-4702-4fb0-a5a3-4771d8d89a08', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', NULL, NULL, 'Cuộc trò chuyện: Hoàng Văn Long - TienManh', 'dang_mo', '2025-11-08 22:42:50'),
 ('CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'NV_phancong001', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', NULL, 'Cuộc trò chuyện: Hoàng Văn Long - Nguyễn Văn C', 'dang_mo', '2025-10-31 22:50:28'),
 ('CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BN_d14d07f0-60d8-4ab2-9d80-a4f0e9f80a26', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'Cuộc trò chuyện: Trần Thị Lan - Nguyễn Văn A', 'dang_mo', '2025-10-31 15:32:59'),
-('CTC_a3d19086-6981-4f1f-99cb-bc1bae460863', 'BN_e2f3g4h5-i6j7-8901-cdef-456789012345', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'Cuộc trò chuyện: Trần Thị Lan - Trần Văn Minh', 'dang_mo', '2025-10-31 15:51:05');
+('CTC_a3d19086-6981-4f1f-99cb-bc1bae460863', 'BN_e2f3g4h5-i6j7-8901-cdef-456789012345', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'Cuộc trò chuyện: Trần Thị Lan - Trần Văn Minh', 'dang_mo', '2025-10-31 15:51:05'),
+('CTC_bbf8b18a-a213-4e14-a7f6-1e9b6efb68b2', 'NV_quay001', 'ADMIN_001', NULL, 'Cuộc trò chuyện: Phạm Thị Quỳnh - Nguyễn Văn Admin', 'dang_mo', '2025-11-03 17:47:22');
 
 -- --------------------------------------------------------
 
@@ -448,6 +455,7 @@ CREATE TABLE `hoadon` (
 INSERT INTO `hoadon` (`id_hoa_don`, `id_cuoc_hen_kham`, `id_cuoc_hen_tu_van`, `tong_tien`, `trang_thai`, `phuong_thuc_thanh_toan`, `thoi_gian_thanh_toan`, `thoi_gian_tao`) VALUES
 ('HD_36a76e4d-1478-4ab3-8f08-ecc0246870d5', 'CH_4853c4ab-44a1-4fd6-a191-48587939ef57', NULL, 4000000.00, 'da_thanh_toan', 'chuyen_khoan', '2025-11-02 21:23:23', '2025-10-31 03:43:31'),
 ('HD_97e5856c-5a12-496e-982d-222df32cca4d', 'CH_629c1a1c-b05f-488f-9600-e65f53e38a9d', NULL, 260000.00, 'da_thanh_toan', 'vi_dien_tu', '2025-11-02 21:23:37', '2025-10-18 05:12:12'),
+('HD_aa788631-3645-437b-98a8-22db5853f559', NULL, 'CH_2f8d0932-839d-422f-9da8-fe051ed9d6f5', 200000.00, 'chua_thanh_toan', NULL, NULL, '2025-11-03 09:30:23'),
 ('HD_c1e4f6e4-216a-404c-8497-5a397f49d6e9', 'CH_629c1a1c-b05f-488f-9600-e65f53e38a9d', NULL, 260000.00, 'chua_thanh_toan', NULL, NULL, '2025-10-04 13:31:45');
 
 -- --------------------------------------------------------
@@ -520,10 +528,21 @@ INSERT INTO `hosokhambenh` (`id_ho_so`, `id_benh_nhan`, `id_bac_si_tao`, `ho_ten
 CREATE TABLE `ketquaxetnghiem` (
   `id_ket_qua` varchar(50) NOT NULL,
   `id_chi_dinh` varchar(50) NOT NULL,
+  `id_nhan_vien_xet_nghiem` varchar(50) DEFAULT NULL,
   `ket_qua_van_ban` text DEFAULT NULL,
+  `trang_thai_ket_qua` enum('binh_thuong','bat_thuong','can_xem_lai') DEFAULT NULL,
+  `ghi_chu_ket_qua` text DEFAULT NULL,
   `duong_dan_file_ket_qua` varchar(500) DEFAULT NULL,
   `thoi_gian_ket_luan` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `ketquaxetnghiem`
+--
+
+INSERT INTO `ketquaxetnghiem` (`id_ket_qua`, `id_chi_dinh`, `id_nhan_vien_xet_nghiem`, `ket_qua_van_ban`, `trang_thai_ket_qua`, `ghi_chu_ket_qua`, `duong_dan_file_ket_qua`, `thoi_gian_ket_luan`) VALUES
+('KQ_7ff18edc-2713-44c0-adef-d979c7abd0d0', 'CD_4199eaa4-e109-45be-8ffd-79c5cbc5c6e5', 'NVXN_001', 'bbbbbb', 'can_xem_lai', 'aaaaa', '', '2025-11-08 11:48:38'),
+('KQ_d7821e23-7d33-4c7b-9c07-612f860cb63d', 'CD_269f9e04-ad0d-4794-a763-3c3e99441418', 'NVXN_001', 'aaaaa', 'binh_thuong', 'aaaaa', '', '2025-11-08 11:36:55');
 
 -- --------------------------------------------------------
 
@@ -573,7 +592,7 @@ CREATE TABLE `lichlamviec` (
 --
 
 INSERT INTO `lichlamviec` (`id_lich_lam_viec`, `id_nguoi_dung`, `id_nguoi_tao`, `id_phong_kham`, `ngay_lam_viec`, `ca`) VALUES
-('L_1761886032634-h7k62cafy', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', NULL, 'PK_h8i9j0k1-l2m3-4567-hijk-890123456789', '2025-10-31', 'Sang'),
+('L_1761886032634-h7k62cafy', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', NULL, 'PK_h8i9j0k1-l2m3-4567-hijk-890123456789', '2025-10-04', 'Sang'),
 ('L_1761889661590-yg96d5xdx', 'NV_quay001', NULL, NULL, '2025-10-31', 'Sang'),
 ('L_1761889780901-ndt9hj7p1', 'BS_a1b2c3d4-e5f6-7890-abcd-ef1234567890', NULL, 'PK_d4e5f6g7-h8i9-0123-defg-456789012345', '2025-10-23', 'Chieu'),
 ('L_1761889887631-8w32h9slr', 'NV_quay001', NULL, NULL, '2025-10-16', 'Sang'),
@@ -581,13 +600,15 @@ INSERT INTO `lichlamviec` (`id_lich_lam_viec`, `id_nguoi_dung`, `id_nguoi_tao`, 
 ('L_1761889977257-jb4oxjfco', 'NV_phancong001', NULL, NULL, '2025-10-31', 'Sang'),
 ('L_1761890055176-hf5xu6pj5', 'NVQ_8a7956f7-01cf-4fbf-bb46-9330d4e8433f', NULL, NULL, '2025-10-31', 'Sang'),
 ('L_1761890471470-ev87ogf3s', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', NULL, NULL, '2025-10-31', 'Sang'),
-('L_1761890700206-cgjuy68w1', 'BS_c3d4e5f6-g7h8-9012-cdef-345678901234', NULL, 'PK_f6g7h8i9-j0k1-2345-fghi-678901234567', '2025-10-31', 'Sang'),
-('L_1761895778975-4vip171xj', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'PK_e5f6g7h8-i9j0-1234-efgh-567890123456', '2025-11-01', 'Sang'),
-('L_3436c298-20f6-4370-af5d-80a0114b0510', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'NV_phancong001', 'PK_a1b2c3d4-e5f6-7890-abcd-ef1234567890', '2025-10-03', 'Sang'),
+('L_1761890700206-cgjuy68w1', 'BS_c3d4e5f6-g7h8-9012-cdef-345678901234', NULL, 'PK_f6g7h8i9-j0k1-2345-fghi-678901234567', '2025-10-04', 'Sang'),
+('L_1761895778975-4vip171xj', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'PK_e5f6g7h8-i9j0-1234-efgh-567890123456', '2025-11-04', 'Sang'),
+('L_1762504819332-c2ljgi6im', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', NULL, NULL, '2025-11-04', 'Sang'),
+('L_1762505184754-1cw2fup5g', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', NULL, NULL, '2025-11-07', 'Chieu'),
+('L_3436c298-20f6-4370-af5d-80a0114b0510', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'NV_phancong001', 'PK_a1b2c3d4-e5f6-7890-abcd-ef1234567890', '2025-10-04', 'Sang'),
 ('L_4eb27707-5cff-4961-b1c6-4a4e44958d4b', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'NV_phancong001', 'PK_b2c3d4e5-f6g7-8901-bcde-f23456789012', '2025-10-03', 'Chieu'),
-('L_a3531195-c5a2-45ff-823e-f5a93cffa22c', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'NV_phancong001', 'PK_a1b2c3d4-e5f6-7890-abcd-ef1234567890', '2025-09-27', 'Sang'),
-('L_ab7df124-5870-4a3f-9c47-381c67f27df5', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'NV_phancong001', 'PK_b2c3d4e5-f6g7-8901-bcde-f23456789012', '2025-10-01', 'Chieu'),
-('L_b1c2d3e4-f5g6-7890-abcd-ef1234567890', 'BS_5ad2c972-b614-41a3-9852-af4b9aef8685', 'NV_phancong001', 'PK_c3d4e5f6-g7h8-9012-cdef-345678901234', '2025-10-08', 'Sang'),
+('L_a3531195-c5a2-45ff-823e-f5a93cffa22c', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'NV_phancong001', 'PK_a1b2c3d4-e5f6-7890-abcd-ef1234567890', '2025-09-04', 'Sang'),
+('L_ab7df124-5870-4a3f-9c47-381c67f27df5', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'NV_phancong001', 'PK_b2c3d4e5-f6g7-8901-bcde-f23456789012', '2025-10-04', 'Chieu'),
+('L_b1c2d3e4-f5g6-7890-abcd-ef1234567890', 'BS_5ad2c972-b614-41a3-9852-af4b9aef8685', 'NV_phancong001', 'PK_c3d4e5f6-g7h8-9012-cdef-345678901234', '2025-10-04', 'Sang'),
 ('L_c2d3e4f5-g6h7-8901-bcde-f23456789012', 'BS_5ad2c972-b614-41a3-9852-af4b9aef8685', 'NV_phancong001', 'PK_c3d4e5f6-g7h8-9012-cdef-345678901234', '2025-10-08', 'Chieu'),
 ('L_d3e4f5g6-h7i8-9012-cdef-345678901234', 'BS_a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'NV_phancong001', 'PK_d4e5f6g7-h8i9-0123-defg-456789012345', '2025-10-09', 'Sang'),
 ('L_e4f5g6h7-i8j9-0123-defg-456789012345', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'NV_phancong001', 'PK_e5f6g7h8-i9j0-1234-efgh-567890123456', '2025-10-10', 'Chieu'),
@@ -688,6 +709,13 @@ CREATE TABLE `lichsutuvan` (
   `mo_ta_muc_tieu` text DEFAULT NULL COMMENT 'Mô tả chi tiết mục tiêu dinh dưỡng'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Lịch sử tư vấn dinh dưỡng';
 
+--
+-- Đang đổ dữ liệu cho bảng `lichsutuvan`
+--
+
+INSERT INTO `lichsutuvan` (`id_lich_su`, `id_benh_nhan`, `id_ho_so`, `id_cuoc_hen`, `thoi_gian_tu_van`, `nguoi_tao`, `ket_qua_cls`, `ke_hoach_dinh_duong`, `nhu_cau_calo`, `sang`, `trua`, `chieu`, `toi`, `cham_soc`, `ghi_chu`, `muc_tieu_dinh_duong`, `muc_do_hoat_dong`, `che_do_an`, `di_ung_thuc_pham`, `bmr`, `tdee`, `protein_target`, `carb_target`, `fat_target`, `ngay_tai_kham`, `mo_ta_muc_tieu`) VALUES
+('LSTV_4764b5a4-10f5-4919-82ee-38ffc81d42c0', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'DD_072dad20-c096-426a-b3db-27d1e0e287af', 'CH_2f8d0932-839d-422f-9da8-fe051ed9d6f5', '2025-11-03 02:30:09', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'aaaa', 'aaaa', '2000', NULL, NULL, NULL, NULL, 'aaaaaa', 'aaaaa', 'giam_can', 'it', 'Keto', 'aaa', 1185.25, 1422.30, 106.70, 124.50, 55.30, '2025-11-07', 'aaaa');
+
 -- --------------------------------------------------------
 
 --
@@ -713,6 +741,7 @@ CREATE TABLE `lich_su_gui_email` (
 --
 
 INSERT INTO `lich_su_gui_email` (`id_lich_su`, `id_yeu_cau`, `email_nguoi_nhan`, `tieu_de`, `noi_dung`, `loai_email`, `trang_thai_gui`, `loi_gui`, `id_quan_tri_vien`, `thoi_gian_tao`, `thoi_gian_gui`) VALUES
+('LS_a559a66a-1afd-42c4-9d8f-84a971e1bd9f', 'YC_c10c5abf-b01a-44a6-8725-a8b30925ed50', 'tienmanh240503@gmail.com', 'Chào mừng đến với Bản tin Y tế!', '<p>Nguyễn Tiến Manh - 21123851</p><h1>Chào tất cả mọi người mình tên là Nguyễn Tiến Mạnh</h1>', 'tin_tuc_y_te', 'thanh_cong', NULL, 'ADMIN_001', '2025-11-05 09:40:57', '2025-11-05 02:40:57'),
 ('LS_f72b1421-d88b-4030-b93e-3e9533adaf38', 'YC_c10c5abf-b01a-44a6-8725-a8b30925ed50', 'tienmanh240503@gmail.com', 'Chào mừng đến với Bản tin Y tế!', '<p>aaaaaaaaaaaaaaaaaa</p>', 'tin_tuc_y_te', 'thanh_cong', NULL, 'ADMIN_001', '2025-11-02 19:30:35', '2025-11-02 12:30:35');
 
 -- --------------------------------------------------------
@@ -774,7 +803,7 @@ CREATE TABLE `nguoidung` (
   `so_cccd` varchar(20) DEFAULT NULL,
   `dia_chi` varchar(500) DEFAULT NULL,
   `anh_dai_dien` varchar(500) DEFAULT NULL,
-  `vai_tro` enum('benh_nhan','bac_si','chuyen_gia_dinh_duong','nhan_vien_quay','nhan_vien_phan_cong','quan_tri_vien') NOT NULL,
+  `vai_tro` enum('benh_nhan','bac_si','chuyen_gia_dinh_duong','nhan_vien_quay','nhan_vien_phan_cong','nhan_vien_xet_nghiem','quan_tri_vien') NOT NULL,
   `trang_thai_hoat_dong` tinyint(1) DEFAULT 1,
   `thoi_gian_tao` timestamp NOT NULL DEFAULT current_timestamp(),
   `thoi_gian_cap_nhat` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -785,8 +814,11 @@ CREATE TABLE `nguoidung` (
 --
 
 INSERT INTO `nguoidung` (`id_nguoi_dung`, `ten_dang_nhap`, `mat_khau`, `email`, `so_dien_thoai`, `ho_ten`, `ngay_sinh`, `gioi_tinh`, `so_cccd`, `dia_chi`, `anh_dai_dien`, `vai_tro`, `trang_thai_hoat_dong`, `thoi_gian_tao`, `thoi_gian_cap_nhat`) VALUES
-('ADMIN_001', 'admin', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'admin@hospital.com', '0901234567', 'Nguyễn Văn Admin', '1985-10-05', 'Nam', '456789012346', '753 Đường NOP, Quận Gò Vấp, TP.HCM', 'https://example.com/admin/admin.jpg', 'quan_tri_vien', 1, '2025-10-01 17:00:00', '2025-11-02 18:11:00'),
-('BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'tienmanh1111', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'tienmanh1111@example.com', '0976543213', 'TienManh', '1988-08-08', 'Nữ', NULL, NULL, NULL, 'benh_nhan', 1, '2025-10-28 15:57:33', '2025-10-31 02:53:56'),
+('ADMIN_001', 'admin', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'admin@hospital.com', '0901234567', 'Nguyễn Văn Admin', '1985-10-05', 'Nam', '456789012346', '753 Đường NOP, Quận Gò Vấp, TP.HCM', 'https://example.com/admin/admin.jpg', 'quan_tri_vien', 1, '2025-10-01 17:00:00', '2025-11-08 19:24:55'),
+('BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'tienmanh1111', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'tienmanh1111@example.com', '0976543213', 'TienManh', '1988-08-08', 'Nữ', NULL, NULL, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1762165509/QLBN/NguoiDung/user_1762165507148.jpg', 'benh_nhan', 0, '2025-10-28 15:57:33', '2025-11-08 19:18:42'),
+('BN_43ee82f9-b47d-4f7c-8cc7-03c3a79f72d7', 'abcdef', '$2b$10$NzkXbSIs7a50HRSN.DIx8ep4R.3icNCBf8Z1xY4rW2bAn5ZDpdA0.', 'tienmanh11118@gmail.com', '0906512694', 'Nguyen Van A', '2025-11-05', 'Nam', '2112385114', '123 Hai Bà Trưng', NULL, 'benh_nhan', 1, '2025-11-05 09:47:17', '2025-11-05 09:47:17'),
+('BN_63ff44ad-a567-41be-88ca-2a148a44772d', 'abc', '$2b$10$4nUTxuBmMLnrm7wXnplqUeTKKT/FyH0mXtLvb6CDqxo/zGgOM1ZDe', 'tienmanh4321@gmail.com', '0912345123', 'A B C', '2025-11-03', 'Nam', '2112385117', 'aaaaaa', NULL, 'benh_nhan', 1, '2025-11-03 11:29:02', '2025-11-03 11:29:02'),
+('BN_7c900d65-7564-4d2c-b83d-daca1ea63bd9', 'dinhthang', '$2b$10$lBEu0lSeeZ2fGPzzC/doxeBXVdvU83BBbfzZrDz3CMeLbSoQir/Fi', 'dinhthang@gmail.com', '', 'Nguyễn Đình Thắng', '2016-02-03', 'Nam', NULL, NULL, NULL, 'benh_nhan', 1, '2025-11-08 19:16:48', '2025-11-08 19:16:48'),
 ('BN_9303ce6f-6ca8-4a17-9435-6b5e90a5144b', 'nguyenlea', '$2b$10$lLjKhmKE37eYxLCp9./swuAbk/ziVhDgpiiat59PbpXhXWhtATsje', 'tienmanh8888@gmail.com', '0912345671', 'Nguyễn Lê A', '2005-07-15', 'Nữ', '2112385111', '35/06 TL02 Thạch Lộc, Quận 12, TP. Hồ Chí Minh', NULL, 'benh_nhan', 1, '2025-10-31 20:01:25', '2025-10-31 21:23:50'),
 ('BN_d14d07f0-60d8-4ab2-9d80-a4f0e9f80a26', 'nguyenvana', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'nguyenvana@example.com', '0912345678', 'Nguyễn Văn A', '1990-01-01', 'Nam', '123456789012', '123 Đường ABC, Quận 1, TP.HCM', 'https://i.pinimg.com/736x/4a/f3/6a/4af36a126e1ca3e0895c0a5a6672652e.jpg', 'benh_nhan', 1, '2025-09-29 07:46:00', '2025-10-31 02:54:00'),
 ('BN_e2f3g4h5-i6j7-8901-cdef-456789012345', 'tranminh', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'tranminh@gmail.com', '0912345679', 'Trần Văn Minh', '1982-03-15', 'Nam', '567890123456', '654 Đường MNO, Quận 5, TP.HCM', 'https://example.com/patients/tranminh.jpg', 'benh_nhan', 1, '2025-10-01 08:00:00', '2025-10-31 02:54:03'),
@@ -794,6 +826,7 @@ INSERT INTO `nguoidung` (`id_nguoi_dung`, `ten_dang_nhap`, `mat_khau`, `email`, 
 ('BN_f3g4h5i6-j7k8-9012-defg-567890123456', 'lehoa', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'lehoa@gmail.com', '0923456789', 'Lê Thị Hoa', '1995-07-20', 'Nữ', '678901234567', '987 Đường PQR, Quận 6, TP.HCM', 'https://example.com/patients/lehoa.jpg', 'benh_nhan', 1, '2025-10-01 09:00:00', '2025-10-31 02:55:34'),
 ('BN_g4h5i6j7-k8l9-0123-efgh-678901234567', 'phamduc', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'phamduc@gmail.com', '0934567890', 'Phạm Văn Đức', '2000-11-10', 'Nam', '789012345678', '147 Đường STU, Quận 7, TP.HCM', 'https://example.com/patients/phamduc.jpg', 'benh_nhan', 1, '2025-10-01 10:00:00', '2025-10-31 02:55:37'),
 ('BN_h5i6j7k8-l9m0-1234-fghi-789012345678', 'hoangmai', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'hoangmai@gmail.com', '0945678901', 'Hoàng Thị Mai', '1988-09-25', 'Nữ', '890123456789', '258 Đường VWX, Quận 8, TP.HCM', 'https://example.com/patients/hoangmai.jpg', 'benh_nhan', 1, '2025-10-01 11:00:00', '2025-11-02 18:17:55'),
+('BS_4c76881e-ca8e-4806-b742-ba7624765fca', 'tienmanh0167', '$2b$10$k11HfDBk7EnTyOTUD63xR./Du6/03fG4F91MOAOYYGmBulsw5IILC', 'tienmanh0167@gmail.com', '0906534693', 'Nguyễn Đình Thống', '2001-08-10', 'Nam', '2112385333', '654 Đường MNO, Quận 5, TP.HCM', NULL, 'bac_si', 1, '2025-11-08 19:32:19', '2025-11-08 19:32:19'),
 ('BS_5161a544-997b-4ff1-84ee-7659336016be', 'bacsi2', '$2b$10$PXWEHOYRS3/7vHC/r1Sbo.1nnGTqXz61dkGMuKgYEjVWWbcoJMhFS', 'bacsi2@example.com', '0385743426', 'TienManh', '1988-08-08', 'Nam', NULL, NULL, NULL, 'bac_si', 1, '2025-10-30 11:03:24', '2025-10-30 11:03:24'),
 ('BS_5ad2c972-b614-41a3-9852-af4b9aef8685', 'dr.tienmanh', '$2b$10$swB5/y/4ewgv90wxrQJFdezBdKKTMxr5Qkr98WZ3sO3KsxwBs4WXu', 'dr.tienmanh@hospital.com', '0906513333', 'Nguyễn Tiến Mạnh', '1987-05-24', 'Nam', '234567890123', '456 Đường DEF, Quận 2, TP.HCM', 'https://example.com/doctors/dr-tienmanh.jpg', 'bac_si', 1, '2025-09-29 07:11:46', '2025-09-29 07:11:46'),
 ('BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'dr.vanb', '$2b$10$huHw9u5bPjlK5GB48ZVwmeuBispbDdkop2Eap1./YZ0lvs0sfj1Ju', 'dr.vanb@hospital.com', '0911111111', 'Nguyễn Văn B', '1985-05-05', 'Nam', '345678901234', '789 Đường GHI, Quận 3, TP.HCM', 'https://hthaostudio.com/wp-content/uploads/2022/03/Anh-bac-si-nam-7-min.jpg.webp', 'bac_si', 1, '2025-09-29 07:52:32', '2025-10-04 11:59:24'),
@@ -803,9 +836,10 @@ INSERT INTO `nguoidung` (`id_nguoi_dung`, `ten_dang_nhap`, `mat_khau`, `email`, 
 ('BS_c3d4e5f6-g7h8-9012-cdef-345678901234', 'dr.thankinh', '$2b$10$stu901vwx234yz567abc890def123ghi456jkl789mno012pqr', 'dr.thankinh@hospital.com', '0978901234', 'Lê Văn Nam', '1975-08-30', 'Nam', '123456789013', '852 Đường EFG, Quận 11, TP.HCM', 'https://example.com/doctors/dr-thankinh.jpg', 'bac_si', 1, '2025-10-01 14:00:00', '2025-10-01 14:00:00'),
 ('BS_c76d606e-1664-4d60-92bb-929f65667587', 'tienmanh9999', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'tienmanh9999@example.com', '0385743420', 'TienManh', '1988-08-08', 'Nam', NULL, NULL, NULL, 'bac_si', 1, '2025-10-30 03:05:20', '2025-10-30 03:05:20'),
 ('CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'chuyengiadinhduong', '$2b$10$wbIW7ZQ6r6r1GTqqu3ghJuNAeruvm34JaNhvUswbmk4aKAZHHKAIS', 'dr.vanc@hospital.com', '0976543210', 'Nguyễn Văn C', '1988-08-08', 'Nữ', '456789012345', '321 Đường JKL, Quận 4, TP.HCM', 'https://example.com/nutritionists/dr-vanc.jpg', 'chuyen_gia_dinh_duong', 1, '2025-09-29 07:52:44', '2025-11-02 19:56:30'),
-('NVQ_8a7956f7-01cf-4fbf-bb46-9330d4e8433f', 'nhanvien2', '$2b$10$JtEOiyh7wYWWXkB6v2pPROYI.IJ6yqgNCv5EvDyEQKT8l1HeniinW', 'nhanvien2@example.com', '0385743422', 'TienManh', '1988-08-08', 'Nam', NULL, NULL, NULL, 'nhan_vien_quay', 1, '2025-10-30 10:58:49', '2025-10-30 10:58:49'),
-('NV_phancong001', 'nhanvienphancong', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'nhanvienphancong@hospital.com', '0990123456', 'Hoàng Văn Long', '1989-01-22', 'Nam', '345678901235', '159 Đường KLM, Quận Bình Thạnh, TP.HCM', 'https://example.com/staff/nhanvienphancong.jpg', 'nhan_vien_phan_cong', 1, '2025-10-01 16:00:00', '2025-10-31 04:25:48'),
-('NV_quay001', 'nhanvienquay', '$2b$10$vwx234yz567abc890def123ghi456jkl789mno012pqr345stu', 'nhanvienquay@hospital.com', '0989012345', 'Phạm Thị Quỳnh', '1992-06-14', 'Nữ', '234567890124', '963 Đường HIJ, Quận 12, TP.HCM', 'https://example.com/staff/nhanvienquay.jpg', 'nhan_vien_quay', 1, '2025-10-01 15:00:00', '2025-10-01 15:00:00');
+('NVQ_8a7956f7-01cf-4fbf-bb46-9330d4e8433f', 'nhanvienquay1', '$2b$10$JtEOiyh7wYWWXkB6v2pPROYI.IJ6yqgNCv5EvDyEQKT8l1HeniinW', 'nhanvien2@example.com', '0385743422', 'TienManh', '1988-08-08', 'Nam', NULL, NULL, NULL, 'nhan_vien_quay', 1, '2025-10-30 10:58:49', '2025-11-03 10:44:14'),
+('NVXN_001', 'nhanvienxetnghiem', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'nhanvienxetnghiem@hospital.com', '0901234568', 'Nguyễn Thị Lan', '1990-05-15', 'Nữ', '123456789018', '123 Đường ABC, Quận 1, TP.HCM', NULL, 'nhan_vien_xet_nghiem', 1, '2025-11-08 18:14:27', '2025-11-08 18:14:27'),
+('NV_phancong001', 'nhanvienphancong', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'nhanvienphancong@hospital.com', '0990123456', 'Hoàng Văn Long', '2025-11-08', 'Nam', '345678901235', '159 Đường KLM, Quận Bình Thạnh, TP.HCM', 'https://example.com/staff/nhanvienphancong.jpg', 'nhan_vien_phan_cong', 1, '2025-10-01 16:00:00', '2025-11-08 15:53:02'),
+('NV_quay001', 'nhanvienquay', '$2b$10$7tgue0ctq0Yj/oPpILu10.TofEalGvD39oASye.L6AqkkEne7jO52', 'nhanvienquay@hospital.com', '0989012345', 'Phạm Thị Quỳnh', '1992-06-14', 'Nữ', '234567890124', '963 Đường HIJ, Quận 12, TP.HCM', 'https://example.com/staff/nhanvienquay.jpg', 'nhan_vien_quay', 1, '2025-10-01 15:00:00', '2025-11-03 10:44:46');
 
 -- --------------------------------------------------------
 
@@ -838,6 +872,31 @@ CREATE TABLE `nhanvienquay` (
 
 INSERT INTO `nhanvienquay` (`id_nhan_vien_quay`, `ma_nhan_vien`, `bo_phan_lam_viec`, `ca_lam_viec`) VALUES
 ('NVQ_8a7956f7-01cf-4fbf-bb46-9330d4e8433f', '', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `nhanvienxetnghiem`
+--
+
+CREATE TABLE `nhanvienxetnghiem` (
+  `id_nhan_vien` varchar(50) NOT NULL,
+  `chuyen_mon` varchar(255) DEFAULT NULL COMMENT 'Chuyên môn xét nghiệm',
+  `so_chung_chi_hang_nghe` varchar(100) DEFAULT NULL COMMENT 'Số chứng chỉ hành nghề',
+  `linh_vuc_chuyen_sau` varchar(255) DEFAULT NULL COMMENT 'Lĩnh vực chuyên sâu',
+  `so_nam_kinh_nghiem` int(11) DEFAULT NULL COMMENT 'Số năm kinh nghiệm',
+  `dang_lam_viec` tinyint(1) DEFAULT 1 COMMENT 'Đang làm việc',
+  `chuc_vu` varchar(100) DEFAULT NULL COMMENT 'Chức vụ',
+  `thoi_gian_tao` timestamp NOT NULL DEFAULT current_timestamp(),
+  `thoi_gian_cap_nhat` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `nhanvienxetnghiem`
+--
+
+INSERT INTO `nhanvienxetnghiem` (`id_nhan_vien`, `chuyen_mon`, `so_chung_chi_hang_nghe`, `linh_vuc_chuyen_sau`, `so_nam_kinh_nghiem`, `dang_lam_viec`, `chuc_vu`, `thoi_gian_tao`, `thoi_gian_cap_nhat`) VALUES
+('NVXN_001', 'Xét nghiệm', '10', 'Xét nghiệm máu', 5, 1, 'Xét nghiệm máu', '2025-11-08 18:15:24', '2025-11-08 18:15:24');
 
 -- --------------------------------------------------------
 
@@ -903,6 +962,7 @@ INSERT INTO `quan_tri_vien` (`id_quan_tri_vien`, `chuc_vu`, `quyen_han`, `ghi_ch
 CREATE TABLE `theodoi_tien_do` (
   `id_theo_doi` varchar(50) NOT NULL,
   `id_benh_nhan` varchar(50) NOT NULL,
+  `id_ho_so` varchar(50) DEFAULT NULL COMMENT 'Liên kết với hồ sơ dinh dưỡng',
   `id_lich_su` varchar(50) DEFAULT NULL COMMENT 'Liên kết với lịch sử tư vấn',
   `ngay_kham` date NOT NULL COMMENT 'Ngày theo dõi',
   `can_nang` decimal(5,2) DEFAULT NULL COMMENT 'Cân nặng (kg)',
@@ -918,6 +978,15 @@ CREATE TABLE `theodoi_tien_do` (
   `nguoi_tao` varchar(50) DEFAULT NULL COMMENT 'Người ghi nhận',
   `thoi_gian_tao` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Theo dõi tiến độ dinh dưỡng theo thời gian';
+
+--
+-- Đang đổ dữ liệu cho bảng `theodoi_tien_do`
+--
+
+INSERT INTO `theodoi_tien_do` (`id_theo_doi`, `id_benh_nhan`, `id_ho_so`, `id_lich_su`, `ngay_kham`, `can_nang`, `chieu_cao`, `vong_eo`, `vong_nguc`, `vong_dui`, `mo_co_the`, `khoi_co`, `nuoc_trong_co_the`, `bmi`, `ghi_chu`, `nguoi_tao`, `thoi_gian_tao`) VALUES
+('TDT_27402120-af5f-4e47-bed3-6b0723274fed', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'DD_072dad20-c096-426a-b3db-27d1e0e287af', 'LSTV_4764b5a4-10f5-4919-82ee-38ffc81d42c0', '2025-11-12', 59.00, 165.00, 90.00, 60.00, 60.00, 14.00, 20.00, 70.00, 21.67, 'aaaaa', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', '2025-11-04 10:37:44'),
+('TDT_2dce11a8-8cc2-4807-ad73-cf3f53f66f3b', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'DD_072dad20-c096-426a-b3db-27d1e0e287af', 'LSTV_4764b5a4-10f5-4919-82ee-38ffc81d42c0', '2025-11-29', 59.00, 167.00, 90.00, 60.00, 60.00, 12.00, 12.00, 78.00, 21.16, 'aaa', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', '2025-11-04 10:38:50'),
+('TDT_9de741dc-4cc1-4e29-ae2a-ef96cacc667d', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'DD_072dad20-c096-426a-b3db-27d1e0e287af', NULL, '2025-11-03', 50.00, 165.00, 90.00, 64.00, 59.00, 20.00, 17.00, 75.00, 18.37, 'aaaaa', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', '2025-11-03 09:06:27');
 
 -- --------------------------------------------------------
 
@@ -942,7 +1011,14 @@ CREATE TABLE `thongbao` (
 --
 
 INSERT INTO `thongbao` (`id_thong_bao`, `id_nguoi_nhan`, `tieu_de`, `noi_dung`, `loai_thong_bao`, `id_lien_ket`, `trang_thai`, `thoi_gian_tao`, `thoi_gian_doc`) VALUES
-('TB_2c556ee7-d402-4cc5-bab4-8242b65a7bdd', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Tin nhắn mới từ Trần Văn Minh', 'tôi có việc bận ạ ', 'chat', 'CTC_a3d19086-6981-4f1f-99cb-bc1bae460863', 'da_xoa', '2025-11-02 17:14:48', '2025-11-02 10:16:43');
+('TB_13d2af9e-7069-45b3-9c97-ab830b302b27', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Hóa đơn mới', 'Bạn có hóa đơn mới với tổng tiền: 200.000 VNĐ', 'hoa_don', 'HD_aa788631-3645-437b-98a8-22db5853f559', 'chua_doc', '2025-11-03 09:30:23', NULL),
+('TB_2c556ee7-d402-4cc5-bab4-8242b65a7bdd', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Tin nhắn mới từ Trần Văn Minh', 'tôi có việc bận ạ ', 'chat', 'CTC_a3d19086-6981-4f1f-99cb-bc1bae460863', 'da_xoa', '2025-11-02 17:14:48', '2025-11-02 10:16:43'),
+('TB_63d3cdee-7783-4953-af86-56e6221c569c', 'ADMIN_001', 'Tin nhắn mới từ Phạm Thị Quỳnh', 'alo', 'chat', 'CTC_bbf8b18a-a213-4e14-a7f6-1e9b6efb68b2', 'chua_doc', '2025-11-03 10:47:27', NULL),
+('TB_825659d3-d7ab-425a-a3c8-8c24c4b4183f', 'NV_phancong001', 'Tin nhắn mới từ Nguyễn Văn C', 'DailyReport.docx', 'chat', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'da_xoa', '2025-11-04 10:41:29', '2025-11-05 02:49:33'),
+('TB_8882d231-6579-4e74-9bf4-86230eafe115', 'NV_phancong001', 'Tin nhắn mới từ Nguyễn Văn C', 'top-cac-mau-balo-saigon-swagger-ca-tinh-thu-hut-su-chu-y-tu-cac-ban-tre-01-1678948628.jpeg', 'chat', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'da_xoa', '2025-11-04 10:41:04', '2025-11-05 02:49:41'),
+('TB_9dfd3ee4-6079-4cd7-8c30-7e147a24ea8a', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Tin nhắn mới từ TienManh', 'chào ạ ', 'chat', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'da_doc', '2025-11-03 10:16:21', '2025-11-05 02:37:24'),
+('TB_b9f45205-8007-40f6-ac4c-994269330f70', 'NV_phancong001', 'Tin nhắn mới từ Nguyễn Văn C', 'gi m', 'chat', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'da_xoa', '2025-11-04 10:40:18', '2025-11-05 02:49:24'),
+('TB_c06f6a36-bb04-465e-bc6c-d2e710f39fc1', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Tin nhắn mới từ Hoàng Văn Long', 'hi', 'chat', 'CTC_3efee32c-4702-4fb0-a5a3-4771d8d89a08', 'da_doc', '2025-11-08 15:42:57', '2025-11-08 09:10:13');
 
 -- --------------------------------------------------------
 
@@ -965,6 +1041,13 @@ CREATE TABLE `thucdon_chi_tiet` (
   `thoi_gian_an` time DEFAULT NULL COMMENT 'Thời gian ăn',
   `thu_tu` int(11) DEFAULT 0 COMMENT 'Thứ tự trong bữa ăn'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Chi tiết thực đơn từng bữa ăn';
+
+--
+-- Đang đổ dữ liệu cho bảng `thucdon_chi_tiet`
+--
+
+INSERT INTO `thucdon_chi_tiet` (`id_thuc_don`, `id_lich_su`, `bua_an`, `ten_mon`, `khoi_luong`, `calo`, `protein`, `carb`, `fat`, `fiber`, `ghi_chu`, `thoi_gian_an`, `thu_tu`) VALUES
+('TDC_0a930efc-ac28-4d62-b03b-f1191c2c8864', 'LSTV_4764b5a4-10f5-4919-82ee-38ffc81d42c0', 'sang', 'Cơm trắng', 100.00, 130.00, 2.70, 28.00, 0.30, 0.40, 'aaaa', '07:00:00', 1);
 
 -- --------------------------------------------------------
 
@@ -1025,25 +1108,31 @@ CREATE TABLE `tinnhan` (
 
 INSERT INTO `tinnhan` (`id_tin_nhan`, `id_cuoc_tro_chuyen`, `id_nguoi_gui`, `loai_tin_nhan`, `noi_dung`, `duong_dan_tap_tin`, `thoi_gian_gui`, `da_doc`) VALUES
 ('TN_017b2c85-e7dc-40a0-a266-f8dfd4c98594', 'CTC_27e45059-86aa-461b-b337-d1d8548da184', 'BS_c76d606e-1664-4d60-92bb-929f65667587', 'van_ban', 'alo', NULL, '2025-10-31 23:04:08', 1),
+('TN_101a27ed-c0f2-4025-898e-a17a74fd07bd', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'van_ban', 'gi m', NULL, '2025-11-04 17:40:18', 1),
 ('TN_20226c06-4285-4670-8a60-479e1f1d5431', 'CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Chào anh', NULL, '2025-10-31 15:33:09', 1),
 ('TN_31adc46d-b90f-4e8f-8b6c-a7352184a157', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'NV_phancong001', 'van_ban', 'ok nha ', NULL, '2025-10-31 16:28:03', 1),
 ('TN_3e160d92-5e51-48b2-8bfb-9373ed763058', 'CTC_22a5710d-95b3-4fef-9a5f-ca4bdbf4317a', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'alo', NULL, '2025-10-31 16:09:47', 1),
-('TN_485c085d-80b7-4db1-a974-2df46cfb67fb', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'hi', NULL, '2025-10-31 16:27:03', 0),
+('TN_485c085d-80b7-4db1-a974-2df46cfb67fb', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'hi', NULL, '2025-10-31 16:27:03', 1),
 ('TN_4ac42f3b-429b-44b3-9feb-ae88963ae8ad', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'chao cau nha ', NULL, '2025-10-31 17:38:42', 1),
+('TN_59c0b77b-7e9a-41e5-9b92-aecb984843de', 'CTC_bbf8b18a-a213-4e14-a7f6-1e9b6efb68b2', 'NV_quay001', 'van_ban', 'alo', NULL, '2025-11-03 17:47:27', 0),
 ('TN_5be2600e-ba29-4a11-a82d-6945436e0d2b', 'CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'hinh_anh', 'aothun1.jpg', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1761899611/QLBN/Chat/chat_1761899607057_aothun1.jpg.jpg', '2025-10-31 15:33:31', 1),
 ('TN_5c77389f-28ab-4769-a655-b83c640ad24a', 'CTC_a3d19086-6981-4f1f-99cb-bc1bae460863', 'BN_e2f3g4h5-i6j7-8901-cdef-456789012345', 'van_ban', 'tôi có việc bận ạ ', NULL, '2025-11-03 00:14:48', 1),
 ('TN_60e307f0-a58a-4efb-9cf7-8cd1176ccf7f', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'NV_phancong001', 'van_ban', 'ok nha ', NULL, '2025-10-31 23:08:15', 1),
 ('TN_6163030c-33fb-4c28-98a1-f0aa6d49a93b', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Alo nghe khong', NULL, '2025-10-31 16:26:39', 1),
 ('TN_661b60b9-b1c3-4e1d-9b4e-acce631efa09', 'CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'alo anh bình gold ', NULL, '2025-10-31 15:41:03', 1),
+('TN_74ddd2dc-0c7f-44d5-9484-adb518699e61', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'van_ban', 'chào ạ ', NULL, '2025-11-03 17:16:21', 1),
 ('TN_74fb4058-698f-4f90-802e-65a174135ddf', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'NV_phancong001', 'tap_tin', 'hethongquanlybenhvien (1).sql', 'https://res.cloudinary.com/dh0lhvm9l/raw/upload/v1761904705/QLBN/Chat/chat_1761904703287_hethongquanlybenhvien__1_.sql', '2025-10-31 16:58:25', 1),
 ('TN_7dfd7e4b-c7f3-4b7a-925f-d4060fdddef2', 'CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'hinh_anh', 'aonhom2.jpg', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1761900077/QLBN/Chat/chat_1761900072316_aonhom2.jpg.jpg', '2025-10-31 15:41:16', 1),
 ('TN_894a4210-fbfc-4aaa-8e6e-83d8ce1d165d', 'CTC_a3d19086-6981-4f1f-99cb-bc1bae460863', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'thì ko biết tại sao hôm nay anh không tham gia buổi tái khám được ạ ', NULL, '2025-10-31 15:51:56', 1),
+('TN_8dd1b286-99c8-49ae-9e95-d681ba471ab8', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'hinh_anh', 'top-cac-mau-balo-saigon-swagger-ca-tinh-thu-hut-su-chu-y-tu-cac-ban-tre-01-1678948628.jpeg', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1762252864/QLBN/Chat/chat_1762252859791_top-cac-mau-balo-saigon-swagger-ca-tinh-thu-hut-su-chu-y-tu-cac-ban-tre-01-1678948628.jpeg.jpg', '2025-11-04 17:41:04', 1),
 ('TN_93c43302-aed1-4cd0-8552-903238f311d7', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'NV_phancong001', 'hinh_anh', 'aonhom2.jpg', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1761902894/QLBN/Chat/chat_1761902889245_aonhom2.jpg.jpg', '2025-10-31 16:28:14', 1),
 ('TN_97571a25-2cb8-4eef-86f2-4f893c73819e', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'NV_phancong001', 'van_ban', 'chuc cau may man ', NULL, '2025-10-31 17:32:20', 1),
 ('TN_a4b255c4-2a2f-4274-8bc2-93eb3f9710a6', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'chieu di an khong', NULL, '2025-10-31 16:26:44', 1),
 ('TN_a99bc26e-b394-411d-a938-fbc1c27e97da', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'NV_phancong001', 'hinh_anh', 'aothun1.jpg', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1761904689/QLBN/Chat/chat_1761904684577_aothun1.jpg.jpg', '2025-10-31 16:58:09', 1),
 ('TN_af349137-ca56-45de-9faa-150348e94d87', 'CTC_a3d19086-6981-4f1f-99cb-bc1bae460863', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Chào anh, hiện tại tôi thấy anh có lịch tái khám', NULL, '2025-10-31 15:51:22', 1),
+('TN_b144c29d-e02b-463e-9cbc-ff29d81281f5', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'tap_tin', 'DailyReport.docx', 'https://res.cloudinary.com/dh0lhvm9l/raw/upload/v1762252889/QLBN/Chat/chat_1762252886449_DailyReport.docx', '2025-11-04 17:41:29', 1),
 ('TN_cc3750c9-0753-4d18-9ad9-945b21ee62ae', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'NV_phancong001', 'tap_tin', '1. XÃ¡c Äá»nh cÃ¡c yÃªu cáº§u chá»©c nÄng.docx', 'https://res.cloudinary.com/dh0lhvm9l/raw/upload/v1761904723/QLBN/Chat/chat_1761904719282_1._X__c______nh_c__c_y__u_c___u_ch___c_n__ng.docx', '2025-10-31 16:58:42', 1),
+('TN_d63c22de-2ba8-4417-9fb7-568e323d8418', 'CTC_3efee32c-4702-4fb0-a5a3-4771d8d89a08', 'NV_phancong001', 'van_ban', 'hi', NULL, '2025-11-08 22:42:57', 1),
 ('TN_d8cfc4b5-4dea-4502-b3f8-0ccb57302dba', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'NV_phancong001', 'van_ban', 'Hi', NULL, '2025-10-31 22:50:34', 1),
 ('TN_fd0821d3-addc-437f-97a4-c55ead87fb5a', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'BS_c76d606e-1664-4d60-92bb-929f65667587', 'van_ban', 'hi', NULL, '2025-10-31 22:57:20', 1);
 
@@ -1128,8 +1217,9 @@ CREATE TABLE `yeu_cau_email` (
 --
 
 INSERT INTO `yeu_cau_email` (`id_yeu_cau`, `email`, `ho_ten`, `so_dien_thoai`, `loai_yeu_cau`, `trang_thai`, `ghi_chu`, `thoi_gian_tao`, `thoi_gian_xu_ly`, `id_quan_tri_vien`) VALUES
-('YC_6368abd2-6df7-4f3e-8518-a664edafaf01', 'namhuynh098@gmail.com', NULL, NULL, 'dang_ky_nhan_tin_tuc', 'chua_xu_ly', NULL, '2025-11-02 19:54:54', NULL, NULL),
-('YC_c10c5abf-b01a-44a6-8725-a8b30925ed50', 'tienmanh240503@gmail.com', NULL, NULL, 'dang_ky_nhan_tin_tuc', 'da_xu_ly', NULL, '2025-11-02 18:09:22', '2025-11-02 12:30:35', 'ADMIN_001');
+('YC_6368abd2-6df7-4f3e-8518-a664edafaf01', 'namhuynh098@gmail.com', NULL, NULL, 'dang_ky_nhan_tin_tuc', 'da_xu_ly', NULL, '2025-11-02 19:54:54', '2025-11-05 02:40:11', 'ADMIN_001'),
+('YC_89abdcab-a873-4ea8-92e4-caff8d98e441', 'huynhzducwr@gmail.com', NULL, NULL, 'dang_ky_nhan_tin_tuc', 'da_xu_ly', NULL, '2025-11-05 09:36:36', '2025-11-05 02:40:07', 'ADMIN_001'),
+('YC_c10c5abf-b01a-44a6-8725-a8b30925ed50', 'tienmanh240503@gmail.com', NULL, NULL, 'dang_ky_nhan_tin_tuc', 'da_xu_ly', NULL, '2025-11-02 18:09:22', '2025-11-05 02:40:57', 'ADMIN_001');
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -1277,7 +1367,9 @@ ALTER TABLE `hosokhambenh`
 --
 ALTER TABLE `ketquaxetnghiem`
   ADD PRIMARY KEY (`id_ket_qua`),
-  ADD UNIQUE KEY `id_chi_dinh` (`id_chi_dinh`);
+  ADD UNIQUE KEY `id_chi_dinh` (`id_chi_dinh`),
+  ADD KEY `idx_ketquaxetnghiem_nhanvien` (`id_nhan_vien_xet_nghiem`),
+  ADD KEY `idx_ketquaxetnghiem_trangthai` (`trang_thai_ket_qua`);
 
 --
 -- Chỉ mục cho bảng `khunggiokham`
@@ -1366,6 +1458,12 @@ ALTER TABLE `nhanvienquay`
   ADD UNIQUE KEY `ma_nhan_vien` (`ma_nhan_vien`);
 
 --
+-- Chỉ mục cho bảng `nhanvienxetnghiem`
+--
+ALTER TABLE `nhanvienxetnghiem`
+  ADD PRIMARY KEY (`id_nhan_vien`);
+
+--
 -- Chỉ mục cho bảng `phongkham`
 --
 ALTER TABLE `phongkham`
@@ -1386,7 +1484,8 @@ ALTER TABLE `theodoi_tien_do`
   ADD PRIMARY KEY (`id_theo_doi`),
   ADD KEY `fk_theodoi_benhnhan` (`id_benh_nhan`),
   ADD KEY `fk_theodoi_lichsu` (`id_lich_su`),
-  ADD KEY `idx_theodoi_ngaykham` (`ngay_kham`);
+  ADD KEY `idx_theodoi_ngaykham` (`ngay_kham`),
+  ADD KEY `idx_theodoi_hoso` (`id_ho_so`);
 
 --
 -- Chỉ mục cho bảng `thongbao`
@@ -1557,7 +1656,8 @@ ALTER TABLE `hosokhambenh`
 -- Các ràng buộc cho bảng `ketquaxetnghiem`
 --
 ALTER TABLE `ketquaxetnghiem`
-  ADD CONSTRAINT `fk_ketquaxetnghiem_chidinh` FOREIGN KEY (`id_chi_dinh`) REFERENCES `chidinhxetnghiem` (`id_chi_dinh`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_ketquaxetnghiem_chidinh` FOREIGN KEY (`id_chi_dinh`) REFERENCES `chidinhxetnghiem` (`id_chi_dinh`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_ketquaxetnghiem_nhanvien` FOREIGN KEY (`id_nhan_vien_xet_nghiem`) REFERENCES `nguoidung` (`id_nguoi_dung`) ON DELETE SET NULL;
 
 --
 -- Các ràng buộc cho bảng `lichlamviec`
@@ -1612,6 +1712,12 @@ ALTER TABLE `nhanvienquay`
   ADD CONSTRAINT `fk_nhanvienquay_nguoidung` FOREIGN KEY (`id_nhan_vien_quay`) REFERENCES `nguoidung` (`id_nguoi_dung`) ON DELETE CASCADE;
 
 --
+-- Các ràng buộc cho bảng `nhanvienxetnghiem`
+--
+ALTER TABLE `nhanvienxetnghiem`
+  ADD CONSTRAINT `fk_nhanvienxetnghiem_nguoidung` FOREIGN KEY (`id_nhan_vien`) REFERENCES `nguoidung` (`id_nguoi_dung`) ON DELETE CASCADE;
+
+--
 -- Các ràng buộc cho bảng `phongkham`
 --
 ALTER TABLE `phongkham`
@@ -1622,6 +1728,7 @@ ALTER TABLE `phongkham`
 --
 ALTER TABLE `theodoi_tien_do`
   ADD CONSTRAINT `fk_theodoi_benhnhan` FOREIGN KEY (`id_benh_nhan`) REFERENCES `benhnhan` (`id_benh_nhan`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_theodoi_hosodinhduong` FOREIGN KEY (`id_ho_so`) REFERENCES `hosodinhduong` (`id_ho_so`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_theodoi_lichsu` FOREIGN KEY (`id_lich_su`) REFERENCES `lichsutuvan` (`id_lich_su`) ON DELETE SET NULL;
 
 --

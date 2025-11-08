@@ -1,12 +1,8 @@
-import { CuocHenKhamBenh, BenhNhan, NguoiDung, BacSi, ChuyenKhoa, KhungGioKham, HoaDon, ChiTietDonThuoc, DonThuoc ,ChiTietHoaDon, HoSoKhamBenh , DichVu} from "../models/index.js";
+import { CuocHenKhamBenh, BenhNhan, NguoiDung, BacSi, ChuyenKhoa, KhungGioKham, HoaDon, ChiTietDonThuoc, DonThuoc ,ChiTietHoaDon, HoSoKhamBenh , DichVu, ChiDinhXetNghiem, KetQuaXetNghiem, LichSuKham} from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
 import { createAppointmentNotification } from '../helpers/notificationHelper.js';
 // Tạo cuộc hẹn khám bệnh
 export const createCuocHenKham = async (req, res) => {
-    console.log("✅ createCuocHenKham controller called - Route is working!");
-    console.log("Request method:", req.method);
-    console.log("Request path:", req.path);
-    console.log("Request body:", req.body);
     try {
         const id_nguoi_dung = req.decoded.info.id_nguoi_dung;
         const vai_tro = req.decoded.vai_tro;
@@ -24,17 +20,11 @@ export const createCuocHenKham = async (req, res) => {
             idBenhNhanFinal = id_benh_nhan;
         }
 
-        console.log("Debug - vai_tro:", vai_tro);
-        console.log("Debug - id_benh_nhan from body:", id_benh_nhan);
-        console.log("Debug - id_nguoi_dung from token:", id_nguoi_dung);
-        console.log("Debug - idBenhNhanFinal:", idBenhNhanFinal);
-
         // Kiểm tra bệnh nhân - thử dùng getById trước, nếu không có thì dùng findOne
         let benhNhan = await BenhNhan.getById(idBenhNhanFinal);
         if (!benhNhan) {
             benhNhan = await BenhNhan.findOne({ id_benh_nhan : idBenhNhanFinal });
         }
-        console.log("Debug - benhNhan found:", benhNhan ? "YES" : "NO");
         if (!benhNhan) {
             return res.status(404).json({ success: false, message: "Bệnh nhân không tồn tại" });
         }
@@ -57,7 +47,6 @@ export const createCuocHenKham = async (req, res) => {
         if (!khungGio) {
             return res.status(404).json({ success: false, message: "Khung giờ không tồn tại" });
         }
-        console.log(khungGio);
         // Check trùng lịch cho bệnh nhân (chỉ tính các lịch chưa hủy)
         const allLich = await CuocHenKhamBenh.findAll({ 
             id_benh_nhan: idBenhNhanFinal,
@@ -69,7 +58,6 @@ export const createCuocHenKham = async (req, res) => {
             return res.status(400).json({ success: false, message: "Bệnh nhân đã có cuộc hẹn trong khung giờ này" });
         }
 
-        console.log(lich);
         const Id = `CH_${uuidv4()}`;
         // ✅ Tạo cuộc hẹn
         const cuocHen = await CuocHenKhamBenh.create({
@@ -136,9 +124,15 @@ export const getLichSuKhamBenhFull = async (req, res) => {
         const lichSu = await Promise.all(
             cuocHenList.map(async (cuocHen) => {
                 // Lấy thông tin bác sĩ
-                const bacSi = cuocHen.id_bac_si 
-                    ? await BacSi.findOne({ id_bac_si: cuocHen.id_bac_si })
-                    : null;
+                let bacSi = null;
+                let bacSiInfo = null;
+                if (cuocHen.id_bac_si) {
+                    bacSi = await BacSi.findOne({ id_bac_si: cuocHen.id_bac_si });
+                    // Lấy thông tin từ nguoidung để có ho_ten
+                    if (bacSi) {
+                        bacSiInfo = await NguoiDung.findOne({ id_nguoi_dung: cuocHen.id_bac_si });
+                    }
+                }
 
                 // Lấy thông tin chuyên khoa
                 const chuyenKhoa = cuocHen.id_chuyen_khoa 
@@ -151,9 +145,27 @@ export const getLichSuKhamBenhFull = async (req, res) => {
                 });
 
                 // Lấy hồ sơ khám bệnh cho cuộc hẹn này
-                const hoSo = await HoSoKhamBenh.findOne({ 
-                    id_cuoc_hen_kham: cuocHen.id_cuoc_hen 
+                // 1 bệnh nhân chỉ có 1 hồ sơ khám bệnh, nên tìm trực tiếp theo id_benh_nhan
+                // Hoặc tìm qua lichsukham nếu cuộc hẹn đã có lịch sử khám
+                let hoSo = null;
+                
+                // Thử tìm qua lichsukham trước (nếu cuộc hẹn đã được khám)
+                const lichSuKham = await LichSuKham.findOne({ 
+                    id_cuoc_hen: cuocHen.id_cuoc_hen 
                 });
+                
+                if (lichSuKham && lichSuKham.id_ho_so) {
+                    hoSo = await HoSoKhamBenh.findOne({ 
+                        id_ho_so: lichSuKham.id_ho_so 
+                    });
+                }
+                
+                // Nếu không tìm thấy qua lichsukham, tìm trực tiếp theo id_benh_nhan
+                if (!hoSo) {
+                    hoSo = await HoSoKhamBenh.findOne({ 
+                        id_benh_nhan: cuocHen.id_benh_nhan 
+                    });
+                }
 
                 // Lấy hóa đơn kèm chi tiết
                 const hoaDon = await HoaDon.findOne({ 
@@ -196,12 +208,38 @@ export const getLichSuKhamBenhFull = async (req, res) => {
                     }
                 }
 
+                // Lấy chỉ định xét nghiệm cho cuộc hẹn này
+                let chiDinhXetNghiem = [];
+                const chiDinhList = await ChiDinhXetNghiem.findAll({ 
+                    id_cuoc_hen: cuocHen.id_cuoc_hen 
+                });
+                
+                if (chiDinhList && chiDinhList.length > 0) {
+                    chiDinhXetNghiem = await Promise.all(
+                        chiDinhList.map(async (chiDinh) => {
+                            // Lấy kết quả xét nghiệm nếu có
+                            const ketQua = await KetQuaXetNghiem.findOne({ 
+                                id_chi_dinh: chiDinh.id_chi_dinh 
+                            });
+                            
+                            return {
+                                ...chiDinh,
+                                ket_qua: ketQua || null
+                            };
+                        })
+                    );
+                }
+
                 return {
                     ...cuocHen,
                     bacSi: bacSi ? {
                         id_bac_si: bacSi.id_bac_si,
+                        ho_ten: bacSiInfo?.ho_ten || null,
                         bang_cap: bacSi.bang_cap,
-                        kinh_nghiem: bacSi.kinh_nghiem
+                        kinh_nghiem: bacSi.kinh_nghiem || bacSi.so_nam_kinh_nghiem,
+                        chuyen_mon: bacSi.chuyen_mon,
+                        chuc_danh: bacSi.chuc_danh,
+                        chuc_vu: bacSi.chuc_vu
                     } : null,
                     chuyenKhoa: chuyenKhoa ? {
                         id_chuyen_khoa: chuyenKhoa.id_chuyen_khoa,
@@ -217,7 +255,8 @@ export const getLichSuKhamBenhFull = async (req, res) => {
                     hoaDon: hoaDon || null,
                     chiTietHoaDon,
                     donThuoc: donThuoc || null,
-                    chiTietDonThuoc
+                    chiTietDonThuoc,
+                    chiDinhXetNghiem
                 };
             })
         );
@@ -348,14 +387,12 @@ export const updateTrangThaiCuocHenKham = async (req, res) => {
     try {
         const { id_cuoc_hen } = req.params;
         const { trang_thai } = req.body;
-        console.log(trang_thai);
         const cuocHen = await CuocHenKhamBenh.findOne({ id_cuoc_hen });
         if (!cuocHen) {
             return res.status(404).json({ success: false, message: "Cuộc hẹn không tồn tại" });
         }
 
         const updated = await CuocHenKhamBenh.update({trang_thai}, id_cuoc_hen);
-        console.log(updated);
 
         // Tạo thông báo cho bệnh nhân khi trạng thái thay đổi
         await createAppointmentNotification(
@@ -405,12 +442,8 @@ export const getCuocHenKhamByDateAndCa = async (req, res) => {
             'Expires': '0'
         });
 
-        console.log(`Fetching appointments for date: ${ngay}, ca: ${ca}`);
-
         // Lấy tất cả cuộc hẹn theo ngày
         const cuocHenList = await CuocHenKhamBenh.findAll({ ngay_kham: ngay });
-        
-        console.log(`Found ${cuocHenList?.length || 0} appointments for date ${ngay}`);
         
         // Lọc theo ca và lấy thông tin chi tiết
         const result = await Promise.all(
@@ -465,8 +498,6 @@ export const getCuocHenKhamByDateAndCa = async (req, res) => {
         
         // Lọc bỏ các giá trị null
         const filteredResult = result.filter(item => item !== null);
-        
-        console.log(`Filtered to ${filteredResult.length} appointments for ca ${ca}`);
         
         return res.status(200).json({ 
             success: true, 

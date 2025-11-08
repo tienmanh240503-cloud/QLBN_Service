@@ -83,7 +83,7 @@ export const getDonThuocByHoSo = async (req, res) => {
         const chiTietDonThuoc = await ChiTietDonThuoc.findAll({id_don_thuoc : donThuoc.id_don_thuoc});
         const chiTietWithThuoc = await Promise.all(
             chiTietDonThuoc.map(async (ct) => {
-                const thuoc = await Thuoc.findOne({id_thuoc});
+                const thuoc = await Thuoc.findOne({id_thuoc: ct.id_thuoc});
                 return {
                     ...ct,
                     thuoc // gắn thông tin thuốc

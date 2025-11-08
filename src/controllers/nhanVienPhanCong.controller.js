@@ -564,10 +564,43 @@ export const getAllNhanVienPhanCong = async (req, res) => {
 export const getNhanVienPhanCongById = async (req, res) => {
     try {
         const { id_nhan_vien_phan_cong } = req.params;
-        const nv = await NhanVienPhanCong.findOne({ id_nhan_vien_phan_cong });
-        if (!nv) return res.status(404).json({ success: false, message: "Không tìm thấy nhân viên." });
-
-        res.status(200).json({ success: true, data: nv });
+        
+        // Join với nguoidung để lấy thông tin đầy đủ
+        // id_nhan_vien_phan_cong trong params có thể là id_nguoi_dung
+        // Sử dụng LEFT JOIN để vẫn lấy được thông tin nếu chưa có record trong nhanvienphancong
+        const query = `
+            SELECT 
+                nvpc.id_nhan_vien_phan_cong,
+                nvpc.ma_nhan_vien,
+                nvpc.quyen_han_phan_cong,
+                nd.id_nguoi_dung,
+                nd.ho_ten,
+                nd.email,
+                nd.so_dien_thoai,
+                nd.ngay_sinh,
+                nd.gioi_tinh,
+                nd.dia_chi,
+                nd.so_cccd,
+                nd.anh_dai_dien,
+                nd.ten_dang_nhap,
+                nd.vai_tro
+            FROM nguoidung nd
+            LEFT JOIN nhanvienphancong nvpc ON nvpc.id_nhan_vien_phan_cong = nd.id_nguoi_dung
+            WHERE nd.id_nguoi_dung = ? AND nd.vai_tro = 'nhan_vien_phan_cong'
+        `;
+        
+        db.query(query, [id_nhan_vien_phan_cong], (err, result) => {
+            if (err) {
+                console.error("Error fetching nhân viên phân công:", err);
+                return res.status(500).json({ success: false, message: "Lỗi server", error: err.message });
+            }
+            
+            if (!result || result.length === 0) {
+                return res.status(404).json({ success: false, message: "Không tìm thấy nhân viên." });
+            }
+            
+            res.status(200).json({ success: true, data: result[0] });
+        });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }
@@ -578,8 +611,63 @@ export const updateNhanVienPhanCong = async (req, res) => {
         const { id_nhan_vien_phan_cong } = req.params;
         const dataUpdate = req.body;
 
-        const updated = await NhanVienPhanCong.update(dataUpdate, id_nhan_vien_phan_cong);
-        res.status(200).json({ success: true, message: "Cập nhật thành công", data: updated });
+        // Tách dữ liệu: thông tin nguoidung và thông tin nhanvienphancong
+        const { 
+            ma_nhan_vien, 
+            quyen_han_phan_cong,
+            ...nguoiDungData 
+        } = dataUpdate;
+
+        // Cập nhật thông tin nguoidung
+        if (Object.keys(nguoiDungData).length > 0) {
+            await NguoiDung.update(nguoiDungData, id_nhan_vien_phan_cong);
+        }
+
+        // Cập nhật thông tin nhanvienphancong nếu có
+        const nvpcData = {};
+        if (ma_nhan_vien) nvpcData.ma_nhan_vien = ma_nhan_vien;
+        if (quyen_han_phan_cong) nvpcData.quyen_han_phan_cong = quyen_han_phan_cong;
+        
+        if (Object.keys(nvpcData).length > 0) {
+            await NhanVienPhanCong.update(nvpcData, id_nhan_vien_phan_cong);
+        }
+
+        // Lấy lại thông tin đầy đủ sau khi cập nhật
+        const query = `
+            SELECT 
+                nvpc.id_nhan_vien_phan_cong,
+                nvpc.ma_nhan_vien,
+                nvpc.quyen_han_phan_cong,
+                nd.ho_ten,
+                nd.email,
+                nd.so_dien_thoai,
+                nd.ngay_sinh,
+                nd.gioi_tinh,
+                nd.dia_chi,
+                nd.so_cccd,
+                nd.anh_dai_dien,
+                nd.ten_dang_nhap,
+                nd.vai_tro
+            FROM nhanvienphancong nvpc
+            INNER JOIN nguoidung nd ON nvpc.id_nhan_vien_phan_cong = nd.id_nguoi_dung
+            WHERE nvpc.id_nhan_vien_phan_cong = ?
+        `;
+        
+        const updatedData = await new Promise((resolve, reject) => {
+            db.query(query, [id_nhan_vien_phan_cong], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result[0]);
+                }
+            });
+        });
+        
+        res.status(200).json({ 
+            success: true, 
+            message: "Cập nhật thành công", 
+            data: updatedData 
+        });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }

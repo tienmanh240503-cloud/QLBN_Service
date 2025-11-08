@@ -16,7 +16,6 @@ export const createLichSuKham = async (req, res) => {
             cham_soc,
             ghi_chu
         } = req.body;
-        console.log(req.body);
         if (!id_benh_nhan || !id_ho_so) {
             return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc." });
         }
@@ -93,9 +92,7 @@ export const getLichSuKhamByBenhNhan = async (req, res) => {
 export const getLichSuKhamByCuocHen = async (req, res) => {
     try {
         const { id_cuoc_hen } = req.params;
-        console.log(id_cuoc_hen);
         const lichSu = await LichSuKham.findOne({id_cuoc_hen});
-        console.log(lichSu);
         res.status(200).json({ success: true, data: lichSu });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });

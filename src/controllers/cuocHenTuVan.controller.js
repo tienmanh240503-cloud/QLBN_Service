@@ -328,12 +328,8 @@ export const getCuocHenTuVanByDateAndCa = async (req, res) => {
             'Expires': '0'
         });
 
-        console.log(`Fetching appointments for date: ${ngay}, ca: ${ca}`);
-
         // Lấy tất cả cuộc hẹn theo ngày
         const cuocHenList = await CuocHenTuVan.findAll({ ngay_kham: ngay });
-        
-        console.log(`Found ${cuocHenList?.length || 0} appointments for date ${ngay}`);
         
         // Lọc theo ca và lấy thông tin chi tiết
         const result = await Promise.all(
@@ -398,8 +394,6 @@ export const getCuocHenTuVanByDateAndCa = async (req, res) => {
         // Lọc bỏ các giá trị null
         const filteredResult = result.filter(item => item !== null);
         
-        console.log(`Filtered to ${filteredResult.length} appointments for ca ${ca}`);
-        
         return res.status(200).json({ 
             success: true, 
             data: filteredResult 
@@ -449,6 +443,24 @@ export const countAppointmentsByTimeSlotTuVan = async (req, res) => {
         
     } catch (error) {
         console.error("Error in countAppointmentsByTimeSlotTuVan:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Lỗi server", 
+            error: error.message 
+        });
+    }
+};
+
+// Lấy tất cả cuộc hẹn tư vấn
+export const getAllCuocHenTuVan = async (req, res) => {
+    try {
+        const appointments = await CuocHenTuVan.getAll();
+        return res.status(200).json({ 
+            success: true, 
+            data: appointments || [] 
+        });
+    } catch (error) {
+        console.error("Error in getAllCuocHenTuVan:", error);
         return res.status(500).json({ 
             success: false, 
             message: "Lỗi server", 

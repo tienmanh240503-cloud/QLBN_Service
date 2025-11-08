@@ -9,7 +9,8 @@ import {
     getCuocHenByBenhNhanAndTrangThai,
     getLichSuTuVanByBenhNhan,
     countAppointmentsByTimeSlotTuVan,
-    getCuocHenTuVanByDateAndCa
+    getCuocHenTuVanByDateAndCa,
+    getAllCuocHenTuVan
 } from "../controllers/cuocHenTuVan.controller.js";
 import { verify } from "../middlewares/verifyToken.middleware.js";
 
@@ -17,6 +18,9 @@ const router = express.Router();
 
 // POST route
 router.post("/", verify, createCuocHenTuVan);
+
+// GET route - Lấy tất cả cuộc hẹn tư vấn (phải đặt trước các route cụ thể)
+router.get("/", verify, getAllCuocHenTuVan);
 
 // Specific GET routes (must come before generic :id route)
 router.get("/benh-nhan/:id_benh_nhan", verify, getCuocHenTuVanByBenhNhan);

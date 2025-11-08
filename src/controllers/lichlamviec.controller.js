@@ -156,7 +156,6 @@ export const getLichLamViecByWeekforBacSi = async (req, res) => {
         if (!ngay) return res.status(400).json({ success: false, message: "Thiếu tham số 'ngay'" });
         if(id){
             liches = await LichLamViec.findAll({id_nguoi_dung : id});
-            console.log(liches);
         }else{
             liches = await LichLamViec.getAll();
         }

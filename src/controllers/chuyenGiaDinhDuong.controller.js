@@ -104,3 +104,79 @@ export const getAllChuyenNganhDinhDuong = async (req, res) => {
         res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }
 };
+
+// Lấy chuyên ngành dinh dưỡng theo ID
+export const getChuyenNganhDinhDuongById = async (req, res) => {
+    try {
+        const { id_chuyen_nganh } = req.params;
+        const chuyenNganh = await ChuyenNganhDinhDuong.findOne({ id_chuyen_nganh });
+        if (!chuyenNganh) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy chuyên ngành dinh dưỡng" });
+        }
+        res.status(200).json({ success: true, data: chuyenNganh });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+// Tạo chuyên ngành dinh dưỡng mới
+export const createChuyenNganhDinhDuong = async (req, res) => {
+    try {
+        const { ten_chuyen_nganh, mo_ta, hinh_anh, doi_tuong_phuc_vu, thoi_gian_hoat_dong } = req.body;
+
+        if (!ten_chuyen_nganh) {
+            return res.status(400).json({ success: false, message: "Tên chuyên ngành là bắt buộc" });
+        }
+
+        const { v4: uuidv4 } = await import('uuid');
+        const id_chuyen_nganh = `CN_${uuidv4()}`;
+
+        const chuyenNganh = await ChuyenNganhDinhDuong.create({
+            id_chuyen_nganh,
+            ten_chuyen_nganh,
+            mo_ta: mo_ta || null,
+            hinh_anh: hinh_anh || null,
+            doi_tuong_phuc_vu: doi_tuong_phuc_vu || null,
+            thoi_gian_hoat_dong: thoi_gian_hoat_dong || null
+        });
+
+        res.status(201).json({ success: true, message: "Tạo chuyên ngành dinh dưỡng thành công", data: chuyenNganh });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+// Cập nhật chuyên ngành dinh dưỡng
+export const updateChuyenNganhDinhDuong = async (req, res) => {
+    try {
+        const { id_chuyen_nganh } = req.params;
+        const updateData = req.body;
+
+        const chuyenNganh = await ChuyenNganhDinhDuong.findOne({ id_chuyen_nganh });
+        if (!chuyenNganh) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy chuyên ngành dinh dưỡng" });
+        }
+
+        const updated = await ChuyenNganhDinhDuong.update(updateData, id_chuyen_nganh);
+        res.status(200).json({ success: true, message: "Cập nhật chuyên ngành dinh dưỡng thành công", data: updated });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+// Xóa chuyên ngành dinh dưỡng
+export const deleteChuyenNganhDinhDuong = async (req, res) => {
+    try {
+        const { id_chuyen_nganh } = req.params;
+
+        const chuyenNganh = await ChuyenNganhDinhDuong.findOne({ id_chuyen_nganh });
+        if (!chuyenNganh) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy chuyên ngành dinh dưỡng" });
+        }
+
+        await ChuyenNganhDinhDuong.delete(id_chuyen_nganh);
+        res.status(200).json({ success: true, message: "Xóa chuyên ngành dinh dưỡng thành công" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};

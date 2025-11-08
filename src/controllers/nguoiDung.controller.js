@@ -1,7 +1,11 @@
 import { NguoiDung, BenhNhan ,BacSi, ChuyenGiaDinhDuong,NhanVienPhanCong, NhanVienQuay } from "../models/index.js";
-import { hashedPassword, comparePassword } from "../utils/password.js";
+import { hashedPassword, comparePassword, generateRandomPassword } from "../utils/password.js";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/auth.js";
+import { checkAgeForAccountCreation } from "../utils/checkAge.js";
 import { v4 as uuidv4 } from 'uuid';
+import db from "../configs/connectData.js";
+import { sendEmail } from "../services/email.service.js";
+import { getNewAccountEmail } from "../services/email.service.js";
 // Đăng nhập
 const login = async (req, res) => {
     try {
@@ -118,6 +122,18 @@ const register = async (req, res) => {
             }
         }
 
+        // Kiểm tra tuổi (phải >= 6 tuổi mới được tạo tài khoản)
+        if (ngay_sinh) {
+            const ageCheck = checkAgeForAccountCreation(ngay_sinh);
+            if (!ageCheck.isValid) {
+                console.log(`[REGISTER] Người dùng không đủ tuổi: ${ageCheck.message}`);
+                return res.status(400).json({ 
+                    success: false, 
+                    message: ageCheck.message 
+                });
+            }
+        }
+
         // Mã hóa mật khẩu
         const hashed = await hashedPassword(mat_khau);
 
@@ -165,19 +181,40 @@ const CreateUser = async (req, res) => {
             email, 
             so_dien_thoai, 
             ten_dang_nhap, 
-            mat_khau, 
+            mat_khau, // Không bắt buộc nữa, sẽ được tạo tự động
             ngay_sinh, 
             gioi_tinh,
             vai_tro,
             dia_chi,
-            so_cccd
+            so_cccd,
+            // Bác sĩ fields
+            id_chuyen_khoa,
+            chuyen_mon,
+            so_giay_phep_hang_nghe,
+            gioi_thieu_ban_than,
+            so_nam_kinh_nghiem,
+            chuc_danh,
+            chuc_vu,
+            // Chuyên gia dinh dưỡng fields
+            hoc_vi,
+            so_chung_chi_hang_nghe,
+            linh_vuc_chuyen_sau,
+            chuyen_nganh_dinh_duong, // array of id_chuyen_nganh
+            // Nhân viên quầy fields
+            ma_nhan_vien,
+            bo_phan_lam_viec,
+            ca_lam_viec,
+            // Nhân viên phân công fields
+            quyen_han_phan_cong,
+            // Nhân viên xét nghiệm fields
+            // (chuyen_mon, so_chung_chi_hang_nghe, linh_vuc_chuyen_sau, so_nam_kinh_nghiem, chuc_vu đã được khai báo ở trên)
         } = req.body;
 
-        // Kiểm tra các trường bắt buộc
-        if (!ho_ten || !email || !ten_dang_nhap || !mat_khau || !vai_tro) {
+        // Kiểm tra các trường bắt buộc (không cần mat_khau nữa)
+        if (!ho_ten || !email || !ten_dang_nhap || !vai_tro) {
             return res.status(400).json({ 
                 success: false, 
-                message: "Vui lòng điền đầy đủ thông tin bắt buộc." 
+                message: "Vui lòng điền đầy đủ thông tin bắt buộc (Họ tên, Email, Tên đăng nhập, Vai trò)." 
             });
         }
 
@@ -210,8 +247,25 @@ const CreateUser = async (req, res) => {
             }
         }
 
+        // Kiểm tra tuổi (phải >= 6 tuổi mới được tạo tài khoản)
+        if (ngay_sinh) {
+            const ageCheck = checkAgeForAccountCreation(ngay_sinh);
+            if (!ageCheck.isValid) {
+                console.log(`[CREATE_USER] Người dùng không đủ tuổi: ${ageCheck.message}`);
+                return res.status(400).json({ 
+                    success: false, 
+                    message: ageCheck.message 
+                });
+            }
+        }
+
+        // Tạo mật khẩu ngẫu nhiên nếu không được cung cấp (cho admin tạo tài khoản)
+        // Nếu có mat_khau từ req.body (từ đăng ký thông thường), sử dụng nó
+        // Nếu không có (admin tạo), tạo mật khẩu ngẫu nhiên
+        const plainPassword = mat_khau || generateRandomPassword(12);
+        
         // Mã hóa mật khẩu
-        const hashed = await hashedPassword(mat_khau);
+        const hashed = await hashedPassword(plainPassword);
 
         let prefix = '';
         switch(vai_tro) {
@@ -220,6 +274,7 @@ const CreateUser = async (req, res) => {
             case 'chuyen_gia_dinh_duong': prefix = 'CG_'; break;
             case 'nhan_vien_quay': prefix = 'NVQ_'; break;
             case 'nhan_vien_phan_cong': prefix = 'NVP_'; break;
+            case 'nhan_vien_xet_nghiem': prefix = 'NVXN_'; break;
             case 'quan_tri_vien': prefix = 'QTV_'; break;
             default: prefix = 'USER_';
         }
@@ -251,28 +306,131 @@ const CreateUser = async (req, res) => {
                     await BenhNhan.create({ id_benh_nhan: Id });
                     break;
                 case 'bac_si':
-                    await BacSi.create({ id_bac_si: Id });
+                    // Tạo bác sĩ với các trường bổ sung
+                    const bacSiData = {
+                        id_bac_si: Id,
+                        id_chuyen_khoa: id_chuyen_khoa || null,
+                        chuyen_mon: chuyen_mon || null,
+                        so_giay_phep_hang_nghe: so_giay_phep_hang_nghe || null,
+                        gioi_thieu_ban_than: gioi_thieu_ban_than || null,
+                        so_nam_kinh_nghiem: so_nam_kinh_nghiem || null,
+                        chuc_danh: chuc_danh || null,
+                        chuc_vu: chuc_vu || null,
+                        dang_lam_viec: true
+                    };
+                    await BacSi.create(bacSiData);
                     break;
                 case 'chuyen_gia_dinh_duong':
-                    await ChuyenGiaDinhDuong.create({ id_chuyen_gia: Id });
+                    // Tạo chuyên gia dinh dưỡng với các trường bổ sung
+                    const chuyenGiaData = {
+                        id_chuyen_gia: Id,
+                        hoc_vi: hoc_vi || 'Cu nhan',
+                        so_chung_chi_hang_nghe: so_chung_chi_hang_nghe || null,
+                        linh_vuc_chuyen_sau: linh_vuc_chuyen_sau || null,
+                        gioi_thieu_ban_than: gioi_thieu_ban_than || null,
+                        chuc_vu: chuc_vu || null
+                    };
+                    await ChuyenGiaDinhDuong.create(chuyenGiaData);
+                    
+                    // Thêm các chuyên ngành dinh dưỡng nếu có
+                    if (chuyen_nganh_dinh_duong && Array.isArray(chuyen_nganh_dinh_duong) && chuyen_nganh_dinh_duong.length > 0) {
+                        const insertQuery = `INSERT INTO chuyengia_chuyennganhdinhduong (id_chuyen_gia, id_chuyen_nganh) VALUES ?`;
+                        const values = chuyen_nganh_dinh_duong.map(id_chuyen_nganh => [Id, id_chuyen_nganh]);
+                        
+                        await new Promise((resolve, reject) => {
+                            db.query(insertQuery, [values], (err, result) => {
+                                if (err) reject(err);
+                                else resolve(result);
+                            });
+                        });
+                    }
                     break;
                 case 'nhan_vien_quay':
-                    await NhanVienQuay.create({ id_nhan_vien_quay: Id });
+                    // Tạo nhân viên quầy với các trường bổ sung
+                    const nhanVienQuayData = {
+                        id_nhan_vien_quay: Id,
+                        ma_nhan_vien: ma_nhan_vien || '',
+                        bo_phan_lam_viec: bo_phan_lam_viec || null,
+                        ca_lam_viec: ca_lam_viec || null
+                    };
+                    await NhanVienQuay.create(nhanVienQuayData);
                     break;
                 case 'nhan_vien_phan_cong':
-                    await NhanVienPhanCong.create({ id_nhan_vien_phan_cong: Id });
+                    // Tạo nhân viên phân công với các trường bổ sung
+                    const nhanVienPhanCongData = {
+                        id_nhan_vien_phan_cong: Id,
+                        ma_nhan_vien: ma_nhan_vien || '',
+                        quyen_han_phan_cong: quyen_han_phan_cong || 'phong_kham'
+                    };
+                    await NhanVienPhanCong.create(nhanVienPhanCongData);
+                    break;
+                case 'nhan_vien_xet_nghiem':
+                    // Tạo nhân viên xét nghiệm với các trường bổ sung
+                    const nhanVienXetNghiemData = {
+                        id_nhan_vien: Id,
+                        chuyen_mon: chuyen_mon || null,
+                        so_chung_chi_hang_nghe: so_chung_chi_hang_nghe || null,
+                        linh_vuc_chuyen_sau: linh_vuc_chuyen_sau || null,
+                        so_nam_kinh_nghiem: so_nam_kinh_nghiem || null,
+                        dang_lam_viec: true,
+                        chuc_vu: chuc_vu || null
+                    };
+                    // Sử dụng raw query vì không có model NhanVienXetNghiem
+                    const insertNVXNQuery = `INSERT INTO nhanvienxetnghiem (id_nhan_vien, chuyen_mon, so_chung_chi_hang_nghe, linh_vuc_chuyen_sau, so_nam_kinh_nghiem, dang_lam_viec, chuc_vu) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+                    await new Promise((resolve, reject) => {
+                        db.query(insertNVXNQuery, [
+                            nhanVienXetNghiemData.id_nhan_vien,
+                            nhanVienXetNghiemData.chuyen_mon,
+                            nhanVienXetNghiemData.so_chung_chi_hang_nghe,
+                            nhanVienXetNghiemData.linh_vuc_chuyen_sau,
+                            nhanVienXetNghiemData.so_nam_kinh_nghiem,
+                            nhanVienXetNghiemData.dang_lam_viec,
+                            nhanVienXetNghiemData.chuc_vu
+                        ], (err, result) => {
+                            if (err) reject(err);
+                            else resolve(result);
+                        });
+                    });
                     break;
                 // case 'quan_tri_vien':
                 //  tutu thêm 
                 //     break;
                 default:
-                    console.log(`Vai trò "${vai_tro}" không có bảng con tương ứng`);
+                    // Vai trò không có bảng con tương ứng
+                    break;
+            }
+
+            // Gửi email thông tin tài khoản (chỉ khi password được tạo tự động - admin tạo tài khoản)
+            // Nếu mat_khau được cung cấp từ req.body, có thể là đăng ký thông thường, không gửi email
+            if (!mat_khau) {
+                try {
+                    const emailTemplate = getNewAccountEmail(ho_ten, ten_dang_nhap, plainPassword, vai_tro, email);
+                    const emailResult = await sendEmail({
+                        to: email,
+                        subject: "Thông tin tài khoản - Hệ thống Quản lý Bệnh viện",
+                        html: emailTemplate.html,
+                        text: emailTemplate.text
+                    });
+
+                    if (emailResult.success) {
+                        console.log(`[CREATE_USER] Email đã được gửi thành công đến ${email}`);
+                    } else {
+                        console.error(`[CREATE_USER] Lỗi gửi email đến ${email}:`, emailResult.error);
+                        // Không throw error, vì user đã được tạo thành công
+                        // Chỉ log lỗi để admin biết
+                    }
+                } catch (emailError) {
+                    console.error(`[CREATE_USER] Lỗi khi gửi email đến ${email}:`, emailError);
+                    // Không throw error, vì user đã được tạo thành công
+                }
             }
         }
 
         res.status(201).json({ 
             success: true, 
-            message: "Đăng ký thành công.", 
+            message: mat_khau 
+                ? "Đăng ký thành công." 
+                : "Tài khoản đã được tạo thành công. Mật khẩu đã được gửi qua email.", 
             data: { id_nguoi_dung: userId } 
         });
 
@@ -290,7 +448,6 @@ const CreateUser = async (req, res) => {
 // Lấy thông tin người dùng theo ID
 const getUserById = async (req, res) => {
     try {
-        console.log(req.decoded);
         const userId = req.params.id_nguoi_dung;
         const user = await NguoiDung.getById(userId);
 
@@ -448,6 +605,18 @@ const updateUser = async (req, res) => {
                 return res.status(400).json({
                     success: false,
                     message: "Số điện thoại đã tồn tại."
+                });
+            }
+        }
+
+        // Kiểm tra tuổi nếu có cập nhật ngày sinh (phải >= 6 tuổi)
+        if (updateData.ngay_sinh) {
+            const ageCheck = checkAgeForAccountCreation(updateData.ngay_sinh);
+            if (!ageCheck.isValid) {
+                console.log(`[UPDATE_USER] Người dùng không đủ tuổi: ${ageCheck.message}`);
+                return res.status(400).json({ 
+                    success: false, 
+                    message: ageCheck.message 
                 });
             }
         }

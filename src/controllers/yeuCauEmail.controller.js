@@ -69,8 +69,6 @@ export const createYeuCauEmail = async (req, res) => {
                         thoi_gian_xu_ly: new Date().toISOString().slice(0, 19).replace('T', ' ')
                     }, id_yeu_cau);
                 }
-
-                console.log('Welcome email sent to:', email, emailResult.success ? 'success' : 'failed');
             } catch (emailError) {
                 // Không làm lỗi đăng ký nếu email gửi thất bại
                 console.error('Error sending welcome email:', emailError);
