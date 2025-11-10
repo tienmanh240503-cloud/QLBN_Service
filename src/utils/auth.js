@@ -26,9 +26,24 @@ const verifyRefreshToken = (token) => {
     }
 };
 
+// Short-lived token for password reset code verification
+const generateResetToken = (payload, expiresIn = '10m') => {
+    return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
+};
+
+const verifyResetToken = (token) => {
+    try {
+        return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    } catch (err) {
+        return null;
+    }
+};
+
 export {
     generateAccessToken,
     generateRefreshToken,
     verifyRefreshToken,
-    verifyAccessToken
+    verifyAccessToken,
+    generateResetToken,
+    verifyResetToken
 }

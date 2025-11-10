@@ -23,7 +23,7 @@
     "mysql": "^2.18.1",
     "mysql2": "^3.14.4",
     "nodemailer": "^7.0.10",
-    "openai": "^6.7.0",
+    "@google/generative-ai": "^0.23.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

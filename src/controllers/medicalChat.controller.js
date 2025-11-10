@@ -1,16 +1,41 @@
-import OpenAI from 'openai';
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Kiểm tra API key có được cấu hình không
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY?.trim();
-const hasValidApiKey = OPENAI_API_KEY && OPENAI_API_KEY.length > 0 && OPENAI_API_KEY !== '';
+// Kiểm tra API key có được cấu hình không (Gemini)
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
+const GEMINI_MODEL = (process.env.GEMINI_MODEL?.trim()) || 'gemini-2.0-flash';
+const hasValidApiKey = GEMINI_API_KEY && GEMINI_API_KEY.length > 0 && GEMINI_API_KEY !== '';
 
-// Khởi tạo OpenAI client (chỉ khi có API key)
-const openai = hasValidApiKey ? new OpenAI({
-  apiKey: OPENAI_API_KEY,
-}) : null;
+// Khởi tạo Gemini client (chỉ khi có API key) theo cách của GEMINITEST
+const genAI = hasValidApiKey ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
+
+const SAFETY_SETTINGS = [
+  {
+    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+];
+
+const geminiModel = genAI
+  ? genAI.getGenerativeModel({
+      model: GEMINI_MODEL,
+      safetySettings: SAFETY_SETTINGS,
+    })
+  : null;
 
 // System prompt cho medical assistant
 const SYSTEM_PROMPT = `Bạn là một trợ lý y tế AI chuyên nghiệp, thân thiện của bệnh viện. Nhiệm vụ của bạn là:
@@ -96,15 +121,15 @@ export const getMedicalChatResponse = async (req, res) => {
     }
 
     // Nếu không có API key hợp lệ, thử tìm câu trả lời từ knowledge base
-    if (!hasValidApiKey || !openai) {
-      console.warn('⚠️ OPENAI_API_KEY chưa được cấu hình hoặc không hợp lệ');
+    if (!hasValidApiKey || !geminiModel) {
+      console.warn('⚠️ GEMINI_API_KEY chưa được cấu hình hoặc không hợp lệ');
       
       // Thử tìm câu trả lời từ knowledge base
       const fallbackAnswer = getFallbackResponse(message);
       if (fallbackAnswer) {
         return res.status(200).json({
           success: true,
-          message: fallbackAnswer + '\n\n💡 **Lưu ý:** Hiện tại hệ thống đang ở chế độ fallback. Vui lòng cấu hình OPENAI_API_KEY trong file .env để sử dụng tính năng AI đầy đủ.',
+          message: fallbackAnswer + '\n\n💡 **Lưu ý:** Hiện tại hệ thống đang ở chế độ fallback. Vui lòng cấu hình GEMINI_API_KEY trong file .env để sử dụng tính năng AI đầy đủ.',
           timestamp: new Date().toISOString()
         });
       }
@@ -124,30 +149,28 @@ export const getMedicalChatResponse = async (req, res) => {
 
 📞 **Liên hệ trực tiếp:** Hotline 1900-xxxx (7:00 - 20:00 hàng ngày)
 
-⚠️ Hiện tại hệ thống đang ở chế độ fallback. Vui lòng cấu hình OPENAI_API_KEY trong file .env để sử dụng tính năng AI đầy đủ.`,
+⚠️ Hiện tại hệ thống đang ở chế độ fallback. Vui lòng cấu hình GEMINI_API_KEY trong file .env để sử dụng tính năng AI đầy đủ.`,
         timestamp: new Date().toISOString()
       });
     }
 
-    // Xây dựng conversation messages
-    const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...conversationHistory.map(msg => ({
-        role: msg.type === 'user' ? 'user' : 'assistant',
-        content: msg.content
-      })),
-      { role: 'user', content: message }
-    ];
+    // Tạo prompt theo cách GEMINITEST (generateContent) và "trend" tiếng Việt
+    const recent = Array.isArray(conversationHistory)
+      ? conversationHistory.slice(-6)
+      : [];
+    const historyText = recent
+      .map((m) => (m.type === 'user' ? `Người dùng: ${m.content}` : `Trợ lý: ${m.content}`))
+      .join('\n');
 
-    // Gọi OpenAI API
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo', // Hoặc 'gpt-4' nếu muốn sử dụng model mạnh hơn
-      messages: messages,
-      temperature: 0.7,
-      max_tokens: 1000,
-    });
+    const prompt = `Ngôn ngữ bắt buộc: Tiếng Việt.
+Bạn là trợ lý y tế AI của bệnh viện. Trả lời rõ ràng, thân thiện, dùng markdown khi phù hợp.
 
-    const aiResponse = completion.choices[0]?.message?.content || 
+${SYSTEM_PROMPT}
+
+${historyText ? `Lịch sử hội thoại gần đây:\n${historyText}\n\n` : ''}Câu hỏi hiện tại: ${message}`;
+
+    const result = await geminiModel.generateContent(prompt);
+    const aiResponse = result?.response?.text() || 
       'Xin lỗi, tôi không thể trả lời câu hỏi này lúc này. Vui lòng thử lại sau.';
 
     return res.status(200).json({
@@ -158,7 +181,7 @@ export const getMedicalChatResponse = async (req, res) => {
 
   } catch (error) {
     // Log chi tiết lỗi để debug
-    console.error('❌ OpenAI API Error:', {
+    console.error('❌ Gemini API Error:', {
       message: error.message,
       status: error.status,
       code: error.code,
@@ -178,10 +201,10 @@ export const getMedicalChatResponse = async (req, res) => {
     
     // Xử lý lỗi cụ thể
     if (error.status === 401 || error.response?.status === 401) {
-      console.error('🔑 OpenAI API Key không hợp lệ hoặc đã hết hạn');
+      console.error('🔑 GEMINI_API_KEY không hợp lệ hoặc đã hết hạn');
       return res.status(200).json({
         success: true,
-        message: fallbackAnswer || `🔑 **Lưu ý:** API key không hợp lệ. Hệ thống đang sử dụng chế độ fallback.
+        message: fallbackAnswer || `🔑 **Lưu ý:** GEMINI_API_KEY không hợp lệ. Hệ thống đang sử dụng chế độ fallback.
 
 Tôi là trợ lý y tế AI và có thể hỗ trợ bạn về:
 ✅ Tư vấn các triệu chứng bệnh thường gặp
@@ -189,7 +212,7 @@ Tôi là trợ lý y tế AI và có thể hỗ trợ bạn về:
 ✅ Thông tin về các dịch vụ y tế
 ✅ Lời khuyên về sức khỏe và dinh dưỡng
 
-💡 **Lưu ý:** Để sử dụng tính năng AI đầy đủ, vui lòng cấu hình OPENAI_API_KEY hợp lệ trong file .env của server.`,
+💡 **Lưu ý:** Để sử dụng tính năng AI đầy đủ, vui lòng cấu hình GEMINI_API_KEY hợp lệ trong file .env của server.`,
         timestamp: new Date().toISOString()
       });
     }
@@ -199,17 +222,16 @@ Tôi là trợ lý y tế AI và có thể hỗ trợ bạn về:
       const isInsufficientQuota = error.code === 'insufficient_quota' || error.type === 'insufficient_quota';
       
       if (isInsufficientQuota) {
-        console.error('💰 OpenAI API: Đã hết quota (insufficient_quota)');
+        console.error('💰 Gemini API: Đã hết quota (insufficient_quota)');
       } else {
-        console.error('⏰ OpenAI API: Quá nhiều yêu cầu (rate limit)');
+        console.error('⏰ Gemini API: Quá nhiều yêu cầu (rate limit)');
       }
       
       // Nếu có câu trả lời từ knowledge base, ưu tiên hiển thị nó
       if (fallbackAnswer) {
-        const note = isInsufficientQuota 
-          ? '\n\n💰 **Lưu ý:** Tài khoản OpenAI đã hết quota. Hệ thống đang sử dụng chế độ fallback. Vui lòng nạp thêm credit vào tài khoản OpenAI để sử dụng tính năng AI đầy đủ.'
-          : '\n\n⏰ **Lưu ý:** Hệ thống đã nhận quá nhiều yêu cầu. Đang sử dụng chế độ fallback. Bạn có thể thử lại sau vài phút để sử dụng tính năng AI đầy đủ.';
-        
+        // Không hiển thị chi tiết kỹ thuật/quota cho người dùng cuối
+        const note = '\n\n⚠️ Hệ thống đang sử dụng chế độ phản hồi dự phòng. Bạn có thể tiếp tục đặt câu hỏi y tế thường gặp, hoặc thử lại sau ít phút để có phản hồi đầy đủ.';
+
         return res.status(200).json({
           success: true,
           message: fallbackAnswer + note,
@@ -218,23 +240,14 @@ Tôi là trợ lý y tế AI và có thể hỗ trợ bạn về:
       }
       
       // Nếu không có fallback answer, hiển thị message mặc định
-      const errorMessage = isInsufficientQuota
-        ? `💰 **Thông báo:** Tài khoản OpenAI đã hết quota. Hệ thống đang sử dụng chế độ fallback.
+      const errorMessage = `⚠️ Hiện tại hệ thống đang bận. Tôi sẽ cung cấp phản hồi tham khảo:
 
-Trong thời gian chờ, tôi vẫn có thể hỗ trợ bạn về:
+Tôi vẫn có thể hỗ trợ bạn về:
 ✅ Tư vấn các triệu chứng bệnh thường gặp
 ✅ Hướng dẫn đặt lịch khám bệnh
 ✅ Thông tin về các dịch vụ y tế
 
-💡 **Lưu ý:** Vui lòng nạp thêm credit vào tài khoản OpenAI để sử dụng tính năng AI đầy đủ.`
-        : `⏰ **Tạm thời:** Hệ thống đã nhận quá nhiều yêu cầu. Vui lòng thử lại sau ít phút.
-
-Trong thời gian chờ, tôi vẫn có thể hỗ trợ bạn về:
-✅ Tư vấn các triệu chứng bệnh thường gặp
-✅ Hướng dẫn đặt lịch khám bệnh
-✅ Thông tin về các dịch vụ y tế
-
-💡 **Lưu ý:** Bạn có thể thử lại sau vài phút để sử dụng tính năng AI đầy đủ.`;
+💡 Bạn có thể tiếp tục đặt câu hỏi hoặc thử lại sau ít phút.`;
       
       return res.status(200).json({
         success: true,
@@ -244,7 +257,7 @@ Trong thời gian chờ, tôi vẫn có thể hỗ trợ bạn về:
     }
 
     // Lỗi kết nối hoặc lỗi khác - sử dụng knowledge base
-    console.error('⚠️ Lỗi khi gọi OpenAI API:', error.message);
+    console.error('⚠️ Lỗi khi gọi Gemini API:', error.message);
     
     if (fallbackAnswer) {
       return res.status(200).json({

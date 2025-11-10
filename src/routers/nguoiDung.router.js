@@ -10,7 +10,11 @@ import {
     updateUserStatus,
     changePassword,
     refreshToken,
-    CreateUser
+    CreateUser,
+    requestPasswordResetCode,
+    verifyPasswordResetCode,
+    requestRegisterVerificationCode,
+    verifyRegisterVerificationCode
 } from '../controllers/nguoiDung.controller.js';
 import { verify } from '../middlewares/verifyToken.middleware.js';
 
@@ -18,6 +22,14 @@ const router = express.Router();
 
 // Đăng nhập
 router.post('/login', login);
+
+// Quên mật khẩu
+router.post('/forgot-password/request-code', requestPasswordResetCode);
+router.post('/forgot-password/verify-code', verifyPasswordResetCode);
+
+// Đăng ký - xác thực email
+router.post('/register/request-code', requestRegisterVerificationCode);
+router.post('/register/verify-code', verifyRegisterVerificationCode);
 
 // Đăng ký
 router.post('/register', register);

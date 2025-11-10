@@ -16,7 +16,10 @@ export const createCuocHenKham = async (req, res) => {
         // - Nếu là nhân viên quầy/admin và có id_benh_nhan trong body -> dùng id_benh_nhan từ body
         // - Ngược lại, dùng id_nguoi_dung từ token (bệnh nhân tự đặt lịch)
         let idBenhNhanFinal = id_nguoi_dung;
-        if ((vai_tro === "NhanVienQuay" || vai_tro === "Admin") && id_benh_nhan) {
+        const normalizedRole = (vai_tro || '').toString().trim().toLowerCase();
+        const canSelectPatient = ["nhan_vien_quay", "admin", "quan_tri_vien"].includes(normalizedRole);
+
+        if (canSelectPatient && id_benh_nhan) {
             idBenhNhanFinal = id_benh_nhan;
         }
 

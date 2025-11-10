@@ -517,3 +517,52 @@ export const getNewAccountEmail = (hoTen, tenDangNhap, matKhau, vaiTro, email) =
   return { html, text };
 };
 
+// Template email xác thực đăng ký (gửi mã OTP 6 số)
+export const getRegisterVerificationEmail = (hoTen, code) => {
+  const safeName = hoTen && hoTen.trim() ? hoTen.trim() : 'Quý khách';
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#333; background:#f4f4f4; }
+        .wrapper { max-width:600px; margin:0 auto; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+        .header { background:linear-gradient(135deg,#00b4db 0%,#0083b0 100%); color:#fff; padding:28px 24px; text-align:center; }
+        .header h1 { margin:0; font-size:22px; font-weight:600; }
+        .content { padding:28px 24px; }
+        .greet { margin:0 0 12px 0; }
+        .otp-box { display:inline-block; padding:14px 18px; letter-spacing:6px; font-size:22px; font-weight:700; background:#f5f7fa; border-radius:8px; border:1px solid #e6ebf1; }
+        .note { margin-top:16px; color:#555; }
+        .footer { background:#f8f9fa; padding:18px 24px; text-align:center; color:#777; font-size:12px; border-top:1px solid #eee; }
+      </style>
+    </head>
+    <body>
+      <div class="wrapper">
+        <div class="header">
+          <h1>Xác thực đăng ký tài khoản</h1>
+        </div>
+        <div class="content">
+          <p class="greet">Xin chào ${safeName},</p>
+          <p>Đây là mã xác thực đăng ký của bạn:</p>
+          <div class="otp-box">${code}</div>
+          <p class="note">Mã có hiệu lực trong 10 phút. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
+        </div>
+        <div class="footer">
+          Email được gửi tự động từ Hệ thống Quản lý Bệnh viện. Vui lòng không trả lời email này.
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  const text = `Xin chào ${safeName},
+
+Mã xác thực đăng ký của bạn: ${code}
+
+Mã có hiệu lực trong 10 phút. Không chia sẻ mã này với bất kỳ ai.
+
+Hệ thống Quản lý Bệnh viện (email tự động)`;
+  return { html, text };
+};
+

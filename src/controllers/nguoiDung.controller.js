@@ -1,11 +1,11 @@
 import { NguoiDung, BenhNhan ,BacSi, ChuyenGiaDinhDuong,NhanVienPhanCong, NhanVienQuay } from "../models/index.js";
 import { hashedPassword, comparePassword, generateRandomPassword } from "../utils/password.js";
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/auth.js";
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken, generateResetToken, verifyResetToken } from "../utils/auth.js";
 import { checkAgeForAccountCreation } from "../utils/checkAge.js";
 import { v4 as uuidv4 } from 'uuid';
 import db from "../configs/connectData.js";
 import { sendEmail } from "../services/email.service.js";
-import { getNewAccountEmail } from "../services/email.service.js";
+import { getNewAccountEmail, getRegisterVerificationEmail } from "../services/email.service.js";
 // Đăng nhập
 const login = async (req, res) => {
     try {
@@ -700,17 +700,23 @@ const getAllUsers = async (req, res) => {
 const changePassword = async (req, res) => {
     try {
         const id_nguoi_dung = req.params.id_nguoi_dung;
-        const { mat_khau_hien_tai, mat_khau_moi } = req.body;
+        const { mat_khau_hien_tai, mat_khau_moi, nhap_lai_mat_khau_moi } = req.body;
 
         const user = await NguoiDung.findOne({id_nguoi_dung: id_nguoi_dung});
         if(!user){
             res.status(404).json({msg: 'User not found!',success: false});
             return;
         }
-        if (!mat_khau_hien_tai || !mat_khau_moi) {
+        if (!mat_khau_hien_tai || !mat_khau_moi || !nhap_lai_mat_khau_moi) {
             return res.status(400).json({ 
                 success: false, 
-                message: "Vui lòng nhập mật khẩu hiện tại và mật khẩu mới." 
+                message: "Vui lòng nhập đủ mật khẩu hiện tại, mật khẩu mới và nhập lại mật khẩu mới." 
+            });
+        }
+        if (mat_khau_moi !== nhap_lai_mat_khau_moi) {
+            return res.status(400).json({
+                success: false,
+                message: "Mật khẩu mới và nhập lại mật khẩu mới không khớp."
             });
         }
 
@@ -725,7 +731,7 @@ const changePassword = async (req, res) => {
         // Mã hóa mật khẩu mới
         const hashedNewPassword = await hashedPassword(mat_khau_moi);
 
-        const updateMatKhau = await NguoiDung.update({mat_khau : hashedNewPassword}, id_nguoi_dung);
+        await NguoiDung.update({mat_khau : hashedNewPassword}, id_nguoi_dung);
         res.status(200).json({
             success: true,
             message: "Đổi mật khẩu thành công."
@@ -736,6 +742,147 @@ const changePassword = async (req, res) => {
             message: "Đã xảy ra lỗi.",
             error: error.message
         });
+    }
+};
+
+// Yêu cầu mã quên mật khẩu (gửi 6 chữ số qua email) - Stateless
+const requestPasswordResetCode = async (req, res) => {
+    try {
+        const { email_or_username } = req.body;
+        if (!email_or_username) {
+            return res.status(400).json({ success: false, message: "Vui lòng nhập email hoặc tên đăng nhập." });
+        }
+        let user = await NguoiDung.findOne({ email: email_or_username });
+        if (!user) {
+            user = await NguoiDung.findOne({ ten_dang_nhap: email_or_username });
+        }
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
+        }
+
+        // Tạo mã 6 chữ số và token xác thực ngắn hạn
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const token = generateResetToken({ type: 'pwd_reset', id_nguoi_dung: user.id_nguoi_dung, code });
+
+        // Gửi email mã
+        const html = `
+            <div style="font-family:Segoe UI,Arial,sans-serif">
+                <h2>Mã xác thực quên mật khẩu</h2>
+                <p>Xin chào ${user.ho_ten},</p>
+                <p>Mã xác thực của bạn là:</p>
+                <div style="font-size:24px; font-weight:700; letter-spacing:4px; padding:12px 16px; background:#f5f5f5; display:inline-block; border-radius:8px;">${code}</div>
+                <p style="margin-top:16px;">Mã có hiệu lực trong 10 phút.</p>
+            </div>
+        `;
+        await sendEmail({ to: user.email, subject: "Mã xác thực quên mật khẩu", html });
+
+        return res.status(200).json({ success: true, message: "Đã gửi mã xác thực qua email.", data: { token } });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Đã xảy ra lỗi.", error: error.message });
+    }
+};
+
+// Đăng ký - yêu cầu mã xác thực email (không cần tài khoản tồn tại)
+const requestRegisterVerificationCode = async (req, res) => {
+    try {
+        const { email, ho_ten } = req.body;
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Thiếu email." });
+        }
+
+        // Chặn từ sớm: email đã tồn tại thì không gửi mã đăng ký nữa
+        const existed = await NguoiDung.findOne({ email });
+        if (existed) {
+            return res.status(409).json({
+                success: false,
+                message: "Email đã tồn tại. Vui lòng đăng nhập hoặc sử dụng chức năng quên mật khẩu."
+            });
+        }
+
+        // Tạo mã 6 chữ số và token ngắn hạn cho đăng ký
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const token = generateResetToken({ type: 'register_verify', email, code, ho_ten: ho_ten || null });
+
+        // Gửi email mã cho tên đã nhập (không tra cứu user để tránh lấy nhầm tên)
+        const template = getRegisterVerificationEmail(ho_ten, code);
+        await sendEmail({ to: email, subject: "Mã xác thực đăng ký", html: template.html, text: template.text });
+
+        return res.status(200).json({ success: true, message: "Đã gửi mã xác thực qua email.", data: { token } });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Đã xảy ra lỗi.", error: error.message });
+    }
+};
+
+// Đăng ký - xác thực mã, trả token xác thực để đính kèm khi register
+const verifyRegisterVerificationCode = async (req, res) => {
+    try {
+        const { token, code } = req.body;
+        if (!token || !code) {
+            return res.status(400).json({ success: false, message: "Thiếu token hoặc mã xác thực." });
+        }
+        const decoded = verifyResetToken(token);
+        if (!decoded || decoded.type !== 'register_verify') {
+            return res.status(400).json({ success: false, message: "Token không hợp lệ hoặc đã hết hạn." });
+        }
+        if (decoded.code !== code) {
+            return res.status(400).json({ success: false, message: "Mã xác thực không chính xác." });
+        }
+
+        // Kiểm tra lại tránh race condition: nếu email đã tồn tại thì dừng với thông điệp rõ ràng
+        const existed = await NguoiDung.findOne({ email: decoded.email });
+        if (existed) {
+            return res.status(409).json({
+                success: false,
+                message: "Email đã tồn tại. Vui lòng đăng nhập hoặc sử dụng chức năng quên mật khẩu."
+            });
+        }
+
+        // Tạo registerToken để xác nhận email đã verify, kèm email và tên nếu có
+        const registerToken = generateResetToken({
+            type: 'register_verified',
+            email: decoded.email,
+            ho_ten: decoded.ho_ten || null
+        });
+
+        return res.status(200).json({ success: true, message: "Đã xác thực email đăng ký.", data: { registerToken } });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Đã xảy ra lỗi.", error: error.message });
+    }
+};
+
+// Xác thực mã và gửi mật khẩu mới qua email (giống logic tạo user)
+const verifyPasswordResetCode = async (req, res) => {
+    try {
+        const { token, code } = req.body;
+        if (!token || !code) {
+            return res.status(400).json({ success: false, message: "Thiếu token hoặc mã xác thực." });
+        }
+        const decoded = verifyResetToken(token);
+        if (!decoded || decoded.type !== 'pwd_reset') {
+            return res.status(400).json({ success: false, message: "Token không hợp lệ hoặc đã hết hạn." });
+        }
+        if (decoded.code !== code) {
+            return res.status(400).json({ success: false, message: "Mã xác thực không chính xác." });
+        }
+
+        // Lấy user
+        const user = await NguoiDung.findOne({ id_nguoi_dung: decoded.id_nguoi_dung });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
+        }
+
+        // Tạo mật khẩu mới và cập nhật
+        const newPlainPassword = generateRandomPassword(12);
+        const hashed = await hashedPassword(newPlainPassword);
+        await NguoiDung.update({ mat_khau: hashed }, user.id_nguoi_dung);
+
+        // Gửi email mật khẩu mới
+        const emailTemplate = getNewAccountEmail(user.ho_ten, user.ten_dang_nhap, newPlainPassword, user.vai_tro, user.email);
+        await sendEmail({ to: user.email, subject: "Mật khẩu mới của bạn", html: emailTemplate.html, text: emailTemplate.text });
+
+        return res.status(200).json({ success: true, message: "Đã xác thực. Mật khẩu mới đã được gửi qua email." });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Đã xảy ra lỗi.", error: error.message });
     }
 };
 
@@ -800,5 +947,9 @@ export {
     updateUserStatus,
     changePassword,
     refreshToken,
-    CreateUser
+    CreateUser,
+    requestPasswordResetCode,
+    verifyPasswordResetCode,
+    requestRegisterVerificationCode,
+    verifyRegisterVerificationCode
 };
