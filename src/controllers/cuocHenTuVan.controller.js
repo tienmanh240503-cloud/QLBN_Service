@@ -18,13 +18,21 @@ export const createCuocHenTuVan = async (req, res) => {
         // - Nếu là nhân viên quầy/admin và có id_benh_nhan trong body -> dùng id_benh_nhan từ body
         // - Ngược lại, dùng id_nguoi_dung từ token (bệnh nhân tự đặt lịch)
         let idBenhNhanFinal = id_nguoi_dung;
-        if ((vai_tro === "NhanVienQuay" || vai_tro === "Admin") && id_benh_nhan) {
+        const normalizedRole = (vai_tro || '').toString().trim().toLowerCase();
+        const canSelectPatient = ["nhan_vien_quay", "admin", "quan_tri_vien"].includes(normalizedRole);
+
+        if (canSelectPatient && id_benh_nhan) {
             idBenhNhanFinal = id_benh_nhan;
         }
 
-        // Kiểm tra bệnh nhân
-        const benhNhan = await BenhNhan.findOne({ id_benh_nhan : idBenhNhanFinal });
-        if (!benhNhan) return res.status(404).json({ success: false, message: "Bệnh nhân không tồn tại" });
+        // Kiểm tra bệnh nhân - thử dùng getById trước, nếu không có thì dùng findOne
+        let benhNhan = await BenhNhan.getById(idBenhNhanFinal);
+        if (!benhNhan) {
+            benhNhan = await BenhNhan.findOne({ id_benh_nhan : idBenhNhanFinal });
+        }
+        if (!benhNhan) {
+            return res.status(404).json({ success: false, message: "Bệnh nhân không tồn tại" });
+        }
 
         // Kiểm tra chuyên gia
         const chuyenGia = await ChuyenGiaDinhDuong.findOne({ id_chuyen_gia});

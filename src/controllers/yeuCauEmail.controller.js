@@ -494,10 +494,17 @@ export const sendBulkEmail = async (req, res) => {
 // Lấy lịch sử gửi email
 export const getLichSuGuiEmail = async (req, res) => {
     try {
-        const { page = 1, pageSize = 10 } = req.query;
+        const { page = 1, pageSize = 10, loai_email } = req.query;
         
-        let sqlQuery = `SELECT * FROM lich_su_gui_email ORDER BY thoi_gian_tao DESC`;
+        let sqlQuery = `SELECT * FROM lich_su_gui_email WHERE 1=1`;
         const values = [];
+
+        if (loai_email) {
+            sqlQuery += ` AND loai_email = ?`;
+            values.push(loai_email);
+        }
+
+        sqlQuery += ` ORDER BY thoi_gian_tao DESC`;
 
         const offset = (parseInt(page) - 1) * parseInt(pageSize);
         sqlQuery += ` LIMIT ? OFFSET ?`;
@@ -514,7 +521,14 @@ export const getLichSuGuiEmail = async (req, res) => {
             }
 
             // Đếm tổng số
-            db.query(`SELECT COUNT(*) as total FROM lich_su_gui_email`, [], (err, countResult) => {
+            let countQuery = `SELECT COUNT(*) as total FROM lich_su_gui_email WHERE 1=1`;
+            const countValues = [];
+            if (loai_email) {
+                countQuery += ` AND loai_email = ?`;
+                countValues.push(loai_email);
+            }
+
+            db.query(countQuery, countValues, (err, countResult) => {
                 if (err) {
                     return res.status(500).json({ 
                         success: false, 

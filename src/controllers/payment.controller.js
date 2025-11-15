@@ -7,7 +7,6 @@ import { HoaDon } from '../models/index.js';
 export const createMomoPaymentUrl = async (req, res) => {
   try {
     const { id_hoa_don } = req.params;
-    const { returnUrl, notifyUrl } = req.body;
 
     // Lấy thông tin hóa đơn
     const hoaDon = await HoaDon.findOne({ id_hoa_don });
@@ -119,6 +118,13 @@ export const createVNPayPaymentUrl = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Hóa đơn đã được thanh toán' });
     }
 
+    // Lấy IP address từ request
+    const ipAddr = req.headers['x-forwarded-for']?.split(',')[0] || 
+                   req.headers['x-real-ip'] || 
+                   req.connection?.remoteAddress || 
+                   req.socket?.remoteAddress ||
+                   '127.0.0.1';
+
     // Tạo payment URL
     const result = createVNPayPayment({
       orderId: id_hoa_don,
@@ -126,7 +132,16 @@ export const createVNPayPaymentUrl = async (req, res) => {
       orderDescription: `Thanh toan hoa don ${id_hoa_don}`,
       orderType: 'other',
       locale: 'vn',
+      ipAddr: ipAddr,
     });
+
+    // Kiểm tra nếu có lỗi từ service
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: result.message || 'Lỗi tạo payment URL',
+      });
+    }
 
     return res.status(200).json({
       success: true,

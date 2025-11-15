@@ -36,7 +36,10 @@ import yeuCauEmailRouter from './src/routers/yeuCauEmail.router.js';
 import thucDonChiTietRouter from './src/routers/thucDonChiTiet.router.js';
 import theoDoiTienDoRouter from './src/routers/theoDoiTienDo.router.js';
 import monAnThamKhaoRouter from './src/routers/monAnThamKhao.router.js';
+import calorieCalculatorRouter from './src/routers/calorieCalculator.router.js';
 import paymentRouter from './src/routers/payment.router.js';
+import symptomAnalysisRouter from './src/routers/symptomAnalysis.router.js';
+import nutritionAnalysisRouter from './src/routers/nutritionAnalysis.router.js';
 // import quanTriVienRouter from './src/routers/quanTriVien.router.js';
 import cors from 'cors';
 dotenv.config();
@@ -80,7 +83,10 @@ app.use('/yeu-cau-email', yeuCauEmailRouter);
 app.use('/thuc-don-chi-tiet', thucDonChiTietRouter);
 app.use('/theo-doi-tien-do', theoDoiTienDoRouter);
 app.use('/mon-an-tham-khao', monAnThamKhaoRouter);
+app.use('/calorie-calculator', calorieCalculatorRouter);
 app.use('/api/payment', paymentRouter);
+app.use('/symptom-analysis', symptomAnalysisRouter);
+app.use('/nutrition-analysis', nutritionAnalysisRouter);
 // app.use('/quan-tri-vien', quanTriVienRouter);
 
 async function main() {

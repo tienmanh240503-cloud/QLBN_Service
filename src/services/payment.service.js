@@ -40,10 +40,40 @@ export const createMomoPayment = async (params) => {
   const requestType = 'captureWallet';
   const amountFormatted = amount;
   const orderInfoFormatted = orderInfo || `Thanh toan hoa don ${orderId}`;
-  const extraDataFormatted = extraData;
+  const extraDataFormatted = extraData || '';
 
-  // Tạo raw signature
-  const rawSignature = `accessKey=${MOMO_CONFIG.accessKey}&amount=${amountFormatted}&extraData=${extraDataFormatted}&ipnUrl=${MOMO_CONFIG.notifyUrl}&orderId=${orderIdFormatted}&orderInfo=${orderInfoFormatted}&partnerCode=${MOMO_CONFIG.partnerCode}&redirectUrl=${MOMO_CONFIG.returnUrl}&requestId=${requestId}&requestType=${requestType}`;
+  // Tạo object chứa các tham số để tạo chữ ký (sắp xếp theo alphabet)
+  const signatureParams = {
+    accessKey: MOMO_CONFIG.accessKey,
+    amount: amountFormatted,
+    extraData: extraDataFormatted,
+    ipnUrl: MOMO_CONFIG.notifyUrl,
+    orderId: orderIdFormatted,
+    orderInfo: orderInfoFormatted,
+    partnerCode: MOMO_CONFIG.partnerCode,
+    redirectUrl: MOMO_CONFIG.returnUrl,
+    requestId: requestId,
+    requestType: requestType,
+  };
+
+  // Kiểm tra config
+  if (!MOMO_CONFIG.secretKey || !MOMO_CONFIG.accessKey) {
+    return {
+      success: false,
+      message: 'Momo config chưa được thiết lập đầy đủ. Vui lòng kiểm tra MOMO_SECRET_KEY và MOMO_ACCESS_KEY trong file .env',
+    };
+  }
+
+  // Sắp xếp các key theo thứ tự alphabet và tạo query string
+  const sortedKeys = Object.keys(signatureParams).sort();
+  const rawSignature = sortedKeys
+    .map((key) => `${key}=${signatureParams[key]}`)
+    .join('&');
+
+  // Log raw signature để debug (chỉ trong development)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Momo raw signature:', rawSignature);
+  }
 
   // Tạo signature bằng HMAC SHA256
   const signature = crypto
@@ -128,8 +158,28 @@ export const verifyMomoCallback = (params) => {
     signature,
   } = params;
 
-  // Tạo raw signature để verify
-  const rawSignature = `accessKey=${MOMO_CONFIG.accessKey}&amount=${amount}&extraData=${extraData}&message=${message}&orderId=${orderId}&orderInfo=${orderInfo}&orderType=${orderType}&partnerCode=${partnerCode}&payType=${payType}&requestId=${requestId}&responseTime=${responseTime}&resultCode=${resultCode}&transId=${transId}`;
+  // Tạo object chứa các tham số để verify chữ ký (sắp xếp theo alphabet)
+  const signatureParams = {
+    accessKey: MOMO_CONFIG.accessKey,
+    amount: amount,
+    extraData: extraData || '',
+    message: message || '',
+    orderId: orderId,
+    orderInfo: orderInfo,
+    orderType: orderType,
+    partnerCode: partnerCode,
+    payType: payType,
+    requestId: requestId,
+    responseTime: responseTime,
+    resultCode: resultCode,
+    transId: transId,
+  };
+
+  // Sắp xếp các key theo thứ tự alphabet và tạo query string
+  const sortedKeys = Object.keys(signatureParams).sort();
+  const rawSignature = sortedKeys
+    .map((key) => `${key}=${signatureParams[key]}`)
+    .join('&');
 
   const verifySignature = crypto
     .createHmac('sha256', MOMO_CONFIG.secretKey)
@@ -147,19 +197,63 @@ export const verifyMomoCallback = (params) => {
  * @param {string} params.orderDescription - Mô tả đơn hàng
  * @param {string} params.orderType - Loại đơn hàng
  * @param {string} params.locale - Ngôn ngữ (vn/en)
+ * @param {string} params.ipAddr - IP address của client
  * @returns {Object} Payment URL và thông tin
  */
 export const createVNPayPayment = (params) => {
-  const { orderId, amount, orderDescription, orderType = 'other', locale = 'vn' } = params;
+  const { orderId, amount, orderDescription, orderType = 'other', locale = 'vn', ipAddr = '127.0.0.1' } = params;
 
-  const date = new Date();
-  const createDate = date.toISOString().replace(/[-:]/g, '').split('.')[0] + '0700';
-  const expireDate = new Date(date.getTime() + 15 * 60 * 1000)
-    .toISOString()
-    .replace(/[-:]/g, '')
-    .split('.')[0] + '0700';
+  // Kiểm tra config
+  if (!VNPAY_CONFIG.tmnCode || VNPAY_CONFIG.tmnCode === 'YOUR_TMN_CODE' || 
+      !VNPAY_CONFIG.secretKey || VNPAY_CONFIG.secretKey === 'YOUR_SECRET_KEY') {
+    return {
+      success: false,
+      message: 'VNPay config chưa được thiết lập đầy đủ. Vui lòng kiểm tra VNPAY_TMN_CODE và VNPAY_SECRET_KEY trong file .env',
+    };
+  }
 
-  const ipAddr = '127.0.0.1'; // Có thể lấy từ request
+  // Format ngày tháng theo timezone GMT+7 (VN) - Format: yyyyMMddHHmmss
+  const now = new Date();
+  // Chuyển sang timezone GMT+7 (VN)
+  const vnOffset = 7 * 60 * 60 * 1000; // GMT+7 in milliseconds
+  const vnTime = new Date(now.getTime() + vnOffset);
+  
+  // Format: yyyyMMddHHmmss (14 ký tự) - sử dụng UTC methods vì đã cộng offset
+  const year = vnTime.getUTCFullYear();
+  const month = String(vnTime.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(vnTime.getUTCDate()).padStart(2, '0');
+  const hours = String(vnTime.getUTCHours()).padStart(2, '0');
+  const minutes = String(vnTime.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(vnTime.getUTCSeconds()).padStart(2, '0');
+  const createDate = `${year}${month}${day}${hours}${minutes}${seconds}`;
+  
+  // Expire date: +15 phút
+  const expireTime = new Date(now.getTime() + vnOffset + (15 * 60 * 1000));
+  const expireYear = expireTime.getUTCFullYear();
+  const expireMonth = String(expireTime.getUTCMonth() + 1).padStart(2, '0');
+  const expireDay = String(expireTime.getUTCDate()).padStart(2, '0');
+  const expireHours = String(expireTime.getUTCHours()).padStart(2, '0');
+  const expireMinutes = String(expireTime.getUTCMinutes()).padStart(2, '0');
+  const expireSeconds = String(expireTime.getUTCSeconds()).padStart(2, '0');
+  const expireDate = `${expireYear}${expireMonth}${expireDay}${expireHours}${expireMinutes}${expireSeconds}`;
+
+  // Làm sạch orderId - chỉ giữ chữ số, chữ cái, dấu gạch dưới, dấu gạch ngang
+  const cleanOrderId = String(orderId).replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 100);
+  
+  // Làm sạch orderDescription - loại bỏ ký tự đặc biệt, chỉ giữ chữ cái, số, khoảng trắng
+  const cleanOrderDescription = (orderDescription || `Thanh toan hoa don ${cleanOrderId}`)
+    .replace(/[^a-zA-Z0-9\s]/g, '')
+    .trim()
+    .substring(0, 255); // VNPAY giới hạn 255 ký tự
+
+  // Đảm bảo amount là số nguyên
+  const amountInt = Math.round(Number(amount));
+  if (isNaN(amountInt) || amountInt <= 0) {
+    return {
+      success: false,
+      message: 'Số tiền không hợp lệ',
+    };
+  }
 
   // Tạo các tham số
   const vnp_Params = {
@@ -168,10 +262,10 @@ export const createVNPayPayment = (params) => {
     vnp_TmnCode: VNPAY_CONFIG.tmnCode,
     vnp_Locale: locale,
     vnp_CurrCode: 'VND',
-    vnp_TxnRef: orderId,
-    vnp_OrderInfo: orderDescription || `Thanh toan hoa don ${orderId}`,
+    vnp_TxnRef: cleanOrderId,
+    vnp_OrderInfo: cleanOrderDescription,
     vnp_OrderType: orderType,
-    vnp_Amount: amount * 100, // VNPay yêu cầu số tiền nhân 100
+    vnp_Amount: amountInt * 100, // VNPay yêu cầu số tiền nhân 100
     vnp_ReturnUrl: VNPAY_CONFIG.returnUrl,
     vnp_IpAddr: ipAddr,
     vnp_CreateDate: createDate,
@@ -202,8 +296,8 @@ export const createVNPayPayment = (params) => {
   return {
     success: true,
     paymentUrl: paymentUrl,
-    orderId: orderId,
-    amount: amount,
+    orderId: cleanOrderId,
+    amount: amountInt,
   };
 };
 
