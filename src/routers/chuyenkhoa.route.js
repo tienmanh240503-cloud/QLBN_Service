@@ -6,7 +6,7 @@ import {
     updateChuyenKhoa,
     deleteChuyenKhoa
 } from "../controllers/chuyenkhoa.controller.js";
-import { verify } from "../middlewares/verifyToken.middleware.js";
+import { verify } from '../middlewares/verifytoken.middleware.js';
 import uploader from "../middlewares/uploader.middleware.js";
 
 const router = express.Router();

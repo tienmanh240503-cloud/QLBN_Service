@@ -1,6 +1,6 @@
 import express from 'express';
 import { getAllBacSi, getBacSiById, updateBacSi } from '../controllers/bacSi.controller.js';
-import { verify } from '../middlewares/verifyToken.middleware.js';
+import { verify } from '../middlewares/verifytoken.middleware.js';
 
 const router = express.Router();
 

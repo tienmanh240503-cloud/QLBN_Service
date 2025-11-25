@@ -9,7 +9,7 @@ import {
     updateTrangThaiXinNghiPhep,
     deleteXinNghiPhep
 } from "../controllers/xinNghiPhep.controller.js";
-import { verify } from "../middlewares/verifyToken.middleware.js";
+import { verify } from '../middlewares/verifytoken.middleware.js';
 
 const router = express.Router();
 

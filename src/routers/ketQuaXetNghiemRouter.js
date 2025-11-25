@@ -5,7 +5,7 @@ import {
     updateKetQua,
     deleteKetQua
 } from '../controllers/ketQuaXetNghiem.controller.js';
-import { verify } from '../middlewares/verifyToken.middleware.js';
+import { verify } from '../middlewares/verifytoken.middleware.js';
 
 const router = express.Router();
 

@@ -7,7 +7,7 @@ import {
     updateHoSoDinhDuong,
     deleteHoSoDinhDuong
 } from '../controllers/hoSoDinhDuong.controller.js';
-import { verify } from '../middlewares/verifyToken.middleware.js';
+import { verify } from '../middlewares/verifytoken.middleware.js';
 import { checkRole } from '../middlewares/checkRole.js';
 
 const router = express.Router();

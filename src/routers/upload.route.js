@@ -6,7 +6,7 @@ import {
     uploadKetQuaXetNghiemFile,
     deleteImage
 } from "../controllers/upload.controller.js";
-import { verify } from "../middlewares/verifyToken.middleware.js";
+import { verify } from '../middlewares/verifytoken.middleware.js';
 import uploader from "../middlewares/uploader.middleware.js";
 import fileUploader from "../middlewares/fileUploader.middleware.js";
 

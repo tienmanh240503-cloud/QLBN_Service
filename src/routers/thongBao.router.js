@@ -1,5 +1,5 @@
 import express from 'express';
-import { verify } from '../middlewares/verifyToken.middleware.js';
+import { verify } from '../middlewares/verifytoken.middleware.js';
 import { 
     createThongBao,
     getThongBaoByNguoiDung,

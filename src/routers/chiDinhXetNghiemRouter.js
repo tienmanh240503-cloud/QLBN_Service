@@ -1,6 +1,6 @@
 import express from "express";
 import { createChiDinh, getChiDinhByHoSo, updateTrangThaiChiDinh, deleteChiDinh, getAllChiDinh } from "../controllers/chiDinhXetNghiem.controller.js";
-import { verify } from '../middlewares/verifyToken.middleware.js';
+import { verify } from '../middlewares/verifytoken.middleware.js';
 const router = express.Router();
 
 router.post("/",verify, createChiDinh);

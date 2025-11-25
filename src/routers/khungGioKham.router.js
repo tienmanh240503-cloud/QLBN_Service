@@ -6,7 +6,7 @@ import {
     updateKhungGioKham,
     deleteKhungGioKham
 } from '../controllers/khungGioKham.controller.js';
-import { verify } from '../middlewares/verifyToken.middleware.js';
+import { verify } from '../middlewares/verifytoken.middleware.js';
 
 const router = express.Router();
 
