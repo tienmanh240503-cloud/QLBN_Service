@@ -102,7 +102,7 @@ async function main() {
         // Make io available globally for use in controllers
         app.set('io', io);
         
-        httpServer.listen(SERVER_CONFIG.PORT, () => {
+        httpServer.listen(SERVER_CONFIG.PORT, '0.0.0.0', () => {
             console.log(`Server running on port ${SERVER_CONFIG.PORT}`);
             console.log(`Socket.IO initialized`);
         })
