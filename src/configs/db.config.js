@@ -16,7 +16,7 @@ export const DB_CONFID = {
     },
     mysql_connect: {
         host: "localhost",
-        port: 26266,
+        port: 3306,
         user: "root",
         password: "",
         database: "HeThongQuanLyBenhVien"
