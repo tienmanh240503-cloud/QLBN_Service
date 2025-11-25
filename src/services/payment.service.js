@@ -23,6 +23,19 @@ const VNPAY_CONFIG = {
   returnUrl: process.env.VNPAY_RETURN_URL || 'http://localhost:5173/payment/callback/vnpay',
 };
 
+// Cấu hình VietQR (Napas 2.0)
+const VIETQR_CONFIG = {
+  endpoint: process.env.VIETQR_ENDPOINT || 'https://api.vietqr.io/v2/generate',
+  acqId: process.env.VIETQR_ACQ_ID || '',
+  accountNo: process.env.VIETQR_ACCOUNT_NO || '',
+  accountName: process.env.VIETQR_ACCOUNT_NAME || '',
+  template: process.env.VIETQR_TEMPLATE || 'compact',
+  format: process.env.VIETQR_FORMAT || 'text',
+  clientId: process.env.VIETQR_CLIENT_ID || '',
+  apiKey: process.env.VIETQR_API_KEY || '',
+  allowAmountEditable: process.env.VIETQR_ALLOW_AMOUNT_OVERRIDE === 'true',
+};
+
 /**
  * Tạo payment URL cho Momo
  * @param {Object} params - Thông tin thanh toán
@@ -36,11 +49,19 @@ export const createMomoPayment = async (params) => {
   const { orderId, amount, orderInfo, extraData = '' } = params;
 
   const requestId = `${MOMO_CONFIG.partnerCode}${Date.now()}`;
-  const orderIdFormatted = orderId;
+  const rawOrderId = orderId || requestId;
   const requestType = 'captureWallet';
-  const amountFormatted = amount;
-  const orderInfoFormatted = orderInfo || `Thanh toan hoa don ${orderId}`;
+  const amountFormatted = String(Math.round(Number(amount) || 0));
+  const orderInfoFormatted = (orderInfo || `Thanh toan hoa don ${rawOrderId}`).substring(0, 90);
   const extraDataFormatted = extraData || '';
+  const orderIdFormatted = rawOrderId.replace(/[^a-zA-Z0-9]/g, '').substring(0, 34) || requestId;
+
+  if (Number(amountFormatted) <= 0) {
+    return {
+      success: false,
+      message: 'Số tiền thanh toán không hợp lệ cho Momo.',
+    };
+  }
 
   // Tạo object chứa các tham số để tạo chữ ký (sắp xếp theo alphabet)
   const signatureParams = {
@@ -158,21 +179,26 @@ export const verifyMomoCallback = (params) => {
     signature,
   } = params;
 
+  const normalize = (value) => {
+    if (value === undefined || value === null) return '';
+    return String(value);
+  };
+
   // Tạo object chứa các tham số để verify chữ ký (sắp xếp theo alphabet)
   const signatureParams = {
-    accessKey: MOMO_CONFIG.accessKey,
-    amount: amount,
-    extraData: extraData || '',
-    message: message || '',
-    orderId: orderId,
-    orderInfo: orderInfo,
-    orderType: orderType,
-    partnerCode: partnerCode,
-    payType: payType,
-    requestId: requestId,
-    responseTime: responseTime,
-    resultCode: resultCode,
-    transId: transId,
+    accessKey: normalize(MOMO_CONFIG.accessKey),
+    amount: normalize(amount),
+    extraData: normalize(extraData),
+    message: normalize(message),
+    orderId: normalize(orderId),
+    orderInfo: normalize(orderInfo),
+    orderType: normalize(orderType),
+    partnerCode: normalize(partnerCode),
+    payType: normalize(payType),
+    requestId: normalize(requestId),
+    responseTime: normalize(responseTime),
+    resultCode: normalize(resultCode),
+    transId: normalize(transId),
   };
 
   // Sắp xếp các key theo thứ tự alphabet và tạo query string
@@ -186,7 +212,17 @@ export const verifyMomoCallback = (params) => {
     .update(rawSignature)
     .digest('hex');
 
-  return verifySignature === signature && resultCode === 0;
+  const isValid = verifySignature === signature;
+
+  if (!isValid && process.env.NODE_ENV !== 'production') {
+    console.warn('Momo callback signature mismatch', {
+      rawSignature,
+      expectedSignature: verifySignature,
+      receivedSignature: signature,
+    });
+  }
+
+  return isValid;
 };
 
 /**
@@ -342,5 +378,100 @@ export const verifyVNPayCallback = (params) => {
     responseCode: vnp_Params['vnp_ResponseCode'],
     message: vnp_Params['vnp_TransactionStatus'] === '00' ? 'Giao dịch thành công' : 'Giao dịch thất bại',
   };
+};
+
+/**
+ * Tạo mã VietQR (thanh toán chuyển khoản Napas 2.0)
+ * @param {Object} params
+ * @param {string} params.orderId
+ * @param {number} params.amount
+ * @param {string} params.description
+ * @returns {Promise<Object>}
+ */
+export const generateVietQRPayment = async (params) => {
+  const { orderId, amount, description } = params;
+
+  if (!VIETQR_CONFIG.accountNo || !VIETQR_CONFIG.accountName || !VIETQR_CONFIG.acqId) {
+    return {
+      success: false,
+      message: 'VietQR chưa được cấu hình. Vui lòng bổ sung VIETQR_ACCOUNT_NO, VIETQR_ACCOUNT_NAME và VIETQR_ACQ_ID.',
+    };
+  }
+
+  const amountInt = Math.round(Number(amount));
+  if (Number.isNaN(amountInt) || amountInt <= 0) {
+    return {
+      success: false,
+      message: 'Số tiền không hợp lệ để tạo VietQR.',
+    };
+  }
+
+  const addInfo = (description || `Thanh toan hoa don ${orderId || ''}`).substring(0, 120);
+
+  const payload = {
+    accountNo: VIETQR_CONFIG.accountNo,
+    accountName: VIETQR_CONFIG.accountName,
+    acqId: Number(VIETQR_CONFIG.acqId),
+    amount: amountInt,
+    addInfo,
+    template: VIETQR_CONFIG.template,
+    format: VIETQR_CONFIG.format,
+  };
+
+  if (VIETQR_CONFIG.allowAmountEditable) {
+    payload.amountEditable = true;
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (VIETQR_CONFIG.clientId) {
+    headers['x-client-id'] = VIETQR_CONFIG.clientId;
+  }
+
+  if (VIETQR_CONFIG.apiKey) {
+    headers['x-api-key'] = VIETQR_CONFIG.apiKey;
+  }
+
+  try {
+    const response = await fetch(VIETQR_CONFIG.endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+
+    if ((result?.code === '00' || result?.code === 0) && result?.data) {
+      return {
+        success: true,
+        data: {
+          qrDataURL: result.data.qrDataURL || null,
+          qrCode: result.data.qrCode || null,
+          bankName: result.data.bankName || result.data.accountName || VIETQR_CONFIG.accountName,
+          accountNo: result.data.accountNo || VIETQR_CONFIG.accountNo,
+          accountName: result.data.accountName || VIETQR_CONFIG.accountName,
+          amount: result.data.amount || amountInt,
+          addInfo: result.data.addInfo || addInfo,
+          template: result.data.template || VIETQR_CONFIG.template,
+          format: result.data.format || VIETQR_CONFIG.format,
+          orderId,
+        },
+      };
+    }
+
+    return {
+      success: false,
+      message: result?.desc || result?.message || 'Không thể tạo mã VietQR. Vui lòng thử lại.',
+    };
+  } catch (error) {
+    console.error('VietQR generate error:', error);
+    return {
+      success: false,
+      message: 'Lỗi kết nối với VietQR.',
+      error: error.message,
+    };
+  }
 };
 

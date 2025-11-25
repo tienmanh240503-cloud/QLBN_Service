@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import db from "../configs/connectData.js";
 import { sendEmail } from "../services/email.service.js";
 import { getNewAccountEmail, getRegisterVerificationEmail } from "../services/email.service.js";
+import { OAuth2Client } from 'google-auth-library';
 // Đăng nhập
 const login = async (req, res) => {
     try {
@@ -936,6 +937,266 @@ const refreshToken = async (req, res) => {
     }
 };
 
+// Đăng nhập với Google
+const loginWithGoogle = async (req, res) => {
+    try {
+        console.log('🔐 [Google Login] Nhận được request từ client');
+        console.log('  - Request body:', { 
+            hasCode: !!req.body.code, 
+            hasRedirectUri: !!req.body.redirectUri,
+            codeLength: req.body.code?.length || 0,
+            redirectUri: req.body.redirectUri || 'KHÔNG CÓ'
+        });
+        
+        const { idToken, code, redirectUri: clientRedirectUri } = req.body;
+        
+        // Khởi tạo Google OAuth client
+        const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+        const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+        
+        if (!CLIENT_ID || !CLIENT_SECRET) {
+            console.error('❌ [Google Login] Thiếu CLIENT_ID hoặc CLIENT_SECRET');
+            return res.status(500).json({
+                success: false,
+                message: "Google OAuth chưa được cấu hình trên server."
+            });
+        }
+        
+        if (!code) {
+            console.error('❌ [Google Login] Không có authorization code trong request');
+            return res.status(401).json({
+                success: false,
+                message: "Không thể xác thực với Google.",
+                error: 'invalid_request',
+                details: 'Authorization code không được cung cấp'
+            });
+        }
+        
+        const client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET);
+
+        let payload;
+        let googleId, email, ho_ten, anh_dai_dien;
+        let redirectUri; // Khai báo ở ngoài để có thể sử dụng trong catch block
+
+        // Nếu có authorization code, exchange để lấy tokens
+        if (code) {
+            try {
+                // Sử dụng redirect URI từ client nếu có, nếu không thì dùng từ env
+                // Redirect URI phải khớp chính xác với redirect URI mà client đã sử dụng khi yêu cầu authorization code
+                // Normalize redirect URI: loại bỏ trailing slash và đảm bảo format đúng
+                redirectUri = clientRedirectUri || process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5173';
+                // Loại bỏ trailing slash để đảm bảo khớp với Google Console
+                redirectUri = redirectUri.replace(/\/$/, '');
+                
+                console.log('🔐 [Google Login] Đang xử lý authorization code...');
+                console.log('  - Authorization code:', code ? `${code.substring(0, 20)}...` : 'KHÔNG CÓ');
+                console.log('  - CLIENT_ID:', CLIENT_ID ? `${CLIENT_ID.substring(0, 20)}...` : 'CHƯA CẤU HÌNH');
+                console.log('  - CLIENT_SECRET:', CLIENT_SECRET ? '***' : 'CHƯA CẤU HÌNH');
+                console.log('  - Redirect URI từ client:', clientRedirectUri || 'KHÔNG CÓ');
+                console.log('  - Redirect URI sau normalize:', redirectUri);
+                console.log('  - Redirect URI từ env:', process.env.GOOGLE_REDIRECT_URI || 'KHÔNG CÓ');
+                
+                // Google OAuth2Client.getToken() yêu cầu parameter là redirect_uri (snake_case)
+                const { tokens } = await client.getToken({ code, redirect_uri: redirectUri });
+                console.log('✅ [Google Login] Đã nhận được tokens từ Google');
+                console.log('  - Có id_token:', !!tokens.id_token);
+                console.log('  - Có access_token:', !!tokens.access_token);
+                client.setCredentials(tokens);
+                
+                // Verify id_token nếu có
+                if (tokens.id_token) {
+                    const ticket = await client.verifyIdToken({
+                        idToken: tokens.id_token,
+                        audience: CLIENT_ID
+                    });
+                    payload = ticket.getPayload();
+                } else {
+                    // Nếu không có id_token, lấy thông tin từ access_token bằng axios
+                    const axios = (await import('axios')).default;
+                    const userInfoResponse = await axios.get(
+                        'https://www.googleapis.com/oauth2/v3/userinfo',
+                        {
+                            headers: { Authorization: `Bearer ${tokens.access_token}` }
+                        }
+                    );
+                    payload = userInfoResponse.data;
+                }
+            } catch (error) {
+                console.error('❌ [Google Login] Lỗi khi xác thực với Google:', error);
+                console.error('  - Error message:', error.message);
+                console.error('  - Error code:', error.code);
+                console.error('  - Error response:', error.response?.data || 'KHÔNG CÓ');
+                console.error('  - Error stack:', error.stack);
+                
+                // Lấy thông tin chi tiết từ Google error response
+                const googleError = error.response?.data;
+                const errorDescription = googleError?.error_description || error.message;
+                const errorCode = googleError?.error || error.code || 'unknown_error';
+                
+                // Trả về thông báo lỗi chi tiết hơn
+                let errorMessage = "Không thể xác thực với Google.";
+                if (errorDescription?.includes('redirect_uri_mismatch') || errorCode === 'redirect_uri_mismatch') {
+                    errorMessage = `Redirect URI không khớp. Redirect URI đã sử dụng: ${redirectUri}. Vui lòng kiểm tra cấu hình Google OAuth Console và đảm bảo redirect URI khớp chính xác.`;
+                } else if (errorDescription?.includes('invalid_grant') || errorCode === 'invalid_grant') {
+                    errorMessage = "Authorization code không hợp lệ hoặc đã hết hạn. Vui lòng thử đăng nhập lại.";
+                } else if (errorDescription?.includes('invalid_client') || errorCode === 'invalid_client') {
+                    errorMessage = "Client ID hoặc Client Secret không đúng. Vui lòng kiểm tra cấu hình trong file .env.";
+                } else if (errorCode === 'invalid_request') {
+                    errorMessage = `Yêu cầu không hợp lệ: ${errorDescription || error.message}. Vui lòng kiểm tra lại cấu hình.`;
+                }
+                
+                return res.status(401).json({
+                    success: false,
+                    message: errorMessage,
+                    error: errorCode,
+                    errorDescription: errorDescription || error.message,
+                    redirectUriUsed: redirectUri,
+                    details: process.env.NODE_ENV === 'development' ? {
+                        fullError: error.toString(),
+                        googleErrorResponse: googleError,
+                        stack: error.stack
+                    } : undefined
+                });
+            }
+        } 
+        // Nếu có idToken trực tiếp
+        else if (idToken) {
+            try {
+                const ticket = await client.verifyIdToken({
+                    idToken: idToken,
+                    audience: CLIENT_ID
+                });
+                payload = ticket.getPayload();
+            } catch (error) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Token Google không hợp lệ.",
+                    error: error.message
+                });
+            }
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: "ID token hoặc authorization code từ Google là bắt buộc."
+            });
+        }
+
+        googleId = payload.sub || payload.id;
+        email = payload.email;
+        ho_ten = payload.name;
+        anh_dai_dien = payload.picture;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Không thể lấy email từ tài khoản Google."
+            });
+        }
+
+        // Tìm user theo email hoặc google_id
+        let user = await NguoiDung.findOne({ email });
+        
+        // Nếu không tìm thấy theo email, tìm theo google_id
+        if (!user) {
+            // Tìm theo google_id bằng raw query vì có thể cột chưa có trong model
+            const findGoogleUserQuery = `SELECT * FROM nguoidung WHERE google_id = ? LIMIT 1`;
+            const [googleUsers] = await new Promise((resolve, reject) => {
+                db.query(findGoogleUserQuery, [googleId], (err, results) => {
+                    if (err) reject(err);
+                    else resolve(results);
+                });
+            });
+            
+            if (googleUsers && googleUsers.length > 0) {
+                user = googleUsers[0];
+            }
+        }
+
+        // Nếu user chưa tồn tại, tạo mới (chỉ cho bệnh nhân)
+        if (!user) {
+            const Id = `BN_${uuidv4()}`;
+            
+            // Tạo username từ email (lấy phần trước @)
+            const ten_dang_nhap = email.split('@')[0] + '_' + Date.now().toString().slice(-6);
+            
+            // Tạo mật khẩu ngẫu nhiên (user sẽ không cần dùng nếu đăng nhập bằng Google)
+            const randomPassword = generateRandomPassword(16);
+            const hashed = await hashedPassword(randomPassword);
+
+            const userData = {
+                id_nguoi_dung: Id,
+                ho_ten: ho_ten || email.split('@')[0],
+                email,
+                ten_dang_nhap,
+                mat_khau: hashed,
+                google_id: googleId,
+                anh_dai_dien: anh_dai_dien || null,
+                vai_tro: "benh_nhan",
+                trang_thai_hoat_dong: true
+            };
+
+            const userId = await NguoiDung.create(userData);
+            
+            if (userId) {
+                await BenhNhan.create({ id_benh_nhan: Id });
+                
+                // Lấy lại user vừa tạo
+                user = await NguoiDung.findOne({ id_nguoi_dung: Id });
+            }
+        } else {
+            // User đã tồn tại, cập nhật google_id nếu chưa có
+            if (!user.google_id) {
+                const updateQuery = `UPDATE nguoidung SET google_id = ? WHERE id_nguoi_dung = ?`;
+                await new Promise((resolve, reject) => {
+                    db.query(updateQuery, [googleId, user.id_nguoi_dung], (err, result) => {
+                        if (err) reject(err);
+                        else resolve(result);
+                    });
+                });
+                user.google_id = googleId;
+            }
+            
+            // Cập nhật ảnh đại diện nếu có
+            if (anh_dai_dien && (!user.anh_dai_dien || user.anh_dai_dien !== anh_dai_dien)) {
+                await NguoiDung.update({ anh_dai_dien }, user.id_nguoi_dung);
+                user.anh_dai_dien = anh_dai_dien;
+            }
+        }
+
+        // Kiểm tra trạng thái hoạt động
+        if (!user.trang_thai_hoat_dong) {
+            return res.status(401).json({
+                success: false,
+                message: "Tài khoản đã bị vô hiệu hóa."
+            });
+        }
+
+        // Tạo tokens
+        const accessToken = generateAccessToken(user, user.vai_tro);
+        const refreshToken = generateRefreshToken(user, user.vai_tro);
+
+        // Ẩn mật khẩu trong response
+        const { mat_khau: _, ...userWithoutPassword } = user;
+
+        res.status(200).json({
+            success: true,
+            message: "Đăng nhập với Google thành công.",
+            data: {
+                user: userWithoutPassword,
+                accessToken,
+                refreshToken
+            }
+        });
+    } catch (error) {
+        console.error("Error in loginWithGoogle:", error);
+        res.status(500).json({
+            success: false,
+            message: "Đã xảy ra lỗi khi đăng nhập với Google.",
+            error: error.message
+        });
+    }
+};
+
 export {
     login,
     register,
@@ -951,5 +1212,6 @@ export {
     requestPasswordResetCode,
     verifyPasswordResetCode,
     requestRegisterVerificationCode,
-    verifyRegisterVerificationCode
+    verifyRegisterVerificationCode,
+    loginWithGoogle
 };

@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { CuocTroChuyen, TinNhan, NguoiDung, BenhNhan, BacSi, ChuyenGiaDinhDuong } from '../models/index.js';
 import cloudinary from '../configs/cloudinary.config.js';
-import { DB_CONFID } from '../configs/db.config.js';
-import mysql from 'mysql2/promise';
+import { poolPromise } from '../configs/connectData.js';
 import { createChatNotification } from '../helpers/notificationHelper.js';
+import { emitNewMessage, emitMessageDeleted } from '../socket/socketServer.js';
 
 // Tạo hoặc lấy cuộc trò chuyện giữa 2 người
 export const getOrCreateConversation = async (req, res) => {
@@ -48,62 +48,64 @@ export const getOrCreateConversation = async (req, res) => {
         const chuyenGiaNhan = await ChuyenGiaDinhDuong.findOne({ id_chuyen_gia: id_nguoi_nhan });
         
         // Tìm cuộc trò chuyện
-        const connection = await mysql.createConnection(DB_CONFID.mysql_connect);
+        const connection = await poolPromise.getConnection();
         
-        let query = '';
-        let params = [];
-        
-        if (benhNhanGui) {
-            // Người gửi là bệnh nhân
-            if (bacSiNhan) {
-                query = 'SELECT * FROM cuoctrochuyen WHERE id_benh_nhan COLLATE utf8mb4_general_ci = ? AND id_bac_si COLLATE utf8mb4_general_ci = ? LIMIT 1';
-                params = [id_nguoi_gui, id_nguoi_nhan];
-            } else if (chuyenGiaNhan) {
-                query = 'SELECT * FROM cuoctrochuyen WHERE id_benh_nhan COLLATE utf8mb4_general_ci = ? AND id_chuyen_gia_dinh_duong COLLATE utf8mb4_general_ci = ? LIMIT 1';
-                params = [id_nguoi_gui, id_nguoi_nhan];
-            }
-        } else if (benhNhanNhan) {
-            // Người nhận là bệnh nhân
-            if (bacSiGui) {
-                query = 'SELECT * FROM cuoctrochuyen WHERE id_benh_nhan COLLATE utf8mb4_general_ci = ? AND id_bac_si COLLATE utf8mb4_general_ci = ? LIMIT 1';
-                params = [id_nguoi_nhan, id_nguoi_gui];
-            } else if (chuyenGiaGui) {
-                query = 'SELECT * FROM cuoctrochuyen WHERE id_benh_nhan COLLATE utf8mb4_general_ci = ? AND id_chuyen_gia_dinh_duong COLLATE utf8mb4_general_ci = ? LIMIT 1';
-                params = [id_nguoi_nhan, id_nguoi_gui];
-            }
-        } else {
-            // Trường hợp cả 2 người đều không phải bệnh nhân (cùng vai trò hoặc vai trò khác)
-            // Tìm cuộc trò chuyện bằng cách kiểm tra tin nhắn có cả 2 người tham gia
-            // Tìm các cuộc trò chuyện có tin nhắn từ cả 2 người (người gửi và người nhận)
-            const [existingMessages] = await connection.execute(
-                `SELECT DISTINCT t1.id_cuoc_tro_chuyen 
-                 FROM tinnhan t1
-                 INNER JOIN tinnhan t2 ON t1.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = t2.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci
-                 WHERE (t1.id_nguoi_gui COLLATE utf8mb4_general_ci = ? AND t2.id_nguoi_gui COLLATE utf8mb4_general_ci = ?)
-                    OR (t1.id_nguoi_gui COLLATE utf8mb4_general_ci = ? AND t2.id_nguoi_gui COLLATE utf8mb4_general_ci = ?)
-                 LIMIT 1`,
-                [id_nguoi_gui, id_nguoi_nhan, id_nguoi_nhan, id_nguoi_gui]
-            );
+        try {
+            let query = '';
+            let params = [];
             
-            if (existingMessages.length > 0) {
-                const [convRows] = await connection.execute(
-                    'SELECT * FROM cuoctrochuyen WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ? LIMIT 1',
-                    [existingMessages[0].id_cuoc_tro_chuyen]
+            if (benhNhanGui) {
+                // Người gửi là bệnh nhân
+                if (bacSiNhan) {
+                    query = 'SELECT * FROM cuoctrochuyen WHERE id_benh_nhan COLLATE utf8mb4_general_ci = ? AND id_bac_si COLLATE utf8mb4_general_ci = ? LIMIT 1';
+                    params = [id_nguoi_gui, id_nguoi_nhan];
+                } else if (chuyenGiaNhan) {
+                    query = 'SELECT * FROM cuoctrochuyen WHERE id_benh_nhan COLLATE utf8mb4_general_ci = ? AND id_chuyen_gia_dinh_duong COLLATE utf8mb4_general_ci = ? LIMIT 1';
+                    params = [id_nguoi_gui, id_nguoi_nhan];
+                }
+            } else if (benhNhanNhan) {
+                // Người nhận là bệnh nhân
+                if (bacSiGui) {
+                    query = 'SELECT * FROM cuoctrochuyen WHERE id_benh_nhan COLLATE utf8mb4_general_ci = ? AND id_bac_si COLLATE utf8mb4_general_ci = ? LIMIT 1';
+                    params = [id_nguoi_nhan, id_nguoi_gui];
+                } else if (chuyenGiaGui) {
+                    query = 'SELECT * FROM cuoctrochuyen WHERE id_benh_nhan COLLATE utf8mb4_general_ci = ? AND id_chuyen_gia_dinh_duong COLLATE utf8mb4_general_ci = ? LIMIT 1';
+                    params = [id_nguoi_nhan, id_nguoi_gui];
+                }
+            } else {
+                // Trường hợp cả 2 người đều không phải bệnh nhân (cùng vai trò hoặc vai trò khác)
+                // Tìm cuộc trò chuyện bằng cách kiểm tra tin nhắn có cả 2 người tham gia
+                // Tìm các cuộc trò chuyện có tin nhắn từ cả 2 người (người gửi và người nhận)
+                const [existingMessages] = await connection.execute(
+                    `SELECT DISTINCT t1.id_cuoc_tro_chuyen 
+                     FROM tinnhan t1
+                     INNER JOIN tinnhan t2 ON t1.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = t2.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci
+                     WHERE (t1.id_nguoi_gui COLLATE utf8mb4_general_ci = ? AND t2.id_nguoi_gui COLLATE utf8mb4_general_ci = ?)
+                        OR (t1.id_nguoi_gui COLLATE utf8mb4_general_ci = ? AND t2.id_nguoi_gui COLLATE utf8mb4_general_ci = ?)
+                     LIMIT 1`,
+                    [id_nguoi_gui, id_nguoi_nhan, id_nguoi_nhan, id_nguoi_gui]
                 );
-                if (convRows.length > 0) {
-                    conversation = convRows[0];
+                
+                if (existingMessages.length > 0) {
+                    const [convRows] = await connection.execute(
+                        'SELECT * FROM cuoctrochuyen WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ? LIMIT 1',
+                        [existingMessages[0].id_cuoc_tro_chuyen]
+                    );
+                    if (convRows.length > 0) {
+                        conversation = convRows[0];
+                    }
                 }
             }
-        }
 
-        if (query && !conversation) {
-            const [rows] = await connection.execute(query, params);
-            if (rows.length > 0) {
-                conversation = rows[0];
+            if (query && !conversation) {
+                const [rows] = await connection.execute(query, params);
+                if (rows.length > 0) {
+                    conversation = rows[0];
+                }
             }
+        } finally {
+            connection.release(); // Trả connection về pool
         }
-        
-        await connection.end();
 
         // Nếu chưa có, tạo mới
         if (!conversation) {
@@ -140,26 +142,30 @@ export const getOrCreateConversation = async (req, res) => {
 
         // Lấy thông tin đầy đủ của cuộc trò chuyện
         // Bao gồm cả trường hợp id_bac_si chứa người dùng không phải bác sĩ
-        const connection2 = await mysql.createConnection(DB_CONFID.mysql_connect);
-        const [conversationDetails] = await connection2.execute(
-            `SELECT c.*, 
-                bn.ho_ten as benh_nhan_ten, bn.anh_dai_dien as benh_nhan_avatar, bn.id_nguoi_dung as benh_nhan_id, bn.vai_tro as benh_nhan_vai_tro,
-                COALESCE(bs.ho_ten, nd_bs.ho_ten) as bac_si_ten, 
-                COALESCE(bs.anh_dai_dien, nd_bs.anh_dai_dien) as bac_si_avatar,
-                COALESCE(bs.id_nguoi_dung, c.id_bac_si) as bac_si_id,
-                COALESCE(bs.vai_tro, nd_bs.vai_tro) as bac_si_vai_tro,
-                cg.ho_ten as chuyen_gia_ten, cg.anh_dai_dien as chuyen_gia_avatar, cg.id_nguoi_dung as chuyen_gia_id, cg.vai_tro as chuyen_gia_vai_tro
-             FROM cuoctrochuyen c
-             LEFT JOIN nguoidung bn ON c.id_benh_nhan COLLATE utf8mb4_general_ci = bn.id_nguoi_dung COLLATE utf8mb4_general_ci
-             LEFT JOIN bacsi b ON c.id_bac_si COLLATE utf8mb4_general_ci = b.id_bac_si COLLATE utf8mb4_general_ci
-             LEFT JOIN nguoidung bs ON b.id_bac_si COLLATE utf8mb4_general_ci = bs.id_nguoi_dung COLLATE utf8mb4_general_ci
-             LEFT JOIN nguoidung nd_bs ON c.id_bac_si COLLATE utf8mb4_general_ci = nd_bs.id_nguoi_dung COLLATE utf8mb4_general_ci
-             LEFT JOIN chuyengiadinhduong cgd ON c.id_chuyen_gia_dinh_duong COLLATE utf8mb4_general_ci = cgd.id_chuyen_gia COLLATE utf8mb4_general_ci
-             LEFT JOIN nguoidung cg ON cgd.id_chuyen_gia COLLATE utf8mb4_general_ci = cg.id_nguoi_dung COLLATE utf8mb4_general_ci
-             WHERE c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ?`,
-            [conversation.id_cuoc_tro_chuyen]
-        );
-        await connection2.end();
+        const connection2 = await poolPromise.getConnection();
+        let conversationDetails;
+        try {
+            [conversationDetails] = await connection2.execute(
+                `SELECT c.*, 
+                    bn.ho_ten as benh_nhan_ten, bn.anh_dai_dien as benh_nhan_avatar, bn.id_nguoi_dung as benh_nhan_id, bn.vai_tro as benh_nhan_vai_tro,
+                    COALESCE(bs.ho_ten, nd_bs.ho_ten) as bac_si_ten, 
+                    COALESCE(bs.anh_dai_dien, nd_bs.anh_dai_dien) as bac_si_avatar,
+                    COALESCE(bs.id_nguoi_dung, c.id_bac_si) as bac_si_id,
+                    COALESCE(bs.vai_tro, nd_bs.vai_tro) as bac_si_vai_tro,
+                    cg.ho_ten as chuyen_gia_ten, cg.anh_dai_dien as chuyen_gia_avatar, cg.id_nguoi_dung as chuyen_gia_id, cg.vai_tro as chuyen_gia_vai_tro
+                 FROM cuoctrochuyen c
+                 LEFT JOIN nguoidung bn ON c.id_benh_nhan COLLATE utf8mb4_general_ci = bn.id_nguoi_dung COLLATE utf8mb4_general_ci
+                 LEFT JOIN bacsi b ON c.id_bac_si COLLATE utf8mb4_general_ci = b.id_bac_si COLLATE utf8mb4_general_ci
+                 LEFT JOIN nguoidung bs ON b.id_bac_si COLLATE utf8mb4_general_ci = bs.id_nguoi_dung COLLATE utf8mb4_general_ci
+                 LEFT JOIN nguoidung nd_bs ON c.id_bac_si COLLATE utf8mb4_general_ci = nd_bs.id_nguoi_dung COLLATE utf8mb4_general_ci
+                 LEFT JOIN chuyengiadinhduong cgd ON c.id_chuyen_gia_dinh_duong COLLATE utf8mb4_general_ci = cgd.id_chuyen_gia COLLATE utf8mb4_general_ci
+                 LEFT JOIN nguoidung cg ON cgd.id_chuyen_gia COLLATE utf8mb4_general_ci = cg.id_nguoi_dung COLLATE utf8mb4_general_ci
+                 WHERE c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ?`,
+                [conversation.id_cuoc_tro_chuyen]
+            );
+        } finally {
+            connection2.release(); // Trả connection về pool
+        }
 
         res.status(200).json({
             success: true,
@@ -187,46 +193,48 @@ export const getConversations = async (req, res) => {
             });
         }
         const id_nguoi_dung = req.decoded.info.id_nguoi_dung;
-        const connection = await mysql.createConnection(DB_CONFID.mysql_connect);
+        const connection = await poolPromise.getConnection();
 
-        // Lấy tất cả cuộc trò chuyện mà người dùng tham gia
-        // Bao gồm cả các cuộc trò chuyện không phải bệnh nhân-bác sĩ/chuyên gia
-        // Sử dụng COALESCE để lấy thông tin người dùng ngay cả khi không phải bác sĩ trong bảng bacsi
-        const [conversations] = await connection.execute(
-            `SELECT DISTINCT c.*, 
-                bn.ho_ten as benh_nhan_ten, bn.anh_dai_dien as benh_nhan_avatar, bn.id_nguoi_dung as benh_nhan_id, bn.vai_tro as benh_nhan_vai_tro,
-                COALESCE(bs.ho_ten, nd_bs.ho_ten) as bac_si_ten, 
-                COALESCE(bs.anh_dai_dien, nd_bs.anh_dai_dien) as bac_si_avatar,
-                COALESCE(bs.id_nguoi_dung, c.id_bac_si) as bac_si_id,
-                COALESCE(bs.vai_tro, nd_bs.vai_tro) as bac_si_vai_tro,
-                cg.ho_ten as chuyen_gia_ten, cg.anh_dai_dien as chuyen_gia_avatar, cg.id_nguoi_dung as chuyen_gia_id, cg.vai_tro as chuyen_gia_vai_tro,
-                (SELECT noi_dung FROM tinnhan WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci ORDER BY thoi_gian_gui DESC LIMIT 1) as tin_nhan_cuoi,
-                (SELECT thoi_gian_gui FROM tinnhan WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci ORDER BY thoi_gian_gui DESC LIMIT 1) as thoi_gian_tin_nhan_cuoi,
-                (SELECT COUNT(*) FROM tinnhan WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci AND id_nguoi_gui COLLATE utf8mb4_general_ci != ? AND da_doc = 0) as so_tin_nhan_chua_doc
-             FROM cuoctrochuyen c
-             LEFT JOIN nguoidung bn ON c.id_benh_nhan COLLATE utf8mb4_general_ci = bn.id_nguoi_dung COLLATE utf8mb4_general_ci
-             LEFT JOIN bacsi b ON c.id_bac_si COLLATE utf8mb4_general_ci = b.id_bac_si COLLATE utf8mb4_general_ci
-             LEFT JOIN nguoidung bs ON b.id_bac_si COLLATE utf8mb4_general_ci = bs.id_nguoi_dung COLLATE utf8mb4_general_ci
-             LEFT JOIN nguoidung nd_bs ON c.id_bac_si COLLATE utf8mb4_general_ci = nd_bs.id_nguoi_dung COLLATE utf8mb4_general_ci
-             LEFT JOIN chuyengiadinhduong cgd ON c.id_chuyen_gia_dinh_duong COLLATE utf8mb4_general_ci = cgd.id_chuyen_gia COLLATE utf8mb4_general_ci
-             LEFT JOIN nguoidung cg ON cgd.id_chuyen_gia COLLATE utf8mb4_general_ci = cg.id_nguoi_dung COLLATE utf8mb4_general_ci
-             WHERE (c.id_benh_nhan COLLATE utf8mb4_general_ci = ? OR c.id_bac_si COLLATE utf8mb4_general_ci = ? OR c.id_chuyen_gia_dinh_duong COLLATE utf8mb4_general_ci = ?)
-                OR EXISTS (
-                    SELECT 1 FROM tinnhan tn 
-                    WHERE tn.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci 
-                    AND tn.id_nguoi_gui COLLATE utf8mb4_general_ci = ?
-                )
-             ORDER BY thoi_gian_tin_nhan_cuoi DESC, c.thoi_gian_tao DESC`,
-            [id_nguoi_dung, id_nguoi_dung, id_nguoi_dung, id_nguoi_dung, id_nguoi_dung]
-        );
+        try {
+            // Lấy tất cả cuộc trò chuyện mà người dùng tham gia
+            // Bao gồm cả các cuộc trò chuyện không phải bệnh nhân-bác sĩ/chuyên gia
+            // Sử dụng COALESCE để lấy thông tin người dùng ngay cả khi không phải bác sĩ trong bảng bacsi
+            const [conversations] = await connection.execute(
+                `SELECT DISTINCT c.*, 
+                    bn.ho_ten as benh_nhan_ten, bn.anh_dai_dien as benh_nhan_avatar, bn.id_nguoi_dung as benh_nhan_id, bn.vai_tro as benh_nhan_vai_tro,
+                    COALESCE(bs.ho_ten, nd_bs.ho_ten) as bac_si_ten, 
+                    COALESCE(bs.anh_dai_dien, nd_bs.anh_dai_dien) as bac_si_avatar,
+                    COALESCE(bs.id_nguoi_dung, c.id_bac_si) as bac_si_id,
+                    COALESCE(bs.vai_tro, nd_bs.vai_tro) as bac_si_vai_tro,
+                    cg.ho_ten as chuyen_gia_ten, cg.anh_dai_dien as chuyen_gia_avatar, cg.id_nguoi_dung as chuyen_gia_id, cg.vai_tro as chuyen_gia_vai_tro,
+                    (SELECT noi_dung FROM tinnhan WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci ORDER BY thoi_gian_gui DESC LIMIT 1) as tin_nhan_cuoi,
+                    (SELECT thoi_gian_gui FROM tinnhan WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci ORDER BY thoi_gian_gui DESC LIMIT 1) as thoi_gian_tin_nhan_cuoi,
+                    (SELECT COUNT(*) FROM tinnhan WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci AND id_nguoi_gui COLLATE utf8mb4_general_ci != ? AND da_doc = 0) as so_tin_nhan_chua_doc
+                 FROM cuoctrochuyen c
+                 LEFT JOIN nguoidung bn ON c.id_benh_nhan COLLATE utf8mb4_general_ci = bn.id_nguoi_dung COLLATE utf8mb4_general_ci
+                 LEFT JOIN bacsi b ON c.id_bac_si COLLATE utf8mb4_general_ci = b.id_bac_si COLLATE utf8mb4_general_ci
+                 LEFT JOIN nguoidung bs ON b.id_bac_si COLLATE utf8mb4_general_ci = bs.id_nguoi_dung COLLATE utf8mb4_general_ci
+                 LEFT JOIN nguoidung nd_bs ON c.id_bac_si COLLATE utf8mb4_general_ci = nd_bs.id_nguoi_dung COLLATE utf8mb4_general_ci
+                 LEFT JOIN chuyengiadinhduong cgd ON c.id_chuyen_gia_dinh_duong COLLATE utf8mb4_general_ci = cgd.id_chuyen_gia COLLATE utf8mb4_general_ci
+                 LEFT JOIN nguoidung cg ON cgd.id_chuyen_gia COLLATE utf8mb4_general_ci = cg.id_nguoi_dung COLLATE utf8mb4_general_ci
+                 WHERE (c.id_benh_nhan COLLATE utf8mb4_general_ci = ? OR c.id_bac_si COLLATE utf8mb4_general_ci = ? OR c.id_chuyen_gia_dinh_duong COLLATE utf8mb4_general_ci = ?)
+                    OR EXISTS (
+                        SELECT 1 FROM tinnhan tn 
+                        WHERE tn.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci 
+                        AND tn.id_nguoi_gui COLLATE utf8mb4_general_ci = ?
+                    )
+                 ORDER BY thoi_gian_tin_nhan_cuoi DESC, c.thoi_gian_tao DESC`,
+                [id_nguoi_dung, id_nguoi_dung, id_nguoi_dung, id_nguoi_dung, id_nguoi_dung]
+            );
 
-        await connection.end();
-
-        res.status(200).json({
-            success: true,
-            message: "Lấy danh sách cuộc trò chuyện thành công",
-            data: conversations
-        });
+            res.status(200).json({
+                success: true,
+                message: "Lấy danh sách cuộc trò chuyện thành công",
+                data: conversations
+            });
+        } finally {
+            connection.release(); // Trả connection về pool
+        }
 
     } catch (error) {
         console.error("Lỗi getConversations:", error);
@@ -335,21 +343,25 @@ export const sendMessage = async (req, res) => {
         const newMessage = await TinNhan.create(tinNhanData);
 
         // Lấy thông tin đầy đủ của tin nhắn
-        const connection = await mysql.createConnection(DB_CONFID.mysql_connect);
-        const [messageDetails] = await connection.execute(
-            `SELECT t.*, n.ho_ten as nguoi_gui_ten, n.anh_dai_dien as nguoi_gui_avatar
-             FROM tinnhan t
-             LEFT JOIN nguoidung n ON t.id_nguoi_gui COLLATE utf8mb4_general_ci = n.id_nguoi_dung COLLATE utf8mb4_general_ci
-             WHERE t.id_tin_nhan COLLATE utf8mb4_general_ci = ?`,
-            [id_tin_nhan]
-        );
-        
-        // Lấy thông tin cuộc trò chuyện để tìm người nhận
-        const [conversationDetails] = await connection.execute(
-            `SELECT * FROM cuoctrochuyen WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ?`,
-            [id_cuoc_tro_chuyen]
-        );
-        await connection.end();
+        const connection = await poolPromise.getConnection();
+        let messageDetails, conversationDetails;
+        try {
+            [messageDetails] = await connection.execute(
+                `SELECT t.*, n.ho_ten as nguoi_gui_ten, n.anh_dai_dien as nguoi_gui_avatar
+                 FROM tinnhan t
+                 LEFT JOIN nguoidung n ON t.id_nguoi_gui COLLATE utf8mb4_general_ci = n.id_nguoi_dung COLLATE utf8mb4_general_ci
+                 WHERE t.id_tin_nhan COLLATE utf8mb4_general_ci = ?`,
+                [id_tin_nhan]
+            );
+            
+            // Lấy thông tin cuộc trò chuyện để tìm người nhận
+            [conversationDetails] = await connection.execute(
+                `SELECT * FROM cuoctrochuyen WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ?`,
+                [id_cuoc_tro_chuyen]
+            );
+        } finally {
+            connection.release(); // Trả connection về pool
+        }
 
         // Tạo thông báo cho người nhận (không phải người gửi)
         if (conversationDetails.length > 0) {
@@ -367,18 +379,21 @@ export const sendMessage = async (req, res) => {
             
             // Nếu không tìm thấy người nhận từ conversation, tìm từ tin nhắn trong conversation
             if (!id_nguoi_nhan) {
-                const connection2 = await mysql.createConnection(DB_CONFID.mysql_connect);
-                const [otherMessages] = await connection2.execute(
-                    `SELECT DISTINCT id_nguoi_gui FROM tinnhan 
-                     WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ? 
-                     AND id_nguoi_gui COLLATE utf8mb4_general_ci != ? 
-                     LIMIT 1`,
-                    [id_cuoc_tro_chuyen, id_nguoi_gui]
-                );
-                await connection2.end();
-                
-                if (otherMessages.length > 0) {
-                    id_nguoi_nhan = otherMessages[0].id_nguoi_gui;
+                const connection2 = await poolPromise.getConnection();
+                try {
+                    const [otherMessages] = await connection2.execute(
+                        `SELECT DISTINCT id_nguoi_gui FROM tinnhan 
+                         WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ? 
+                         AND id_nguoi_gui COLLATE utf8mb4_general_ci != ? 
+                         LIMIT 1`,
+                        [id_cuoc_tro_chuyen, id_nguoi_gui]
+                    );
+                    
+                    if (otherMessages.length > 0) {
+                        id_nguoi_nhan = otherMessages[0].id_nguoi_gui;
+                    }
+                } finally {
+                    connection2.release(); // Trả connection về pool
                 }
             }
             
@@ -391,6 +406,12 @@ export const sendMessage = async (req, res) => {
                     noi_dung || (file ? file.originalname : '')
                 );
             }
+        }
+
+        // Emit Socket.IO event for real-time message
+        const io = req.app.get('io');
+        if (io && messageDetails[0]) {
+            emitNewMessage(io, messageDetails[0]);
         }
 
         res.status(201).json({
@@ -432,38 +453,40 @@ export const getMessages = async (req, res) => {
             });
         }
 
-        const connection = await mysql.createConnection(DB_CONFID.mysql_connect);
+        const connection = await poolPromise.getConnection();
         
-        const offset = (page - 1) * pageSize;
-        const [messages] = await connection.execute(
-            `SELECT t.*, n.ho_ten as nguoi_gui_ten, n.anh_dai_dien as nguoi_gui_avatar, n.id_nguoi_dung as nguoi_gui_id
-             FROM tinnhan t
-             LEFT JOIN nguoidung n ON t.id_nguoi_gui COLLATE utf8mb4_general_ci = n.id_nguoi_dung COLLATE utf8mb4_general_ci
-             WHERE t.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ?
-             ORDER BY t.thoi_gian_gui ASC
-             LIMIT ? OFFSET ?`,
-            [id_cuoc_tro_chuyen, parseInt(pageSize), offset]
-        );
+        try {
+            const offset = (page - 1) * pageSize;
+            const [messages] = await connection.execute(
+                `SELECT t.*, n.ho_ten as nguoi_gui_ten, n.anh_dai_dien as nguoi_gui_avatar, n.id_nguoi_dung as nguoi_gui_id
+                 FROM tinnhan t
+                 LEFT JOIN nguoidung n ON t.id_nguoi_gui COLLATE utf8mb4_general_ci = n.id_nguoi_dung COLLATE utf8mb4_general_ci
+                 WHERE t.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ?
+                 ORDER BY t.thoi_gian_gui ASC
+                 LIMIT ? OFFSET ?`,
+                [id_cuoc_tro_chuyen, parseInt(pageSize), offset]
+            );
 
-        // Đánh dấu tin nhắn là đã đọc
-        await connection.execute(
-            `UPDATE tinnhan SET da_doc = 1 
-             WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ? AND id_nguoi_gui COLLATE utf8mb4_general_ci != ? AND da_doc = 0`,
-            [id_cuoc_tro_chuyen, id_nguoi_dung]
-        );
+            // Đánh dấu tin nhắn là đã đọc
+            await connection.execute(
+                `UPDATE tinnhan SET da_doc = 1 
+                 WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ? AND id_nguoi_gui COLLATE utf8mb4_general_ci != ? AND da_doc = 0`,
+                [id_cuoc_tro_chuyen, id_nguoi_dung]
+            );
 
-        await connection.end();
-
-        res.status(200).json({
-            success: true,
-            message: "Lấy danh sách tin nhắn thành công",
-            data: messages,
-            pagination: {
-                page: parseInt(page),
-                pageSize: parseInt(pageSize),
-                total: messages.length
-            }
-        });
+            res.status(200).json({
+                success: true,
+                message: "Lấy danh sách tin nhắn thành công",
+                data: messages,
+                pagination: {
+                    page: parseInt(page),
+                    pageSize: parseInt(pageSize),
+                    total: messages.length
+                }
+            });
+        } finally {
+            connection.release(); // Trả connection về pool
+        }
 
     } catch (error) {
         console.error("Lỗi getMessages:", error);
@@ -481,13 +504,16 @@ export const markAsRead = async (req, res) => {
         const { id_cuoc_tro_chuyen } = req.params;
         const id_nguoi_dung = req.decoded.info.id_nguoi_dung;
 
-        const connection = await mysql.createConnection(DB_CONFID.mysql_connect);
-        await connection.execute(
-            `UPDATE tinnhan SET da_doc = 1 
-             WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ? AND id_nguoi_gui COLLATE utf8mb4_general_ci != ? AND da_doc = 0`,
-            [id_cuoc_tro_chuyen, id_nguoi_dung]
-        );
-        await connection.end();
+        const connection = await poolPromise.getConnection();
+        try {
+            await connection.execute(
+                `UPDATE tinnhan SET da_doc = 1 
+                 WHERE id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ? AND id_nguoi_gui COLLATE utf8mb4_general_ci != ? AND da_doc = 0`,
+                [id_cuoc_tro_chuyen, id_nguoi_dung]
+            );
+        } finally {
+            connection.release(); // Trả connection về pool
+        }
 
         res.status(200).json({
             success: true,
@@ -518,57 +544,65 @@ export const deleteMessage = async (req, res) => {
         }
 
         // Kiểm tra tin nhắn tồn tại và người dùng có quyền xóa (chỉ xóa tin nhắn của chính mình)
-        const connection = await mysql.createConnection(DB_CONFID.mysql_connect);
-        const [messages] = await connection.execute(
-            `SELECT * FROM tinnhan WHERE id_tin_nhan COLLATE utf8mb4_general_ci = ?`,
-            [id_tin_nhan]
-        );
+        const connection = await poolPromise.getConnection();
+        let messageData;
+        try {
+            const [messages] = await connection.execute(
+                `SELECT * FROM tinnhan WHERE id_tin_nhan COLLATE utf8mb4_general_ci = ?`,
+                [id_tin_nhan]
+            );
 
-        if (messages.length === 0) {
-            await connection.end();
-            return res.status(404).json({
-                success: false,
-                message: "Không tìm thấy tin nhắn"
-            });
+            if (messages.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Không tìm thấy tin nhắn"
+                });
+            }
+
+            messageData = messages[0];
+            
+            // Kiểm tra người dùng có trong cùng cuộc trò chuyện không
+            // Kiểm tra xem người dùng có phải là một trong những người tham gia cuộc trò chuyện
+            const [conversations] = await connection.execute(
+                `SELECT c.* FROM cuoctrochuyen c
+                 WHERE c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ?
+                 AND (
+                     c.id_benh_nhan COLLATE utf8mb4_general_ci = ?
+                     OR c.id_bac_si COLLATE utf8mb4_general_ci = ?
+                     OR c.id_chuyen_gia_dinh_duong COLLATE utf8mb4_general_ci = ?
+                     OR EXISTS (
+                         SELECT 1 FROM tinnhan tn 
+                         WHERE tn.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci 
+                         AND tn.id_nguoi_gui COLLATE utf8mb4_general_ci = ?
+                     )
+                 )`,
+                [messageData.id_cuoc_tro_chuyen, id_nguoi_dung, id_nguoi_dung, id_nguoi_dung, id_nguoi_dung]
+            );
+
+            if (conversations.length === 0) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Bạn không có quyền xóa tin nhắn này"
+                });
+            }
+
+            // Cho phép xóa tin nhắn của chính mình hoặc của đối phương trong cùng cuộc trò chuyện
+            // (trước đây chỉ cho phép xóa tin nhắn của chính mình)
+
+            // Xóa tin nhắn
+            await connection.execute(
+                `DELETE FROM tinnhan WHERE id_tin_nhan COLLATE utf8mb4_general_ci = ?`,
+                [id_tin_nhan]
+            );
+        } finally {
+            connection.release(); // Trả connection về pool
         }
 
-        const messageData = messages[0];
-        
-        // Kiểm tra người dùng có trong cùng cuộc trò chuyện không
-        // Kiểm tra xem người dùng có phải là một trong những người tham gia cuộc trò chuyện
-        const [conversations] = await connection.execute(
-            `SELECT c.* FROM cuoctrochuyen c
-             WHERE c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ?
-             AND (
-                 c.id_benh_nhan COLLATE utf8mb4_general_ci = ?
-                 OR c.id_bac_si COLLATE utf8mb4_general_ci = ?
-                 OR c.id_chuyen_gia_dinh_duong COLLATE utf8mb4_general_ci = ?
-                 OR EXISTS (
-                     SELECT 1 FROM tinnhan tn 
-                     WHERE tn.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = c.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci 
-                     AND tn.id_nguoi_gui COLLATE utf8mb4_general_ci = ?
-                 )
-             )`,
-            [messageData.id_cuoc_tro_chuyen, id_nguoi_dung, id_nguoi_dung, id_nguoi_dung, id_nguoi_dung]
-        );
-
-        if (conversations.length === 0) {
-            await connection.end();
-            return res.status(403).json({
-                success: false,
-                message: "Bạn không có quyền xóa tin nhắn này"
-            });
+        // Emit Socket.IO event for message deletion
+        const io = req.app.get('io');
+        if (io && messageData) {
+            emitMessageDeleted(io, messageData.id_cuoc_tro_chuyen, id_tin_nhan);
         }
-
-        // Cho phép xóa tin nhắn của chính mình hoặc của đối phương trong cùng cuộc trò chuyện
-        // (trước đây chỉ cho phép xóa tin nhắn của chính mình)
-
-        // Xóa tin nhắn
-        await connection.execute(
-            `DELETE FROM tinnhan WHERE id_tin_nhan COLLATE utf8mb4_general_ci = ?`,
-            [id_tin_nhan]
-        );
-        await connection.end();
 
         res.status(200).json({
             success: true,

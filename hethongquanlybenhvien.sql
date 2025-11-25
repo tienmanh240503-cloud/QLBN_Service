@@ -443,7 +443,7 @@ CREATE TABLE `hoadon` (
   `id_cuoc_hen_tu_van` varchar(50) DEFAULT NULL,
   `tong_tien` decimal(15,2) NOT NULL,
   `trang_thai` enum('chua_thanh_toan','da_thanh_toan','da_huy') DEFAULT 'chua_thanh_toan',
-  `phuong_thuc_thanh_toan` enum('tien_mat','chuyen_khoan','the','vi_dien_tu') DEFAULT NULL,
+  `phuong_thuc_thanh_toan` enum('tien_mat','chuyen_khoan','the','vi_dien_tu','momo','vnpay') DEFAULT NULL,
   `thoi_gian_thanh_toan` timestamp NULL DEFAULT NULL,
   `thoi_gian_tao` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

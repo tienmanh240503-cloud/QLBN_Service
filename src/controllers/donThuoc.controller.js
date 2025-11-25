@@ -78,8 +78,9 @@ export const getDonThuocByHoSo = async (req, res) => {
         const donThuoc = await DonThuoc.findOne({id_ho_so});
 
         if (!donThuoc) {
-            return res.status(404).json({ success: false, message: "Không tìm thấy đơn thuốc cho hồ sơ này" });
+            return res.status(200).json({ success: true, data: null });
         }
+
         const chiTietDonThuoc = await ChiTietDonThuoc.findAll({id_don_thuoc : donThuoc.id_don_thuoc});
         const chiTietWithThuoc = await Promise.all(
             chiTietDonThuoc.map(async (ct) => {
@@ -90,6 +91,7 @@ export const getDonThuocByHoSo = async (req, res) => {
                 };
             })
         );
+
         return res.status(200).json({ success: true, data:{ ...donThuoc, chi_tiet : chiTietWithThuoc}});
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -109,7 +111,7 @@ export const getDonThuocByLichSu = async (req, res) => {
         // Lấy đơn thuốc + chi tiết + thông tin thuốc
         const donThuoc = await DonThuoc.findOne({id_lich_su});
         if (!donThuoc) {
-            return res.status(404).json({ success: false, message: "Không tìm thấy đơn thuốc cho hồ sơ này" });
+            return res.status(200).json({ success: true, data: null });
         }
        
         const chiTietDonThuoc = await ChiTietDonThuoc.findAll({id_don_thuoc : donThuoc.id_don_thuoc});

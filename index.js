@@ -1,6 +1,9 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
 import { SERVER_CONFIG } from './src/configs/server.config.js';
+import { initializeSocketIO } from './src/socket/socketServer.js';
+import { ensurePaymentMethodEnum } from './src/helpers/schemaMigrator.js';
 // Import routes
 import nguoiDungRouter from './src/routers/nguoiDung.router.js';
 import thuocRouter from './src/routers/thuoc.router.js';
@@ -44,6 +47,7 @@ import nutritionAnalysisRouter from './src/routers/nutritionAnalysis.router.js';
 import cors from 'cors';
 dotenv.config();
 const app = express();
+const httpServer = createServer(app);
 
 app.use(express.json());
 app.use(cors());
@@ -91,11 +95,19 @@ app.use('/nutrition-analysis', nutritionAnalysisRouter);
 
 async function main() {
     try {
-        app.listen(SERVER_CONFIG.PORT, () => {
-            // Server started successfully
+        await ensurePaymentMethodEnum();
+        // Initialize Socket.IO
+        const io = initializeSocketIO(httpServer);
+        
+        // Make io available globally for use in controllers
+        app.set('io', io);
+        
+        httpServer.listen(SERVER_CONFIG.PORT, () => {
+            console.log(`Server running on port ${SERVER_CONFIG.PORT}`);
+            console.log(`Socket.IO initialized`);
         })
     } catch (error) {
-        // Error connecting to database
+        console.error('Error starting server:', error);
     }
 }
 main()

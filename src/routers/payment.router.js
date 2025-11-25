@@ -4,6 +4,7 @@ import {
   handleMomoCallback,
   createVNPayPaymentUrl,
   handleVNPayCallback,
+  createVietQRPayment,
 } from '../controllers/payment.controller.js';
 import { verify } from '../middlewares/verifyToken.middleware.js';
 
@@ -20,6 +21,9 @@ router.post('/vnpay/:id_hoa_don', verify, createVNPayPaymentUrl);
 
 // Callback từ VNPay (Return URL - không cần đăng nhập)
 router.get('/callback/vnpay', handleVNPayCallback);
+
+// Tạo mã VietQR (cần đăng nhập)
+router.post('/vietqr/:id_hoa_don', verify, createVietQRPayment);
 
 export default router;
 

@@ -160,6 +160,77 @@ export const uploadImage = async (req, res) => {
     }
 };
 
+// Upload file kết quả xét nghiệm (hỗ trợ PDF, Word, Excel, Image, v.v.)
+export const uploadKetQuaXetNghiemFile = async (req, res) => {
+    try {
+        const file = req.file;
+        
+        if (!file) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Vui lòng chọn một tập tin" 
+            });
+        }
+
+        const fileName = `ketqua_xetnghiem_${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const uploadFolder = "QLBN/KetQuaXetNghiem";
+
+        let result;
+        
+        // Kiểm tra nếu là hình ảnh
+        if (file.mimetype.startsWith('image/')) {
+            // Upload hình ảnh
+            const dataUrl = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+            result = await new Promise((resolve, reject) => {
+                cloudinary.uploader.upload(dataUrl, {
+                    public_id: fileName,
+                    resource_type: 'auto',
+                    folder: uploadFolder
+                }, (err, result) => {
+                    if (err) reject(err);
+                    else resolve(result);
+                });
+            });
+        } else {
+            // Upload file (PDF, Word, Excel, v.v.) - sử dụng upload_stream với buffer
+            result = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    {
+                        public_id: fileName,
+                        resource_type: 'raw',
+                        folder: uploadFolder
+                    },
+                    (err, result) => {
+                        if (err) reject(err);
+                        else resolve(result);
+                    }
+                );
+                // Ghi buffer vào stream
+                uploadStream.write(file.buffer);
+                uploadStream.end();
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Upload file kết quả xét nghiệm thành công",
+            data: {
+                fileUrl: result.secure_url,
+                publicId: result.public_id,
+                fileName: fileName,
+                folder: uploadFolder
+            }
+        });
+
+    } catch (error) {
+        console.error("Lỗi upload file kết quả xét nghiệm:", error);
+        res.status(500).json({
+            success: false,
+            message: "Lỗi server khi upload file kết quả xét nghiệm"
+        });
+    }
+};
+
 // Xóa hình ảnh từ Cloudinary
 export const deleteImage = async (req, res) => {
     try {

@@ -1,4 +1,4 @@
-import { LichLamViec, KhungGioKham } from "../models/index.js";
+import { LichLamViec, KhungGioKham, PhongKham } from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
 
 // Tạo lịch làm việc mới
@@ -177,13 +177,27 @@ export const getLichLamViecByWeekforBacSi = async (req, res) => {
             return lvStr >= startStr && lvStr <= endStr;
         });
 
-        // Query khung giờ cho từng lịch thay vì hardcode
+        // Query khung giờ và phòng khám cho từng lịch
         const result = await Promise.all(
             filtered.map(async (l) => {
                 const khungGios = await KhungGioKham.findAll({ ca: l.ca });
+                let phongKham = null;
+                if (l.id_phong_kham) {
+                    phongKham = await PhongKham.getById(l.id_phong_kham);
+                }
                 return {
                     ...l,
-                    khung_gios: khungGios || []
+                    khung_gios: khungGios || [],
+                    phong_kham: phongKham ? {
+                        id_phong_kham: phongKham.id_phong_kham,
+                        ten_phong: phongKham.ten_phong,
+                        so_phong: phongKham.so_phong,
+                        tang: phongKham.tang,
+                        ten_chuyen_khoa: phongKham.ten_chuyen_khoa,
+                        ten_chuyen_nganh: phongKham.ten_chuyen_nganh
+                    } : null,
+                    ten_phong: phongKham?.ten_phong || null,
+                    so_phong: phongKham?.so_phong || null
                 };
             })
         );
@@ -219,13 +233,27 @@ export const getLichLamViecByWeek = async (req, res) => {
         if (filtered.length === 0) 
             return res.status(404).json({ success: false, message: "Không tìm thấy lịch làm việc" });
 
-        // Query khung giờ cho từng lịch
+        // Query khung giờ và phòng khám cho từng lịch
         const dataWithKhungGio = await Promise.all(
             filtered.map(async (lich) => {
                 const khungGios = await KhungGioKham.findAll({ ca: lich.ca });
+                let phongKham = null;
+                if (lich.id_phong_kham) {
+                    phongKham = await PhongKham.getById(lich.id_phong_kham);
+                }
                 return {
                     ...lich,
-                    khung_gios: khungGios || []
+                    khung_gios: khungGios || [],
+                    phong_kham: phongKham ? {
+                        id_phong_kham: phongKham.id_phong_kham,
+                        ten_phong: phongKham.ten_phong,
+                        so_phong: phongKham.so_phong,
+                        tang: phongKham.tang,
+                        ten_chuyen_khoa: phongKham.ten_chuyen_khoa,
+                        ten_chuyen_nganh: phongKham.ten_chuyen_nganh
+                    } : null,
+                    ten_phong: phongKham?.ten_phong || null,
+                    so_phong: phongKham?.so_phong || null
                 };
             })
         );

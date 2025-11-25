@@ -20,7 +20,7 @@ export const createLichLamViec = async (req, res) => {
             return res.status(404).json({ success: false, message: "Người dùng không tồn tại" });
         }
 
-        // Kiểm tra và validate chuyên khoa nếu có phòng khám
+        // Kiểm tra và validate phòng khám dựa trên vai trò
         if (id_phong_kham) {
             const phongKham = await PhongKham.findOne({ id_phong_kham });
             if (!phongKham) {
@@ -32,19 +32,98 @@ export const createLichLamViec = async (req, res) => {
                 return res.status(400).json({ success: false, message: `Phòng khám đang ở trạng thái ${phongKham.trang_thai}, không thể phân công lịch` });
             }
             
-            // Nếu phòng khám có chuyên khoa, kiểm tra bác sĩ có cùng chuyên khoa không
-            if (phongKham.id_chuyen_khoa) {
-                const bacSi = await BacSi.findOne({ id_bac_si: id_nguoi_dung });
-        if (!bacSi) {
-                    return res.status(400).json({ success: false, message: "Người dùng không phải là bác sĩ" });
-                }
-                
-                if (bacSi.id_chuyen_khoa !== phongKham.id_chuyen_khoa) {
-                    return res.status(400).json({ 
-                        success: false, 
-                        message: "Chuyên khoa của bác sĩ không khớp với chuyên khoa của phòng khám" 
-                    });
-                }
+            const vaiTro = nguoiDung.vai_tro;
+            
+            // Validate phòng khám dựa trên vai trò
+            switch(vaiTro) {
+                case 'bac_si':
+                    // Bác sĩ: phòng phải là phong_kham_bac_si và chuyên khoa phải khớp
+                    if (phongKham.loai_phong !== 'phong_kham_bac_si' && phongKham.loai_phong !== null) {
+                        return res.status(400).json({ 
+                            success: false, 
+                            message: "Phòng khám không phù hợp với bác sĩ. Vui lòng chọn phòng khám bác sĩ." 
+                        });
+                    }
+                    
+                    if (phongKham.id_chuyen_khoa) {
+                        const bacSi = await BacSi.findOne({ id_bac_si: id_nguoi_dung });
+                        if (!bacSi) {
+                            return res.status(400).json({ success: false, message: "Người dùng không phải là bác sĩ" });
+                        }
+                        
+                        if (bacSi.id_chuyen_khoa !== phongKham.id_chuyen_khoa) {
+                            return res.status(400).json({ 
+                                success: false, 
+                                message: "Chuyên khoa của bác sĩ không khớp với chuyên khoa của phòng khám" 
+                            });
+                        }
+                    }
+                    break;
+                    
+                case 'chuyen_gia_dinh_duong':
+                    // Chuyên gia dinh dưỡng: phòng phải là phong_tu_van_dinh_duong
+                    if (phongKham.loai_phong !== 'phong_tu_van_dinh_duong') {
+                        return res.status(400).json({ 
+                            success: false, 
+                            message: "Phòng khám không phù hợp với chuyên gia dinh dưỡng. Vui lòng chọn phòng tư vấn dinh dưỡng." 
+                        });
+                    }
+                    
+                    // Nếu phòng có chuyên ngành, kiểm tra chuyên gia có chuyên ngành đó không (tùy chọn)
+                    if (phongKham.id_chuyen_nganh) {
+                        // Kiểm tra trong bảng chuyengia_chuyennganhdinhduong
+                        const checkQuery = `
+                            SELECT * FROM chuyengia_chuyennganhdinhduong 
+                            WHERE id_chuyen_gia = ? AND id_chuyen_nganh = ?
+                        `;
+                        const [chuyenNganhCheck] = await new Promise((resolve, reject) => {
+                            db.query(checkQuery, [id_nguoi_dung, phongKham.id_chuyen_nganh], (err, result) => {
+                                if (err) reject(err);
+                                else resolve(result);
+                            });
+                        });
+                        
+                        // Không bắt buộc phải có chuyên ngành khớp, chỉ cảnh báo nếu muốn
+                        // if (!chuyenNganhCheck) {
+                        //     return res.status(400).json({ 
+                        //         success: false, 
+                        //         message: "Chuyên ngành của chuyên gia không khớp với chuyên ngành của phòng khám" 
+                        //     });
+                        // }
+                    }
+                    break;
+                    
+                case 'nhan_vien_quay':
+                case 'nhan_vien_phan_cong':
+                    // Nhân viên quầy/phân công: phòng phải là phong_lam_viec
+                    // Cho phép null để tương thích với dữ liệu cũ
+                    if (phongKham.loai_phong !== null && phongKham.loai_phong !== 'phong_lam_viec') {
+                        return res.status(400).json({ 
+                            success: false, 
+                            message: "Phòng khám không phù hợp với nhân viên. Vui lòng chọn phòng làm việc." 
+                        });
+                    }
+                    break;
+                    
+                case 'nhan_vien_xet_nghiem':
+                    // Nhân viên xét nghiệm: phòng phải là phong_xet_nghiem
+                    // Cho phép null để tương thích với dữ liệu cũ
+                    if (phongKham.loai_phong !== null && phongKham.loai_phong !== 'phong_xet_nghiem') {
+                        return res.status(400).json({ 
+                            success: false, 
+                            message: "Phòng khám không phù hợp với nhân viên xét nghiệm. Vui lòng chọn phòng xét nghiệm." 
+                        });
+                    }
+                    break;
+                    
+                default:
+                    // Các role khác không cần phòng khám hoặc có thể dùng phòng làm việc chung
+                    if (phongKham.loai_phong && phongKham.loai_phong !== 'phong_lam_viec' && phongKham.loai_phong !== 'phong_khac') {
+                        return res.status(400).json({ 
+                            success: false, 
+                            message: "Phòng khám không phù hợp với vai trò này" 
+                        });
+                    }
             }
         }
 
@@ -252,16 +331,30 @@ export const updateLichLamViec = async (req, res) => {
 
         const updated = await LichLamViec.update(updateData, id_lich_lam_viec);
         
-        // Lấy lại lịch đã cập nhật để query khung giờ
+        // Lấy lại lịch đã cập nhật để query khung giờ và phòng khám
         const lichUpdated = await LichLamViec.findOne({ id_lich_lam_viec });
         const khungGios = await KhungGioKham.findAll({ ca: lichUpdated.ca });
+        let phongKham = null;
+        if (lichUpdated.id_phong_kham) {
+            phongKham = await PhongKham.getById(lichUpdated.id_phong_kham);
+        }
         
         res.status(200).json({ 
             success: true, 
             message: "Cập nhật lịch làm việc thành công", 
             data: {
                 ...lichUpdated,
-                khung_gios: khungGios || []
+                khung_gios: khungGios || [],
+                phong_kham: phongKham ? {
+                    id_phong_kham: phongKham.id_phong_kham,
+                    ten_phong: phongKham.ten_phong,
+                    so_phong: phongKham.so_phong,
+                    tang: phongKham.tang,
+                    ten_chuyen_khoa: phongKham.ten_chuyen_khoa,
+                    ten_chuyen_nganh: phongKham.ten_chuyen_nganh
+                } : null,
+                ten_phong: phongKham?.ten_phong || null,
+                so_phong: phongKham?.so_phong || null
             }
         });
     } catch (error) {

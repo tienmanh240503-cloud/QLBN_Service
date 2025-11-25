@@ -71,17 +71,45 @@ export const updateKetQua = async (req, res) => {
         const ketqua = await KetQuaXetNghiem.findOne({id_chi_dinh});
         if (!ketqua) return res.status(404).json({ success: false, message: "Không tìm thấy kết quả" });
         
-        // Cập nhật kèm id_nhan_vien_xet_nghiem nếu chưa có
-        const updateData = {
-            ...req.body,
-            // Nếu chưa có người nhập, cập nhật lại
-            id_nhan_vien_xet_nghiem: id_nhan_vien_xet_nghiem || ketqua.id_nhan_vien_xet_nghiem
-        };
+        // Chỉ lấy các field hợp lệ từ req.body và loại bỏ undefined/null không cần thiết
+        // Loại bỏ id_chi_dinh vì đây là foreign key và không nên thay đổi
+        const { ket_qua_van_ban, duong_dan_file_ket_qua, thoi_gian_ket_luan, trang_thai_ket_qua, ghi_chu_ket_qua } = req.body;
+        
+        // Xây dựng updateData chỉ với các field có giá trị và hợp lệ
+        const updateData = {};
+        
+        if (ket_qua_van_ban !== undefined) updateData.ket_qua_van_ban = ket_qua_van_ban;
+        if (duong_dan_file_ket_qua !== undefined) updateData.duong_dan_file_ket_qua = duong_dan_file_ket_qua;
+        if (thoi_gian_ket_luan !== undefined) updateData.thoi_gian_ket_luan = thoi_gian_ket_luan;
+        if (trang_thai_ket_qua !== undefined) updateData.trang_thai_ket_qua = trang_thai_ket_qua;
+        if (ghi_chu_ket_qua !== undefined) updateData.ghi_chu_ket_qua = ghi_chu_ket_qua;
+        
+        // Cập nhật id_nhan_vien_xet_nghiem nếu chưa có hoặc có giá trị mới
+        if (id_nhan_vien_xet_nghiem) {
+            updateData.id_nhan_vien_xet_nghiem = id_nhan_vien_xet_nghiem;
+        } else if (!ketqua.id_nhan_vien_xet_nghiem) {
+            // Giữ nguyên nếu đã có
+            updateData.id_nhan_vien_xet_nghiem = ketqua.id_nhan_vien_xet_nghiem;
+        }
+        
+        // Kiểm tra xem có field nào để update không
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({ success: false, message: "Không có dữ liệu để cập nhật" });
+        }
         
         const updated = await KetQuaXetNghiem.update(updateData, ketqua.id_ket_qua);
-        return res.status(200).json({ success: true, message: "Cập nhật thành công", data: updated });
+        
+        // Xử lý response - update method trả về {msg, result}
+        const result = updated?.result || updated;
+        
+        return res.status(200).json({ success: true, message: "Cập nhật thành công", data: result });
     } catch (error) {
-        return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+        console.error("Error updating ket qua xet nghiem:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Lỗi server", 
+            error: error.msg || error.message 
+        });
     }
 };
 

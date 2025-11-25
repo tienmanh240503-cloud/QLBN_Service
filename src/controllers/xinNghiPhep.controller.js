@@ -1,10 +1,10 @@
-import { XinNghiPhep } from "../models/index.js";
+import { XinNghiPhep, LichLamViec } from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
 
 // Tạo đơn xin nghỉ phép
 export const createXinNghiPhep = async (req, res) => {
     try {
-        const { id_nguoi_dung, ngay_bat_dau, ngay_ket_thuc, ly_do, trang_thai } = req.body;
+        const { id_nguoi_dung, ngay_bat_dau, ngay_ket_thuc, ly_do, trang_thai, buoi_nghi } = req.body;
 
         if (!id_nguoi_dung || !ngay_bat_dau || !ngay_ket_thuc || !ly_do) {
             return res.status(400).json({ 
@@ -26,6 +26,132 @@ export const createXinNghiPhep = async (req, res) => {
             });
         }
 
+        // Validate buoi_nghi nếu có
+        if (buoi_nghi && !['sang', 'chieu', 'toi'].includes(buoi_nghi)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "buoi_nghi phải là 'sang', 'chieu' hoặc 'toi'" 
+            });
+        }
+
+        // Nếu nghỉ nửa ngày, đảm bảo ngay_bat_dau = ngay_ket_thuc
+        if (buoi_nghi && ngay_bat_dau !== ngay_ket_thuc) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Khi nghỉ nửa ngày, ngày bắt đầu phải bằng ngày kết thúc" 
+            });
+        }
+
+        // Kiểm tra lịch làm việc trước khi cho phép xin nghỉ phép
+        try {
+            // Lấy tất cả lịch làm việc của người dùng
+            const allSchedules = await LichLamViec.findAll({ id_nguoi_dung });
+            
+            // Chuyển đổi buoi_nghi sang format ca trong database (Sang, Chieu, Toi)
+            const caMap = {
+                'sang': 'Sang',
+                'chieu': 'Chieu',
+                'toi': 'Toi'
+            };
+
+            if (buoi_nghi) {
+                // Nghỉ nửa ngày: kiểm tra có lịch làm việc trong buổi đó không
+                const ca = caMap[buoi_nghi];
+                
+                // Normalize ngay_bat_dau để so sánh (format: YYYY-MM-DD)
+                const normalizedNgayBatDau = ngay_bat_dau.includes('T') 
+                    ? ngay_bat_dau.split('T')[0] 
+                    : ngay_bat_dau;
+                
+                const schedulesInDate = allSchedules.filter(schedule => {
+                    // Normalize schedule.ngay_lam_viec - có thể là Date object, string với timezone, hoặc string thuần
+                    let scheduleDateStr;
+                    if (schedule.ngay_lam_viec instanceof Date) {
+                        scheduleDateStr = schedule.ngay_lam_viec.toISOString().slice(0, 10);
+                    } else if (typeof schedule.ngay_lam_viec === 'string') {
+                        // Nếu có 'T' thì lấy phần trước 'T', nếu không thì dùng trực tiếp
+                        scheduleDateStr = schedule.ngay_lam_viec.includes('T') 
+                            ? schedule.ngay_lam_viec.split('T')[0] 
+                            : schedule.ngay_lam_viec;
+                    } else {
+                        // Fallback: convert sang Date rồi lấy date string
+                        scheduleDateStr = new Date(schedule.ngay_lam_viec).toISOString().slice(0, 10);
+                    }
+                    
+                    return scheduleDateStr === normalizedNgayBatDau && schedule.ca === ca;
+                });
+
+                if (schedulesInDate.length === 0) {
+                    // Tìm các lịch làm việc gần đó để hiển thị cho người dùng
+                    const nearbySchedules = allSchedules
+                        .map(schedule => {
+                            let scheduleDateStr;
+                            if (schedule.ngay_lam_viec instanceof Date) {
+                                scheduleDateStr = schedule.ngay_lam_viec.toISOString().slice(0, 10);
+                            } else if (typeof schedule.ngay_lam_viec === 'string') {
+                                scheduleDateStr = schedule.ngay_lam_viec.includes('T') 
+                                    ? schedule.ngay_lam_viec.split('T')[0] 
+                                    : schedule.ngay_lam_viec;
+                            } else {
+                                scheduleDateStr = new Date(schedule.ngay_lam_viec).toISOString().slice(0, 10);
+                            }
+                            return { date: scheduleDateStr, ca: schedule.ca };
+                        })
+                        .filter(s => s.date === normalizedNgayBatDau)
+                        .map(s => `${s.date} (${s.ca})`);
+                    
+                    let errorMessage = `Bạn không có lịch làm việc vào buổi ${buoi_nghi === 'sang' ? 'sáng' : buoi_nghi === 'chieu' ? 'chiều' : 'tối'} ngày ${normalizedNgayBatDau}.`;
+                    
+                    if (nearbySchedules.length > 0) {
+                        errorMessage += ` Bạn có lịch làm việc vào ngày này với các ca: ${nearbySchedules.join(', ')}.`;
+                    }
+                    
+                    errorMessage += ' Vui lòng kiểm tra lại lịch làm việc.';
+                    
+                    return res.status(400).json({ 
+                        success: false, 
+                        message: errorMessage
+                    });
+                }
+            } else {
+                // Nghỉ cả ngày: kiểm tra có lịch làm việc trong khoảng thời gian đó không
+                // Normalize dates để so sánh (format: YYYY-MM-DD)
+                const normalizedNgayBatDau = ngay_bat_dau.includes('T') 
+                    ? ngay_bat_dau.split('T')[0] 
+                    : ngay_bat_dau;
+                const normalizedNgayKetThuc = ngay_ket_thuc.includes('T') 
+                    ? ngay_ket_thuc.split('T')[0] 
+                    : ngay_ket_thuc;
+                
+                const schedulesInRange = allSchedules.filter(schedule => {
+                    // Normalize schedule.ngay_lam_viec
+                    let scheduleDateStr;
+                    if (schedule.ngay_lam_viec instanceof Date) {
+                        scheduleDateStr = schedule.ngay_lam_viec.toISOString().slice(0, 10);
+                    } else if (typeof schedule.ngay_lam_viec === 'string') {
+                        scheduleDateStr = schedule.ngay_lam_viec.includes('T') 
+                            ? schedule.ngay_lam_viec.split('T')[0] 
+                            : schedule.ngay_lam_viec;
+                    } else {
+                        scheduleDateStr = new Date(schedule.ngay_lam_viec).toISOString().slice(0, 10);
+                    }
+                    
+                    // So sánh string dates (YYYY-MM-DD format có thể so sánh trực tiếp)
+                    return scheduleDateStr >= normalizedNgayBatDau && scheduleDateStr <= normalizedNgayKetThuc;
+                });
+
+                if (schedulesInRange.length === 0) {
+                    return res.status(400).json({ 
+                        success: false, 
+                        message: `Bạn không có lịch làm việc trong khoảng thời gian từ ${normalizedNgayBatDau} đến ${normalizedNgayKetThuc}. Vui lòng kiểm tra lại lịch làm việc.` 
+                    });
+                }
+            }
+        } catch (scheduleError) {
+            console.error("Error checking work schedule:", scheduleError);
+            // Không block việc tạo đơn nếu có lỗi khi kiểm tra lịch, chỉ log
+        }
+
         const Id = `XN_${uuidv4()}`;
 
         const xinNghiPhep = await XinNghiPhep.create({
@@ -35,6 +161,7 @@ export const createXinNghiPhep = async (req, res) => {
             ngay_ket_thuc,
             ly_do,
             trang_thai: trang_thai || "cho_duyet",
+            buoi_nghi: buoi_nghi || null,
             ngay_tao: new Date().toISOString().slice(0, 10)
         });
 

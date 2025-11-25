@@ -14,7 +14,8 @@ import {
     requestPasswordResetCode,
     verifyPasswordResetCode,
     requestRegisterVerificationCode,
-    verifyRegisterVerificationCode
+    verifyRegisterVerificationCode,
+    loginWithGoogle
 } from '../controllers/nguoiDung.controller.js';
 import { verify } from '../middlewares/verifyToken.middleware.js';
 
@@ -22,6 +23,9 @@ const router = express.Router();
 
 // Đăng nhập
 router.post('/login', login);
+
+// Đăng nhập với Google
+router.post('/login/google', loginWithGoogle);
 
 // Quên mật khẩu
 router.post('/forgot-password/request-code', requestPasswordResetCode);

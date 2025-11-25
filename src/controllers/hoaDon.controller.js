@@ -1,4 +1,4 @@
-import { HoaDon, ChiTietHoaDon, DichVu, CuocHenKhamBenh, CuocHenTuVan, BenhNhan, NguoiDung } from "../models/index.js";
+import { HoaDon, ChiTietHoaDon, DichVu, CuocHenKhamBenh, CuocHenTuVan, BenhNhan, NguoiDung, BacSi, ChuyenGiaDinhDuong } from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
 import { createInvoiceNotification } from '../helpers/notificationHelper.js';
 
@@ -145,16 +145,20 @@ export const searchHoaDon = async (req, res) => {
         let hoaDons = Array.isArray(data) ? data : (data?.data || []);
 
         // Lấy tất cả cuộc hẹn để map với hóa đơn
-        const [cuocHenKham, cuocHenTuVan, benhNhanData, nguoiDungData] = await Promise.all([
+        const [cuocHenKham, cuocHenTuVan, benhNhanData, nguoiDungData, bacSiData, chuyenGiaData] = await Promise.all([
             CuocHenKhamBenh.getAll(),
             CuocHenTuVan.getAll(),
             BenhNhan.getAll(),
-            NguoiDung.getAll()
+            NguoiDung.getAll(),
+            BacSi.getAll(),
+            ChuyenGiaDinhDuong.getAll()
         ]);
         const allCuocHenKham = Array.isArray(cuocHenKham) ? cuocHenKham : (cuocHenKham?.data || []);
         const allCuocHenTuVan = Array.isArray(cuocHenTuVan) ? cuocHenTuVan : (cuocHenTuVan?.data || []);
         const allBenhNhan = Array.isArray(benhNhanData) ? benhNhanData : (benhNhanData?.data || []);
         const allNguoiDung = Array.isArray(nguoiDungData) ? nguoiDungData : (nguoiDungData?.data || []);
+        const allBacSi = Array.isArray(bacSiData) ? bacSiData : (bacSiData?.data || []);
+        const allChuyenGia = Array.isArray(chuyenGiaData) ? chuyenGiaData : (chuyenGiaData?.data || []);
 
         // Map hóa đơn với thông tin bệnh nhân và cuộc hẹn
         hoaDons = hoaDons.map(hd => {
@@ -175,11 +179,40 @@ export const searchHoaDon = async (req, res) => {
                 }
             }
 
+            let bacSiKham = null;
+            if (cuocHen?.id_bac_si) {
+                const bacSiRecord = allBacSi.find(bs => bs.id_bac_si === cuocHen.id_bac_si);
+                const bacSiNguoiDung = allNguoiDung.find(nd => nd.id_nguoi_dung === cuocHen.id_bac_si);
+                bacSiKham = {
+                    id_bac_si: cuocHen.id_bac_si,
+                    ho_ten: bacSiNguoiDung?.ho_ten || bacSiRecord?.ho_ten || null,
+                    so_dien_thoai: bacSiNguoiDung?.so_dien_thoai || null,
+                    email: bacSiNguoiDung?.email || null,
+                    chuc_danh: bacSiRecord?.chuc_danh || bacSiRecord?.chuc_vu || null,
+                    chuyen_mon: bacSiRecord?.chuyen_mon || null
+                };
+            }
+
+            let chuyenGiaTuVan = null;
+            if (cuocHen?.id_chuyen_gia) {
+                const chuyenGiaRecord = allChuyenGia.find(cg => cg.id_chuyen_gia === cuocHen.id_chuyen_gia);
+                const chuyenGiaNguoiDung = allNguoiDung.find(nd => nd.id_nguoi_dung === cuocHen.id_chuyen_gia);
+                chuyenGiaTuVan = {
+                    id_chuyen_gia: cuocHen.id_chuyen_gia,
+                    ho_ten: chuyenGiaNguoiDung?.ho_ten || chuyenGiaRecord?.ho_ten || null,
+                    so_dien_thoai: chuyenGiaNguoiDung?.so_dien_thoai || null,
+                    email: chuyenGiaNguoiDung?.email || null,
+                    chuyen_nganh: chuyenGiaRecord?.chuyen_nganh || chuyenGiaRecord?.linh_vuc || null
+                };
+            }
+
             return {
                 ...hd,
                 cuoc_hen: cuocHen,
                 benh_nhan: benhNhan,
-                nguoi_dung: nguoiDung
+                nguoi_dung: nguoiDung,
+                bac_si_kham: bacSiKham,
+                chuyen_gia_tu_van: chuyenGiaTuVan
             };
         });
 
@@ -254,6 +287,8 @@ export const getHoaDonById = async (req, res) => {
         let cuocHen = null;
         let benhNhan = null;
         let nguoiDung = null;
+        let bacSiKham = null;
+        let chuyenGiaTuVan = null;
 
         if (hoaDon.id_cuoc_hen_kham) {
             cuocHen = await CuocHenKhamBenh.getById(hoaDon.id_cuoc_hen_kham);
@@ -268,6 +303,37 @@ export const getHoaDonById = async (req, res) => {
             }
         }
 
+        if (hoaDon.id_cuoc_hen_kham && cuocHen?.id_bac_si) {
+            let bacSi = await BacSi.getById(cuocHen.id_bac_si);
+            if (!bacSi) {
+                bacSi = await BacSi.findOne({ id_bac_si: cuocHen.id_bac_si });
+            }
+            const bacSiNguoiDung = await NguoiDung.getById(cuocHen.id_bac_si);
+            bacSiKham = {
+                id_bac_si: cuocHen.id_bac_si,
+                ho_ten: bacSiNguoiDung?.ho_ten || bacSi?.ho_ten || null,
+                so_dien_thoai: bacSiNguoiDung?.so_dien_thoai || null,
+                email: bacSiNguoiDung?.email || null,
+                chuc_danh: bacSi?.chuc_danh || bacSi?.chuc_vu || null,
+                chuyen_mon: bacSi?.chuyen_mon || null
+            };
+        }
+
+        if (hoaDon.id_cuoc_hen_tu_van && cuocHen?.id_chuyen_gia) {
+            let chuyenGia = await ChuyenGiaDinhDuong.getById(cuocHen.id_chuyen_gia);
+            if (!chuyenGia) {
+                chuyenGia = await ChuyenGiaDinhDuong.findOne({ id_chuyen_gia: cuocHen.id_chuyen_gia });
+            }
+            const chuyenGiaNguoiDung = await NguoiDung.getById(cuocHen.id_chuyen_gia);
+            chuyenGiaTuVan = {
+                id_chuyen_gia: cuocHen.id_chuyen_gia,
+                ho_ten: chuyenGiaNguoiDung?.ho_ten || chuyenGia?.ho_ten || null,
+                so_dien_thoai: chuyenGiaNguoiDung?.so_dien_thoai || null,
+                email: chuyenGiaNguoiDung?.email || null,
+                chuyen_nganh: chuyenGia?.chuyen_nganh || chuyenGia?.linh_vuc || null
+            };
+        }
+
         res.status(200).json({ 
             success: true, 
             data: { 
@@ -275,7 +341,9 @@ export const getHoaDonById = async (req, res) => {
                 chi_tiet: chiTiet,
                 cuoc_hen: cuocHen,
                 benh_nhan: benhNhan,
-                nguoi_dung: nguoiDung
+                nguoi_dung: nguoiDung,
+                bac_si_kham: bacSiKham,
+                chuyen_gia_tu_van: chuyenGiaTuVan
             } 
         });
     } catch (error) {
