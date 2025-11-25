@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 export const DB_CONFID = {
     baseUrl: "http://localhost:3000",
     resourses: {
@@ -15,12 +19,12 @@ export const DB_CONFID = {
         }
     },
     mysql_connect: {
-        host: "localhost",
-        port: 3306,
-        user: "qlbn_user",
-        password: "Manh0385@",
-        database: "hethongquanlybenhvien"
-    },
+        host: process.env.DB_HOST,
+        port: process.env.PORT,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
+    },    
     cloudinary_connect: {
         cloud_name: 'dh0lhvm9l',
         api_key: '314188383667441',
