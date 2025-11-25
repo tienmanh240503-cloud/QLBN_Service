@@ -17,9 +17,9 @@ export const DB_CONFID = {
     mysql_connect: {
         host: "localhost",
         port: 3306,
-        user: "root",
-        password: "",
-        database: "HeThongQuanLyBenhVien"
+        user: "qlbn_user",
+        password: "Manh0385@",
+        database: "hethongquanlybenhvien"
     },
     cloudinary_connect: {
         cloud_name: 'dh0lhvm9l',
