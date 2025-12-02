@@ -92,6 +92,10 @@ export const createAppointmentNotification = async (id_nguoi_nhan, trang_thai, i
         }
 
         switch (trang_thai) {
+            case 'cho_thanh_toan':
+                tieu_de = 'Cuộc hẹn đang chờ thanh toán cọc';
+                noi_dung = `Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày ${ngay_kham}`;
+                break;
             case 'da_dat':
                 tieu_de = 'Cuộc hẹn mới đã được đặt';
                 noi_dung = `Bạn có cuộc hẹn mới vào ngày ${ngay_kham}${ten_nguoi_thuc_hien ? ` với ${ten_nguoi_thuc_hien}` : ''}`;

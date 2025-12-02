@@ -10,7 +10,8 @@ import {
     getLichSuTuVanByBenhNhan,
     countAppointmentsByTimeSlotTuVan,
     getCuocHenTuVanByDateAndCa,
-    getAllCuocHenTuVan
+    getAllCuocHenTuVan,
+    createCuocHenTuVanDepositPaymentSession
 } from "../controllers/cuocHenTuVan.controller.js";
 import { verify } from '../middlewares/verifytoken.middleware.js';
 
@@ -18,6 +19,9 @@ const router = express.Router();
 
 // POST route
 router.post("/", verify, createCuocHenTuVan);
+
+// Khởi tạo thanh toán cọc
+router.post("/:id_cuoc_hen/deposit-payment", verify, createCuocHenTuVanDepositPaymentSession);
 
 // GET route - Lấy tất cả cuộc hẹn tư vấn (phải đặt trước các route cụ thể)
 router.get("/", verify, getAllCuocHenTuVan);

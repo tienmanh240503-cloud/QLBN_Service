@@ -3,7 +3,8 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { SERVER_CONFIG } from './src/configs/server.config.js';
 import { initializeSocketIO } from './src/socket/socketServer.js';
-import { ensurePaymentMethodEnum } from './src/helpers/schemaMigrator.js';
+import { startDepositExpirationWatcher } from './src/services/depositCleanup.service.js';
+// import { ensurePaymentMethodEnum } from './src/helpers/schemaMigrator.js';
 // Import routes
 import nguoiDungRouter from './src/routers/nguoiDung.router.js';
 import thuocRouter from './src/routers/thuoc.router.js';
@@ -95,12 +96,14 @@ app.use('/nutrition-analysis', nutritionAnalysisRouter);
 
 async function main() {
     try {
-        await ensurePaymentMethodEnum();
+        // await ensurePaymentMethodEnum();
         // Initialize Socket.IO
         const io = initializeSocketIO(httpServer);
         
         // Make io available globally for use in controllers
         app.set('io', io);
+        
+        startDepositExpirationWatcher();
         
         httpServer.listen(SERVER_CONFIG.PORT, '0.0.0.0', () => {
             console.log(`Server running on port ${SERVER_CONFIG.PORT}`);

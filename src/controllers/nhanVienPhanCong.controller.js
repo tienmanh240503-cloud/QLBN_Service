@@ -407,32 +407,53 @@ export const getAllLichLamViec = async (req, res) => {
             ? await LichLamViec.findAll(whereCondition)
             : await LichLamViec.getAll();
         
-        // Query khung giờ theo ca và gắn vào từng lịch làm việc
-        const dataWithKhungGio = await Promise.all(
+        // Gắn khung giờ + thông tin phòng khám (số phòng, tầng) cho từng lịch làm việc
+        const dataWithDetails = await Promise.all(
             data.map(async (lich) => {
                 // Query các khung giờ thuộc ca này (chỉ query nếu có ca)
+                let khungGios = [];
                 if (lich.ca) {
-                    const khungGios = await KhungGioKham.findAll({ ca: lich.ca });
-                    return {
-                        ...lich,
-                        khung_gios: khungGios || []
-                    };
+                    khungGios = await KhungGioKham.findAll({ ca: lich.ca }) || [];
                 }
+
+                // Lấy thông tin phòng khám (nếu có)
+                let phongKham = null;
+                if (lich.id_phong_kham) {
+                    try {
+                        phongKham = await PhongKham.getById(lich.id_phong_kham);
+                    } catch (err) {
+                        // giữ nguyên phongKham = null nếu lỗi
+                    }
+                }
+
                 return {
                     ...lich,
-                    khung_gios: []
+                    khung_gios: khungGios,
+                    phong_kham: phongKham
+                        ? {
+                            id_phong_kham: phongKham.id_phong_kham,
+                            ten_phong: phongKham.ten_phong,
+                            so_phong: phongKham.so_phong,
+                            tang: phongKham.tang,
+                            ten_chuyen_khoa: phongKham.ten_chuyen_khoa,
+                            ten_chuyen_nganh: phongKham.ten_chuyen_nganh,
+                          }
+                        : null,
+                    ten_phong: phongKham?.ten_phong || null,
+                    so_phong: phongKham?.so_phong || null,
+                    tang: phongKham?.tang || null,
                 };
             })
         );
         
         res.status(200).json({
             success: true,
-            data: dataWithKhungGio,
+            data: dataWithDetails,
             pagination: {
-                total: dataWithKhungGio.length,
+                total: dataWithDetails.length,
                 page: parseInt(page),
                 limit: parseInt(limit),
-                totalPages: Math.ceil(dataWithKhungGio.length / limit)
+                totalPages: Math.ceil(dataWithDetails.length / limit)
             }
         });
     } catch (error) {

@@ -1,6 +1,140 @@
 import { CuocHenKhamBenh, BenhNhan, NguoiDung, BacSi, ChuyenKhoa, KhungGioKham, HoaDon, ChiTietDonThuoc, DonThuoc ,ChiTietHoaDon, HoSoKhamBenh , DichVu, ChiDinhXetNghiem, KetQuaXetNghiem, LichSuKham} from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
-import { createAppointmentNotification } from '../helpers/notificationHelper.js';
+import { createAppointmentNotification, createInvoiceNotification } from '../helpers/notificationHelper.js';
+import { createDepositPaymentSession } from '../services/depositPayment.service.js';
+import { refundMomoPayment } from '../services/payment.service.js';
+
+const BOOKING_DEPOSIT_AMOUNT = Number(process.env.BOOKING_DEPOSIT_AMOUNT || 100000);
+const BOOKING_DEPOSIT_TIMEOUT_MINUTES = Number(process.env.BOOKING_DEPOSIT_TIMEOUT_MINUTES || 1440);
+const buildDepositDeadline = () => new Date(Date.now() + BOOKING_DEPOSIT_TIMEOUT_MINUTES * 60 * 1000);
+const buildDepositHoldLabel = () => {
+    if (BOOKING_DEPOSIT_TIMEOUT_MINUTES === 1440) {
+        return '24 giờ';
+    }
+    if (BOOKING_DEPOSIT_TIMEOUT_MINUTES % 1440 === 0) {
+        const days = BOOKING_DEPOSIT_TIMEOUT_MINUTES / 1440;
+        return `${days} ngày`;
+    }
+    if (BOOKING_DEPOSIT_TIMEOUT_MINUTES % 60 === 0) {
+        const hours = BOOKING_DEPOSIT_TIMEOUT_MINUTES / 60;
+        return `${hours} giờ`;
+    }
+    return `${BOOKING_DEPOSIT_TIMEOUT_MINUTES} phút`;
+};
+const DEPOSIT_HOLD_LABEL = buildDepositHoldLabel();
+const isStaffRole = (role = '') => {
+    const normalized = role.toString().trim().toLowerCase();
+    return ['nhan_vien_quay', 'admin', 'quan_tri_vien', 'bac_si'].includes(normalized);
+};
+
+const isExpiredDeposit = (deadline) => {
+    if (!deadline) return false;
+    return new Date(deadline).getTime() < Date.now();
+};
+
+const cancelPendingAppointment = async (appointment) => {
+    if (!appointment?.id_cuoc_hen) return;
+    try {
+        await CuocHenKhamBenh.update({ trang_thai: 'da_huy' }, appointment.id_cuoc_hen);
+    } catch (error) {
+        console.error('Failed to cancel pending appointment', appointment.id_cuoc_hen, error);
+    }
+    if (appointment.id_hoa_don_coc) {
+        try {
+            await HoaDon.update({ trang_thai: 'da_huy' }, appointment.id_hoa_don_coc);
+        } catch (error) {
+            console.error('Failed to cancel deposit invoice', appointment.id_hoa_don_coc, error);
+        }
+    }
+};
+
+const purgeExpiredPendingAppointments = async (appointments = []) => {
+    const active = [];
+    for (const appt of appointments) {
+        if (appt?.trang_thai === 'cho_thanh_toan' && isExpiredDeposit(appt.thoi_han_thanh_toan)) {
+            await cancelPendingAppointment(appt);
+            continue;
+        }
+        active.push(appt);
+    }
+    return active;
+};
+
+const isRefundEligible = (ngay_kham) => {
+    if (!ngay_kham) return false;
+    const appointmentDate = new Date(ngay_kham);
+    const diff = appointmentDate.getTime() - Date.now();
+    return diff >= 7 * 24 * 60 * 60 * 1000;
+};
+
+const requestMomoRefundForInvoice = async (invoice, appointment) => {
+    const method = (invoice?.phuong_thuc_thanh_toan || '').toLowerCase();
+    if (method !== 'momo') {
+        return true;
+    }
+    await HoaDon.update({ trang_thai: 'dang_hoan_tien' }, invoice.id_hoa_don);
+    if (!invoice.ma_giao_dich) {
+        console.error('Missing momo transaction id for refund', invoice.id_hoa_don);
+        await HoaDon.update({ trang_thai: 'hoan_that_bai' }, invoice.id_hoa_don);
+        return false;
+    }
+    const description = `Hoàn cọc cuộc hẹn khám ${appointment?.id_cuoc_hen || ''}`.trim();
+    const refundResponse = await refundMomoPayment({
+        orderId: invoice.id_hoa_don,
+        amount: invoice.tong_tien,
+        transId: invoice.ma_giao_dich,
+        description,
+    });
+    if (!refundResponse.success) {
+        console.error('Momo refund failed', {
+            invoiceId: invoice.id_hoa_don,
+            reason: refundResponse.message,
+            code: refundResponse.resultCode,
+        });
+        await HoaDon.update({ trang_thai: 'hoan_that_bai' }, invoice.id_hoa_don);
+        return false;
+    }
+    return true;
+};
+
+const createRefundInvoiceForKham = async (invoice, appointment) => {
+    const refundId = `HD_${uuidv4()}`;
+    await HoaDon.create({
+        id_hoa_don: refundId,
+        id_cuoc_hen_kham: invoice.id_cuoc_hen_kham,
+        tong_tien: invoice.tong_tien,
+        trang_thai: 'da_thanh_toan',
+        phuong_thuc_thanh_toan: invoice.phuong_thuc_thanh_toan || 'tien_mat',
+        loai_hoa_don: 'hoan_dat_coc',
+        id_hoa_don_tham_chieu: invoice.id_hoa_don,
+        thoi_gian_thanh_toan: new Date()
+    });
+    await createInvoiceNotification(appointment.id_benh_nhan, refundId, invoice.tong_tien);
+};
+
+const handleDepositCancellationForKham = async (appointment) => {
+    if (!appointment?.id_hoa_don_coc) return;
+    try {
+        const invoice = await HoaDon.findOne({ id_hoa_don: appointment.id_hoa_don_coc });
+        if (!invoice) return;
+
+        if (invoice.trang_thai === 'chua_thanh_toan') {
+            await HoaDon.update({ trang_thai: 'da_huy' }, invoice.id_hoa_don);
+            return;
+        }
+
+        if (invoice.trang_thai === 'da_thanh_toan' && isRefundEligible(appointment.ngay_kham)) {
+            const momoRefundOk = await requestMomoRefundForInvoice(invoice, appointment);
+            if (!momoRefundOk) {
+                return;
+            }
+            await HoaDon.update({ trang_thai: 'da_hoan_tien' }, invoice.id_hoa_don);
+            await createRefundInvoiceForKham(invoice, appointment);
+        }
+    } catch (error) {
+        console.error('Failed to handle deposit cancellation for appointment', appointment?.id_cuoc_hen, error);
+    }
+};
 // Tạo cuộc hẹn khám bệnh
 export const createCuocHenKham = async (req, res) => {
     try {
@@ -12,9 +146,6 @@ export const createCuocHenKham = async (req, res) => {
             return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc" });
         }
 
-        // Xác định id_benh_nhan: 
-        // - Nếu là nhân viên quầy/admin và có id_benh_nhan trong body -> dùng id_benh_nhan từ body
-        // - Ngược lại, dùng id_nguoi_dung từ token (bệnh nhân tự đặt lịch)
         let idBenhNhanFinal = id_nguoi_dung;
         const normalizedRole = (vai_tro || '').toString().trim().toLowerCase();
         const canSelectPatient = ["nhan_vien_quay", "admin", "quan_tri_vien"].includes(normalizedRole);
@@ -23,7 +154,6 @@ export const createCuocHenKham = async (req, res) => {
             idBenhNhanFinal = id_benh_nhan;
         }
 
-        // Kiểm tra bệnh nhân - thử dùng getById trước, nếu không có thì dùng findOne
         let benhNhan = await BenhNhan.getById(idBenhNhanFinal);
         if (!benhNhan) {
             benhNhan = await BenhNhan.findOne({ id_benh_nhan : idBenhNhanFinal });
@@ -37,7 +167,6 @@ export const createCuocHenKham = async (req, res) => {
             return res.status(404).json({ success: false, message: "Bác sĩ không tồn tại" });
         }
 
-        // Kiểm tra chuyên khoa (nếu có)
         if (id_chuyen_khoa) {
             const ck = await ChuyenKhoa.findOne({ id_chuyen_khoa });
             if (!ck) {
@@ -45,24 +174,26 @@ export const createCuocHenKham = async (req, res) => {
             }
         }
 
-        // Kiểm tra khung giờ
         const khungGio = await KhungGioKham.findOne({ id_khung_gio });
         if (!khungGio) {
             return res.status(404).json({ success: false, message: "Khung giờ không tồn tại" });
         }
-        // Check trùng lịch cho bệnh nhân (chỉ tính các lịch chưa hủy)
-        const allLich = await CuocHenKhamBenh.findAll({ 
+
+        const allLichRaw = await CuocHenKhamBenh.findAll({ 
             id_benh_nhan: idBenhNhanFinal,
             id_khung_gio, 
             ngay_kham
         });
+        const allLich = await purgeExpiredPendingAppointments(allLichRaw);
         const lich = allLich.find(l => l.trang_thai !== 'da_huy');
         if (lich) {
             return res.status(400).json({ success: false, message: "Bệnh nhân đã có cuộc hẹn trong khung giờ này" });
         }
 
         const Id = `CH_${uuidv4()}`;
-        // ✅ Tạo cuộc hẹn
+        const invoiceId = `HD_${uuidv4()}`;
+        const depositDeadline = buildDepositDeadline();
+
         const cuocHen = await CuocHenKhamBenh.create({
             id_benh_nhan : idBenhNhanFinal,
             id_cuoc_hen : Id,
@@ -73,32 +204,49 @@ export const createCuocHenKham = async (req, res) => {
             loai_hen: loai_hen || "truc_tiep",
             ly_do_kham: ly_do_kham || null,
             trieu_chung: trieu_chung || null,
-            trang_thai: "da_dat"
+            trang_thai: "cho_thanh_toan",
+            id_hoa_don_coc: invoiceId,
+            thoi_han_thanh_toan: depositDeadline
         });
 
-        // Tạo thông báo cho bệnh nhân
+        await HoaDon.create({
+            id_hoa_don : invoiceId,
+            id_cuoc_hen_kham: Id,
+            tong_tien: BOOKING_DEPOSIT_AMOUNT,
+            trang_thai: 'chua_thanh_toan',
+            loai_hoa_don: 'dat_coc',
+            thoi_han_thanh_toan: depositDeadline
+        });
+
         await createAppointmentNotification(
             idBenhNhanFinal,
-            'da_dat',
+            'cho_thanh_toan',
             Id,
             ngay_kham,
-            id_bac_si,
+            null,
             null
         );
 
-        // Tạo thông báo cho bác sĩ (nếu có)
-        if (id_bac_si) {
-            await createAppointmentNotification(
-                id_bac_si,
-                'da_dat',
-                Id,
-                ngay_kham,
-                id_bac_si,
-                null
-            );
-        }
+        const createdAppointment = await CuocHenKhamBenh.findOne({ id_cuoc_hen: Id }) || cuocHen;
 
-        return res.status(201).json({ success: true, message: "Tạo cuộc hẹn khám bệnh thành công", data: cuocHen });
+        return res.status(201).json({ 
+            success: true, 
+            message: `Đã ghi nhận yêu cầu đặt lịch. Vui lòng thanh toán cọc ${BOOKING_DEPOSIT_AMOUNT.toLocaleString('vi-VN')} VNĐ trong ${DEPOSIT_HOLD_LABEL}`, 
+            data: {
+                ...createdAppointment,
+                deposit: {
+                    invoice_id: invoiceId,
+                    amount: BOOKING_DEPOSIT_AMOUNT,
+                    payment_url: null,
+                    qr_code_url: null,
+                    order_id: null,
+                    expires_at: depositDeadline.toISOString(),
+                    provider: 'momo',
+                    mode: null,
+                    instructions: null
+                }
+            } 
+        });
 
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -397,6 +545,10 @@ export const updateTrangThaiCuocHenKham = async (req, res) => {
 
         const updated = await CuocHenKhamBenh.update({trang_thai}, id_cuoc_hen);
 
+        if (trang_thai === 'da_huy') {
+            await handleDepositCancellationForKham(cuocHen);
+        }
+
         // Tạo thông báo cho bệnh nhân khi trạng thái thay đổi
         await createAppointmentNotification(
             cuocHen.id_benh_nhan,
@@ -423,6 +575,67 @@ export const updateTrangThaiCuocHenKham = async (req, res) => {
 
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    }
+};
+
+export const createCuocHenKhamDepositPaymentSession = async (req, res) => {
+    try {
+        const { id_cuoc_hen } = req.params;
+        const requesterId = req?.decoded?.info?.id_nguoi_dung;
+        const role = req?.decoded?.vai_tro || '';
+
+        const cuocHen = await CuocHenKhamBenh.findOne({ id_cuoc_hen });
+        if (!cuocHen) {
+            return res.status(404).json({ success: false, message: "Cuộc hẹn không tồn tại" });
+        }
+
+        const isOwner = cuocHen.id_benh_nhan === requesterId;
+        if (!isOwner && !isStaffRole(role)) {
+            return res.status(403).json({ success: false, message: "Không có quyền khởi tạo thanh toán cho cuộc hẹn này" });
+        }
+
+        if (!cuocHen.id_hoa_don_coc) {
+            return res.status(400).json({ success: false, message: "Cuộc hẹn chưa có hóa đơn cọc" });
+        }
+
+        const invoice = await HoaDon.findOne({ id_hoa_don: cuocHen.id_hoa_don_coc });
+        if (!invoice) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy hóa đơn cọc" });
+        }
+
+        if (invoice.trang_thai === 'da_thanh_toan') {
+            return res.status(400).json({ success: false, message: "Hóa đơn đã được thanh toán" });
+        }
+
+        if (invoice.trang_thai === 'da_huy') {
+            return res.status(400).json({ success: false, message: "Hóa đơn đã bị hủy" });
+        }
+
+        const deadline = cuocHen.thoi_han_thanh_toan
+            ? new Date(cuocHen.thoi_han_thanh_toan)
+            : buildDepositDeadline();
+
+        const session = await createDepositPaymentSession({
+            invoiceId: invoice.id_hoa_don,
+            appointmentId: cuocHen.id_cuoc_hen,
+            appointmentType: 'kham_benh',
+            depositDeadline: deadline,
+            patientId: cuocHen.id_benh_nhan,
+            doctorId: cuocHen.id_bac_si || null,
+            specialistId: null
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                ...session,
+                invoice_id: invoice.id_hoa_don,
+                amount: invoice.tong_tien
+            }
+        });
+    } catch (error) {
+        console.error('Error creating deposit payment session:', error);
+        return res.status(500).json({ success: false, message: "Lỗi server khi khởi tạo thanh toán", error: error.message });
     }
 };
 

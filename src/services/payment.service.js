@@ -11,6 +11,7 @@ const MOMO_CONFIG = {
   accessKey: process.env.MOMO_ACCESS_KEY || '',
   secretKey: process.env.MOMO_SECRET_KEY || '',
   endpoint: process.env.MOMO_ENDPOINT || 'https://test-payment.momo.vn/v2/gateway/api/create',
+  refundEndpoint: process.env.MOMO_REFUND_ENDPOINT || 'https://test-payment.momo.vn/v2/gateway/api/refund',
   returnUrl: process.env.MOMO_RETURN_URL || 'http://localhost:5173/payment/callback/momo',
   notifyUrl: process.env.MOMO_NOTIFY_URL || 'http://localhost:5005/api/payment/callback/momo',
 };
@@ -130,8 +131,23 @@ export const createMomoPayment = async (params) => {
       },
       body: JSON.stringify(requestBody),
     });
-
-    const result = await response.json();
+    const responseText = await response.text();
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('❌ Cannot parse Momo response as JSON:', {
+        status: response.status,
+        statusText: response.statusText,
+        responseText: responseText?.substring(0, 500),
+      });
+      return {
+        success: false,
+        message: 'Không nhận được phản hồi JSON hợp lệ từ Momo',
+        status: response.status,
+        rawResponse: responseText,
+      };
+    }
 
     if (result.resultCode === 0) {
       return {
@@ -142,6 +158,12 @@ export const createMomoPayment = async (params) => {
         qrCodeUrl: result.qrCodeUrl || null,
       };
     } else {
+      console.error('MoMo create payment failed:', {
+        resultCode: result.resultCode,
+        message: result.message,
+        orderId: orderIdFormatted,
+        raw: result,
+      });
       return {
         success: false,
         message: result.message || 'Lỗi tạo payment URL từ Momo',
@@ -223,6 +245,110 @@ export const verifyMomoCallback = (params) => {
   }
 
   return isValid;
+};
+
+/**
+ * Yêu cầu hoàn tiền qua Momo
+ * @param {Object} params
+ * @param {string} params.orderId - Mã hóa đơn gốc
+ * @param {number} params.amount - Số tiền hoàn
+ * @param {string|number} params.transId - Mã giao dịch Momo gốc
+ * @param {string} [params.description] - Ghi chú hoàn tiền
+ * @returns {Promise<{success: boolean, message?: string, resultCode?: number, data?: any}>}
+ */
+export const refundMomoPayment = async (params = {}) => {
+  if (!MOMO_CONFIG.secretKey || !MOMO_CONFIG.accessKey) {
+    return {
+      success: false,
+      message: 'Momo config chưa đầy đủ để hoàn tiền',
+    };
+  }
+
+  const { orderId, amount, transId, description } = params;
+  if (!transId) {
+    return {
+      success: false,
+      message: 'Thiếu mã giao dịch (transId) để hoàn tiền qua Momo',
+    };
+  }
+
+  const requestId = `${MOMO_CONFIG.partnerCode}${Date.now()}RF`;
+  const normalizedOrderId =
+    (orderId || requestId).toString().replace(/[^a-zA-Z0-9]/g, '').substring(0, 50) || requestId;
+  const normalizedAmount = String(Math.round(Number(amount) || 0));
+  if (Number(normalizedAmount) <= 0) {
+    return {
+      success: false,
+      message: 'Số tiền hoàn không hợp lệ',
+    };
+  }
+
+  const descriptionValue =
+    description?.toString().substring(0, 190) || `Refund for order ${normalizedOrderId}`;
+  const signatureParams = {
+    accessKey: MOMO_CONFIG.accessKey,
+    amount: normalizedAmount,
+    description: descriptionValue,
+    orderId: normalizedOrderId,
+    partnerCode: MOMO_CONFIG.partnerCode,
+    requestId,
+    transId: String(transId),
+  };
+
+  const sortedKeys = Object.keys(signatureParams).sort();
+  const rawSignature = sortedKeys.map((key) => `${key}=${signatureParams[key]}`).join('&');
+  const signature = crypto.createHmac('sha256', MOMO_CONFIG.secretKey).update(rawSignature).digest('hex');
+
+  const requestBody = {
+    ...signatureParams,
+    lang: 'vi',
+    signature,
+  };
+
+  try {
+    const response = await fetch(MOMO_CONFIG.refundEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+    const responseText = await response.text();
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('❌ Cannot parse Momo refund response as JSON:', {
+        status: response.status,
+        statusText: response.statusText,
+        responseText: responseText?.substring(0, 500),
+      });
+      return {
+        success: false,
+        message: 'Không nhận được phản hồi JSON hợp lệ từ Momo khi hoàn tiền',
+      };
+    }
+
+    if (result.resultCode === 0) {
+      return {
+        success: true,
+        data: result,
+      };
+    }
+
+    return {
+      success: false,
+      message: result.message || 'Momo hoàn tiền thất bại',
+      resultCode: result.resultCode,
+    };
+  } catch (error) {
+    console.error('Momo refund error:', error);
+    return {
+      success: false,
+      message: 'Lỗi kết nối với Momo khi hoàn tiền',
+      error: error.message,
+    };
+  }
 };
 
 /**

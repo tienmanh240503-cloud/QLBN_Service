@@ -9,7 +9,8 @@ import {
     getLichSuKhamBenhFull,
     getCuocHenKhamByDateAndCa,
     countAppointmentsByTimeSlot,
-    getAllCuocHenKhamBenh
+    getAllCuocHenKhamBenh,
+    createCuocHenKhamDepositPaymentSession
 } from '../controllers/cuocHenKhamBenh.controller.js';
 import { verify } from '../middlewares/verifytoken.middleware.js';
 
@@ -22,6 +23,9 @@ router.get('/test', (req, res) => {
 
 // Tạo cuộc hẹn mới
 router.post('/', verify, createCuocHenKham);
+
+// Khởi tạo thanh toán cọc
+router.post('/:id_cuoc_hen/deposit-payment', verify, createCuocHenKhamDepositPaymentSession);
 
 // Lấy tất cả cuộc hẹn khám bệnh
 router.get('/', verify, getAllCuocHenKhamBenh);
