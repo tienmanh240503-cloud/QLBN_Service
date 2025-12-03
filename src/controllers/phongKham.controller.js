@@ -95,7 +95,8 @@ export const getAllPhongKham = async (req, res) => {
 // Lấy tất cả phòng khám cho Admin (không mặc định lọc trạng thái)
 export const getAllPhongKhamAdmin = async (req, res) => {
     try {
-        const { id_chuyen_khoa, trang_thai, search } = req.query;
+        // Thêm đầy đủ các tham số filter để tránh lỗi biến chưa được định nghĩa
+        const { id_chuyen_khoa, id_chuyen_nganh, loai_phong, trang_thai, search } = req.query;
         
         let query = `
             SELECT 

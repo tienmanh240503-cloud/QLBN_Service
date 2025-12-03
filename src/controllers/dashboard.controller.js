@@ -349,6 +349,11 @@ export const getAdminDashboard = async (req, res) => {
         const today = getToday();
         const thisMonth = getThisMonth();
 
+        // Hỗ trợ lọc theo khoảng thời gian tuỳ chọn (start_date, end_date - định dạng YYYY-MM-DD)
+        const { start_date, end_date } = req.query;
+        const rangeStart = start_date || thisMonth.start;
+        const rangeEnd = end_date || thisMonth.end;
+
         // Lấy tất cả dữ liệu
         const [
             allBenhNhan,
@@ -400,29 +405,72 @@ export const getAdminDashboard = async (req, res) => {
             })
         ].length;
 
-        // Doanh thu tháng này
-        const monthInvoices = allHoaDonData.filter(hd => {
+        // Doanh thu trong khoảng thời gian (mặc định: tháng hiện tại)
+        const rangedInvoices = allHoaDonData.filter(hd => {
             const ngayTao = formatDate(hd.thoi_gian_tao || hd.ngay_tao);
-            return ngayTao && ngayTao >= thisMonth.start && ngayTao <= thisMonth.end &&
+            return ngayTao && ngayTao >= rangeStart && ngayTao <= rangeEnd &&
                    hd.trang_thai === 'da_thanh_toan';
         });
-        const monthlyRevenue = monthInvoices.reduce((sum, inv) => sum + (parseFloat(inv.tong_tien) || 0), 0);
+        const monthlyRevenue = rangedInvoices.reduce((sum, inv) => sum + (parseFloat(inv.tong_tien) || 0), 0);
 
-        // Bệnh nhân mới tháng này
+        // Doanh thu hôm nay
+        const todayInvoices = allHoaDonData.filter(hd => {
+            const ngayTao = formatDate(hd.thoi_gian_tao || hd.ngay_tao);
+            return ngayTao && ngayTao === today && hd.trang_thai === 'da_thanh_toan';
+        });
+        const revenueToday = todayInvoices.reduce((sum, inv) => sum + (parseFloat(inv.tong_tien) || 0), 0);
+
+        // Doanh thu theo phương thức thanh toán & loại hóa đơn (trong khoảng)
+        const revenueByPaymentMethod = {};
+        const revenueByInvoiceType = {};
+        rangedInvoices.forEach(inv => {
+            const amount = parseFloat(inv.tong_tien) || 0;
+            const method = inv.phuong_thuc_thanh_toan || 'khac';
+            const type = inv.loai_hoa_don || 'dich_vu';
+            revenueByPaymentMethod[method] = (revenueByPaymentMethod[method] || 0) + amount;
+            revenueByInvoiceType[type] = (revenueByInvoiceType[type] || 0) + amount;
+        });
+
+        // Bệnh nhân mới trong khoảng thời gian
         const newPatientsThisMonth = allBenhNhanData.filter(bn => {
             const ngayTao = formatDate(bn.thoi_gian_tao || bn.ngay_dang_ky);
-            return ngayTao && ngayTao >= thisMonth.start && ngayTao <= thisMonth.end;
+            return ngayTao && ngayTao >= rangeStart && ngayTao <= rangeEnd;
         }).length;
 
-        // Tỷ lệ hoàn thành cuộc hẹn
+        // Tỷ lệ hoàn thành cuộc hẹn (toàn hệ thống)
         const totalAppointments = allCuocHenKhamData.length + allCuocHenTuVanData.length;
         const completedAppointments = [
-            ...allCuocHenKhamData.filter(ch => ch.trang_thai === 'hoan_thanh' || ch.trang_thai === 'completed'),
-            ...allCuocHenTuVanData.filter(ch => ch.trang_thai === 'hoan_thanh' || ch.trang_thai === 'completed')
+            ...allCuocHenKhamData.filter(ch => ch.trang_thai === 'hoan_thanh' || ch.trang_thai === 'completed' || ch.trang_thai === 'da_hoan_thanh'),
+            ...allCuocHenTuVanData.filter(ch => ch.trang_thai === 'hoan_thanh' || ch.trang_thai === 'completed' || ch.trang_thai === 'da_hoan_thanh')
         ].length;
         const completionRate = totalAppointments > 0 
             ? Math.round((completedAppointments / totalAppointments) * 100) 
             : 0;
+
+        // Thống kê cuộc hẹn theo trạng thái (trong khoảng thời gian)
+        const appointmentStatuses = ['cho_thanh_toan', 'da_dat', 'da_huy', 'da_hoan_thanh'];
+        const appointmentStatsByStatus = {};
+        appointmentStatuses.forEach(status => {
+            const countKham = allCuocHenKhamData.filter(ch => {
+                const ngay = formatDate(ch.ngay_kham || ch.ngay_hen);
+                return ngay && ngay >= rangeStart && ngay <= rangeEnd && ch.trang_thai === status;
+            }).length;
+            const countTuVan = allCuocHenTuVanData.filter(ch => {
+                const ngay = formatDate(ch.ngay_tu_van || ch.ngay_hen);
+                return ngay && ngay >= rangeStart && ngay <= rangeEnd && ch.trang_thai === status;
+            }).length;
+            appointmentStatsByStatus[status] = countKham + countTuVan;
+        });
+
+        // Thống kê số cuộc hẹn theo loại (khám / tư vấn) trong khoảng
+        const appointmentsKhamInRange = allCuocHenKhamData.filter(ch => {
+            const ngay = formatDate(ch.ngay_kham || ch.ngay_hen);
+            return ngay && ngay >= rangeStart && ngay <= rangeEnd;
+        }).length;
+        const appointmentsTuVanInRange = allCuocHenTuVanData.filter(ch => {
+            const ngay = formatDate(ch.ngay_tu_van || ch.ngay_hen);
+            return ngay && ngay >= rangeStart && ngay <= rangeEnd;
+        }).length;
 
         res.status(200).json({
             success: true,
@@ -435,6 +483,24 @@ export const getAdminDashboard = async (req, res) => {
                     monthlyRevenue,
                     newPatientsThisMonth,
                     completionRate
+                },
+                revenueStats: {
+                    rangeStart,
+                    rangeEnd,
+                    revenueToday,
+                    monthlyRevenue,
+                    revenueByPaymentMethod,
+                    revenueByInvoiceType
+                },
+                appointmentStats: {
+                    totalAppointments,
+                    completedAppointments,
+                    completionRate,
+                    byStatus: appointmentStatsByStatus,
+                    byType: {
+                        kham: appointmentsKhamInRange,
+                        tu_van: appointmentsTuVanInRange
+                    }
                 }
             }
         });
