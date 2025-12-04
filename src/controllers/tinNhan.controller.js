@@ -461,14 +461,20 @@ export const getMessages = async (req, res) => {
         
         try {
             const offset = (pageNum - 1) * pageSizeNum;
+            // Đảm bảo LIMIT và OFFSET là số nguyên dương
+            const limitValue = Math.max(1, parseInt(pageSizeNum, 10));
+            const offsetValue = Math.max(0, parseInt(offset, 10));
+            
+            // MySQL2 có thể không chấp nhận LIMIT/OFFSET dưới dạng placeholder trong một số trường hợp
+            // Nên nhúng trực tiếp vào query (an toàn vì đã validate là số nguyên)
             const [messages] = await connection.execute(
                 `SELECT t.*, n.ho_ten as nguoi_gui_ten, n.anh_dai_dien as nguoi_gui_avatar, n.id_nguoi_dung as nguoi_gui_id
                  FROM tinnhan t
                  LEFT JOIN nguoidung n ON t.id_nguoi_gui COLLATE utf8mb4_general_ci = n.id_nguoi_dung COLLATE utf8mb4_general_ci
                  WHERE t.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ?
                  ORDER BY t.thoi_gian_gui ASC
-                 LIMIT ? OFFSET ?`,
-                [id_cuoc_tro_chuyen, pageSizeNum, offset]
+                 LIMIT ${limitValue} OFFSET ${offsetValue}`,
+                [id_cuoc_tro_chuyen]
             );
 
             // Đánh dấu tin nhắn là đã đọc
