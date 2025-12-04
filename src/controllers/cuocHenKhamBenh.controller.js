@@ -1,4 +1,4 @@
-import { CuocHenKhamBenh, BenhNhan, NguoiDung, BacSi, ChuyenKhoa, KhungGioKham, HoaDon, ChiTietDonThuoc, DonThuoc ,ChiTietHoaDon, HoSoKhamBenh , DichVu, ChiDinhXetNghiem, KetQuaXetNghiem, LichSuKham} from "../models/index.js";
+import { CuocHenKhamBenh, BenhNhan, NguoiDung, BacSi, ChuyenKhoa, KhungGioKham, HoaDon, ChiTietDonThuoc, DonThuoc ,ChiTietHoaDon, HoSoKhamBenh , DichVu, ChiDinhXetNghiem, KetQuaXetNghiem, LichSuKham, LichLamViec, PhongKham} from "../models/index.js";
 import { v4 as uuidv4 } from 'uuid';
 import { createAppointmentNotification, createInvoiceNotification } from '../helpers/notificationHelper.js';
 import { createDepositPaymentSession } from '../services/depositPayment.service.js';
@@ -30,6 +30,49 @@ const isStaffRole = (role = '') => {
 const isExpiredDeposit = (deadline) => {
     if (!deadline) return false;
     return new Date(deadline).getTime() < Date.now();
+};
+
+const getCaFromGioBatDau = (gioBatDau) => {
+    if (!gioBatDau) return null;
+    if (gioBatDau >= '07:00' && gioBatDau < '12:00') return 'Sang';
+    if (gioBatDau >= '13:00' && gioBatDau < '18:00') return 'Chieu';
+    if (gioBatDau >= '18:00' && gioBatDau < '22:00') return 'Toi';
+    return 'Khac';
+};
+
+const buildPhongKhamForAppointment = async (cuocHen) => {
+    try {
+        if (!cuocHen?.id_bac_si || !cuocHen?.id_khung_gio || !cuocHen?.ngay_kham) {
+            return null;
+        }
+
+        const khungGio = await KhungGioKham.findOne({ id_khung_gio: cuocHen.id_khung_gio });
+        if (!khungGio) return null;
+
+        const ca = getCaFromGioBatDau(khungGio.gio_bat_dau);
+        const lich = await LichLamViec.findOne({
+            id_nguoi_dung: cuocHen.id_bac_si,
+            ngay_lam_viec: cuocHen.ngay_kham,
+            ca
+        });
+
+        if (!lich?.id_phong_kham) return null;
+
+        const phongKham = await PhongKham.getById(lich.id_phong_kham);
+        if (!phongKham) return null;
+
+        return {
+            id_phong_kham: phongKham.id_phong_kham,
+            ten_phong: phongKham.ten_phong,
+            so_phong: phongKham.so_phong,
+            tang: phongKham.tang,
+            ten_chuyen_khoa: phongKham.ten_chuyen_khoa,
+            ten_chuyen_nganh: phongKham.ten_chuyen_nganh
+        };
+    } catch (error) {
+        console.error('Failed to build phong_kham for cuoc hen kham benh', cuocHen?.id_cuoc_hen, error);
+        return null;
+    }
 };
 
 const cancelPendingAppointment = async (appointment) => {
@@ -492,7 +535,7 @@ export const getCuocHenKhamByBenhNhan = async (req, res) => {
 
         const cuocHenList = await CuocHenKhamBenh.findAll({ id_benh_nhan });
 
-        // Enrich với thông tin khung giờ, bác sĩ, chuyên khoa
+        // Enrich với thông tin khung giờ, bác sĩ, chuyên khoa, phòng khám
         const enrichedData = await Promise.all(
             cuocHenList.map(async (cuocHen) => {
                 let khungGio = null;
@@ -517,6 +560,9 @@ export const getCuocHenKhamByBenhNhan = async (req, res) => {
                     chuyenKhoa = await ChuyenKhoa.findOne({ id_chuyen_khoa: cuocHen.id_chuyen_khoa });
                 }
 
+                // Lấy thông tin phòng khám từ lịch làm việc
+                const phong_kham = await buildPhongKhamForAppointment(cuocHen);
+
                 return {
                     ...cuocHen,
                     khungGio: khungGio ? {
@@ -532,7 +578,8 @@ export const getCuocHenKhamByBenhNhan = async (req, res) => {
                     chuyenKhoa: chuyenKhoa ? {
                         id_chuyen_khoa: chuyenKhoa.id_chuyen_khoa,
                         ten_chuyen_khoa: chuyenKhoa.ten_chuyen_khoa
-                    } : null
+                    } : null,
+                    phong_kham
                 };
             })
         );
@@ -913,7 +960,7 @@ export const getAllCuocHenKhamBenh = async (req, res) => {
     try {
         const appointments = await CuocHenKhamBenh.getAll();
 
-        // Enrich với thông tin khung giờ, bác sĩ, chuyên khoa
+        // Enrich với thông tin khung giờ, bác sĩ, chuyên khoa, phòng khám
         const enrichedData = await Promise.all(
             (appointments || []).map(async (cuocHen) => {
                 let khungGio = null;
@@ -938,6 +985,9 @@ export const getAllCuocHenKhamBenh = async (req, res) => {
                     chuyenKhoa = await ChuyenKhoa.findOne({ id_chuyen_khoa: cuocHen.id_chuyen_khoa });
                 }
 
+                // Lấy thông tin phòng khám từ lịch làm việc
+                const phong_kham = await buildPhongKhamForAppointment(cuocHen);
+
                 return {
                     ...cuocHen,
                     khungGio: khungGio ? {
@@ -953,7 +1003,8 @@ export const getAllCuocHenKhamBenh = async (req, res) => {
                     chuyenKhoa: chuyenKhoa ? {
                         id_chuyen_khoa: chuyenKhoa.id_chuyen_khoa,
                         ten_chuyen_khoa: chuyenKhoa.ten_chuyen_khoa
-                    } : null
+                    } : null,
+                    phong_kham
                 };
             })
         );
