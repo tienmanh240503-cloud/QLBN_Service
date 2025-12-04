@@ -7,7 +7,7 @@ const storage = multer.memoryStorage();
 const chatUploader = multer({ 
     storage: storage,
     limits: {
-        fileSize: 10 * 1024 * 1024, // Giới hạn 10MB cho file chat
+        fileSize: 30 * 1024 * 1024, // Giới hạn 30MB cho file chat
     },
     fileFilter: (req, file, cb) => {
         // Cho phép tất cả các loại file (hình ảnh, PDF, Word, Excel, v.v.)

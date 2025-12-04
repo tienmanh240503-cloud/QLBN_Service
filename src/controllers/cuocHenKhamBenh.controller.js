@@ -70,13 +70,17 @@ const isRefundEligible = (ngay_kham) => {
 const requestMomoRefundForInvoice = async (invoice, appointment) => {
     const method = (invoice?.phuong_thuc_thanh_toan || '').toLowerCase();
     if (method !== 'momo') {
+        // Nếu không phải Momo, không cần hoàn tiền qua Momo API
         return true;
     }
     await HoaDon.update({ trang_thai: 'dang_hoan_tien' }, invoice.id_hoa_don);
     if (!invoice.ma_giao_dich) {
-        console.error('Missing momo transaction id for refund', invoice.id_hoa_don);
+        console.error('Missing momo transaction id for refund', {
+            invoiceId: invoice.id_hoa_don,
+            phuong_thuc: invoice.phuong_thuc_thanh_toan,
+        });
         await HoaDon.update({ trang_thai: 'hoan_that_bai' }, invoice.id_hoa_don);
-        return false;
+        return { success: false, reason: 'missing_transaction_id' };
     }
     const description = `Hoàn cọc cuộc hẹn khám ${appointment?.id_cuoc_hen || ''}`.trim();
     const refundResponse = await refundMomoPayment({
@@ -92,9 +96,9 @@ const requestMomoRefundForInvoice = async (invoice, appointment) => {
             code: refundResponse.resultCode,
         });
         await HoaDon.update({ trang_thai: 'hoan_that_bai' }, invoice.id_hoa_don);
-        return false;
+        return { success: false, reason: 'refund_api_failed', message: refundResponse.message };
     }
-    return true;
+    return { success: true };
 };
 
 const createRefundInvoiceForKham = async (invoice, appointment) => {
@@ -113,26 +117,50 @@ const createRefundInvoiceForKham = async (invoice, appointment) => {
 };
 
 const handleDepositCancellationForKham = async (appointment) => {
-    if (!appointment?.id_hoa_don_coc) return;
+    if (!appointment?.id_hoa_don_coc) {
+        return { refunded: false, message: null, amount: null };
+    }
     try {
         const invoice = await HoaDon.findOne({ id_hoa_don: appointment.id_hoa_don_coc });
-        if (!invoice) return;
+        if (!invoice) {
+            return { refunded: false, message: null, amount: null };
+        }
 
         if (invoice.trang_thai === 'chua_thanh_toan') {
             await HoaDon.update({ trang_thai: 'da_huy' }, invoice.id_hoa_don);
-            return;
+            return { refunded: false, message: 'Hóa đơn cọc chưa thanh toán, không cần hoàn tiền', amount: null };
         }
 
         if (invoice.trang_thai === 'da_thanh_toan' && isRefundEligible(appointment.ngay_kham)) {
-            const momoRefundOk = await requestMomoRefundForInvoice(invoice, appointment);
-            if (!momoRefundOk) {
-                return;
+            const refundResult = await requestMomoRefundForInvoice(invoice, appointment);
+            if (!refundResult || (typeof refundResult === 'object' && !refundResult.success)) {
+                let errorMessage = 'Không thể hoàn tiền cọc. Vui lòng liên hệ bộ phận hỗ trợ.';
+                if (refundResult?.reason === 'missing_transaction_id') {
+                    errorMessage = 'Không tìm thấy mã giao dịch để hoàn tiền. Vui lòng liên hệ bộ phận hỗ trợ với mã hóa đơn: ' + invoice.id_hoa_don;
+                } else if (refundResult?.message) {
+                    errorMessage = `Không thể hoàn tiền: ${refundResult.message}. Vui lòng liên hệ bộ phận hỗ trợ.`;
+                }
+                return { refunded: false, message: errorMessage, amount: invoice.tong_tien };
             }
             await HoaDon.update({ trang_thai: 'da_hoan_tien' }, invoice.id_hoa_don);
             await createRefundInvoiceForKham(invoice, appointment);
+            return { 
+                refunded: true, 
+                message: `Đã hoàn tiền cọc ${parseFloat(invoice.tong_tien || 0).toLocaleString('vi-VN')} đ vào tài khoản của bạn. Vui lòng kiểm tra tài khoản.`, 
+                amount: invoice.tong_tien 
+            };
+        } else if (invoice.trang_thai === 'da_thanh_toan' && !isRefundEligible(appointment.ngay_kham)) {
+            return { 
+                refunded: false, 
+                message: 'Không thể hoàn tiền cọc vì đã quá thời hạn hủy. Vui lòng liên hệ bộ phận hỗ trợ.', 
+                amount: invoice.tong_tien 
+            };
         }
+        
+        return { refunded: false, message: null, amount: null };
     } catch (error) {
         console.error('Failed to handle deposit cancellation for appointment', appointment?.id_cuoc_hen, error);
+        return { refunded: false, message: 'Lỗi khi xử lý hoàn tiền cọc. Vui lòng liên hệ bộ phận hỗ trợ.', amount: null };
     }
 };
 // Tạo cuộc hẹn khám bệnh
@@ -179,10 +207,34 @@ export const createCuocHenKham = async (req, res) => {
             return res.status(404).json({ success: false, message: "Khung giờ không tồn tại" });
         }
 
+        // Normalize ngày để tránh vấn đề timezone
+        // Đảm bảo ngày được so sánh đúng format YYYY-MM-DD
+        const normalizeDate = (dateStr) => {
+            if (!dateStr) return null;
+            // Nếu đã là format YYYY-MM-DD, return trực tiếp
+            if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                return dateStr;
+            }
+            try {
+                // Nếu là Date object hoặc ISO string, parse và format lại
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return dateStr;
+                // Lấy ngày theo local time để tránh lệch timezone
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            } catch {
+                return dateStr;
+            }
+        };
+
+        const normalizedDate = normalizeDate(ngay_kham);
+
         const allLichRaw = await CuocHenKhamBenh.findAll({ 
             id_benh_nhan: idBenhNhanFinal,
             id_khung_gio, 
-            ngay_kham
+            ngay_kham: normalizedDate
         });
         const allLich = await purgeExpiredPendingAppointments(allLichRaw);
         const lich = allLich.find(l => l.trang_thai !== 'da_huy');
@@ -200,7 +252,7 @@ export const createCuocHenKham = async (req, res) => {
             id_bac_si : id_bac_si|| null,
             id_chuyen_khoa: id_chuyen_khoa || null,
             id_khung_gio,
-            ngay_kham,
+            ngay_kham: normalizedDate, // Sử dụng normalized date để đảm bảo nhất quán
             loai_hen: loai_hen || "truc_tiep",
             ly_do_kham: ly_do_kham || null,
             trieu_chung: trieu_chung || null,
@@ -438,9 +490,54 @@ export const getCuocHenKhamByBenhNhan = async (req, res) => {
             return res.status(404).json({ success: false, message: "Bệnh nhân không tồn tại" });
         }
 
-        const cuocHen = await CuocHenKhamBenh.findAll({ id_benh_nhan });
+        const cuocHenList = await CuocHenKhamBenh.findAll({ id_benh_nhan });
 
-        return res.status(200).json({ success: true, data: cuocHen });
+        // Enrich với thông tin khung giờ, bác sĩ, chuyên khoa
+        const enrichedData = await Promise.all(
+            cuocHenList.map(async (cuocHen) => {
+                let khungGio = null;
+                if (cuocHen.id_khung_gio) {
+                    khungGio = await KhungGioKham.findOne({ id_khung_gio: cuocHen.id_khung_gio });
+                }
+
+                let bacSi = null;
+                if (cuocHen.id_bac_si) {
+                    bacSi = await BacSi.findOne({ id_bac_si: cuocHen.id_bac_si });
+                    if (bacSi) {
+                        const bacSiInfo = await NguoiDung.findOne({ id_nguoi_dung: cuocHen.id_bac_si });
+                        bacSi = {
+                            ...bacSi,
+                            ho_ten: bacSiInfo?.ho_ten || null
+                        };
+                    }
+                }
+
+                let chuyenKhoa = null;
+                if (cuocHen.id_chuyen_khoa) {
+                    chuyenKhoa = await ChuyenKhoa.findOne({ id_chuyen_khoa: cuocHen.id_chuyen_khoa });
+                }
+
+                return {
+                    ...cuocHen,
+                    khungGio: khungGio ? {
+                        id_khung_gio: khungGio.id_khung_gio,
+                        gio_bat_dau: khungGio.gio_bat_dau,
+                        gio_ket_thuc: khungGio.gio_ket_thuc,
+                        ca: khungGio.ca
+                    } : null,
+                    bacSi: bacSi ? {
+                        id_bac_si: bacSi.id_bac_si,
+                        ho_ten: bacSi.ho_ten
+                    } : null,
+                    chuyenKhoa: chuyenKhoa ? {
+                        id_chuyen_khoa: chuyenKhoa.id_chuyen_khoa,
+                        ten_chuyen_khoa: chuyenKhoa.ten_chuyen_khoa
+                    } : null
+                };
+            })
+        );
+
+        return res.status(200).json({ success: true, data: enrichedData });
 
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -545,8 +642,9 @@ export const updateTrangThaiCuocHenKham = async (req, res) => {
 
         const updated = await CuocHenKhamBenh.update({trang_thai}, id_cuoc_hen);
 
+        let refundInfo = null;
         if (trang_thai === 'da_huy') {
-            await handleDepositCancellationForKham(cuocHen);
+            refundInfo = await handleDepositCancellationForKham(cuocHen);
         }
 
         // Tạo thông báo cho bệnh nhân khi trạng thái thay đổi
@@ -571,7 +669,16 @@ export const updateTrangThaiCuocHenKham = async (req, res) => {
             );
         }
 
-        return res.status(200).json({ success: true, message: "Cập nhật trạng thái thành công", data: updated });
+        const responseMessage = refundInfo?.message 
+            ? `Cập nhật trạng thái thành công. ${refundInfo.message}`
+            : "Cập nhật trạng thái thành công";
+
+        return res.status(200).json({ 
+            success: true, 
+            message: responseMessage, 
+            data: updated,
+            refundInfo: refundInfo || undefined
+        });
 
     } catch (error) {
         return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -742,16 +849,45 @@ export const countAppointmentsByTimeSlot = async (req, res) => {
             });
         }
 
-        // Đếm số lượng appointments đã đặt (chỉ tính các trạng thái đã đặt hoặc đã hoàn thành)
+        // Normalize ngày để tránh vấn đề timezone
+        // Đảm bảo ngày được so sánh đúng format YYYY-MM-DD
+        const normalizeDate = (dateStr) => {
+            if (!dateStr) return null;
+            // Nếu đã là format YYYY-MM-DD, return trực tiếp
+            if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                return dateStr;
+            }
+            try {
+                // Nếu là Date object hoặc ISO string, parse và format lại
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return null;
+                // Lấy ngày theo local time để tránh lệch timezone
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            } catch {
+                return dateStr;
+            }
+        };
+
+        const normalizedDate = normalizeDate(ngay_kham);
+
+        // Đếm số lượng appointments đã đặt
+        // Lấy tất cả appointments (bao gồm cả cho_thanh_toan)
         const appointments = await CuocHenKhamBenh.findAll({ 
             id_bac_si,
             id_khung_gio,
-            ngay_kham
+            ngay_kham: normalizedDate
         });
 
-        // Lọc các appointments có trạng thái hợp lệ (đã đặt hoặc đã hoàn thành)
-        const validAppointments = appointments.filter(apt => 
-            apt.trang_thai === 'da_dat' || apt.trang_thai === 'da_hoan_thanh'
+        // Purge expired pending appointments (giống như logic kiểm tra trùng)
+        const allLich = await purgeExpiredPendingAppointments(appointments);
+
+        // Đếm các appointments còn hiệu lực (không bị hủy và không hết hạn)
+        // Bao gồm: cho_thanh_toan (chưa hết hạn), da_dat, da_hoan_thanh
+        const validAppointments = allLich.filter(apt => 
+            apt.trang_thai !== 'da_huy'
         );
 
         return res.status(200).json({ 
@@ -776,9 +912,55 @@ export const countAppointmentsByTimeSlot = async (req, res) => {
 export const getAllCuocHenKhamBenh = async (req, res) => {
     try {
         const appointments = await CuocHenKhamBenh.getAll();
+
+        // Enrich với thông tin khung giờ, bác sĩ, chuyên khoa
+        const enrichedData = await Promise.all(
+            (appointments || []).map(async (cuocHen) => {
+                let khungGio = null;
+                if (cuocHen.id_khung_gio) {
+                    khungGio = await KhungGioKham.findOne({ id_khung_gio: cuocHen.id_khung_gio });
+                }
+
+                let bacSi = null;
+                if (cuocHen.id_bac_si) {
+                    bacSi = await BacSi.findOne({ id_bac_si: cuocHen.id_bac_si });
+                    if (bacSi) {
+                        const bacSiInfo = await NguoiDung.findOne({ id_nguoi_dung: cuocHen.id_bac_si });
+                        bacSi = {
+                            ...bacSi,
+                            ho_ten: bacSiInfo?.ho_ten || null
+                        };
+                    }
+                }
+
+                let chuyenKhoa = null;
+                if (cuocHen.id_chuyen_khoa) {
+                    chuyenKhoa = await ChuyenKhoa.findOne({ id_chuyen_khoa: cuocHen.id_chuyen_khoa });
+                }
+
+                return {
+                    ...cuocHen,
+                    khungGio: khungGio ? {
+                        id_khung_gio: khungGio.id_khung_gio,
+                        gio_bat_dau: khungGio.gio_bat_dau,
+                        gio_ket_thuc: khungGio.gio_ket_thuc,
+                        ca: khungGio.ca
+                    } : null,
+                    bacSi: bacSi ? {
+                        id_bac_si: bacSi.id_bac_si,
+                        ho_ten: bacSi.ho_ten
+                    } : null,
+                    chuyenKhoa: chuyenKhoa ? {
+                        id_chuyen_khoa: chuyenKhoa.id_chuyen_khoa,
+                        ten_chuyen_khoa: chuyenKhoa.ten_chuyen_khoa
+                    } : null
+                };
+            })
+        );
+
         return res.status(200).json({ 
             success: true, 
-            data: appointments || [] 
+            data: enrichedData || [] 
         });
     } catch (error) {
         console.error("Error in getAllCuocHenKhamBenh:", error);

@@ -406,7 +406,27 @@ export const updateThanhToan = async (req, res) => {
             return res.status(404).json({ success: false, message: "Không tìm thấy hóa đơn" });
         }
 
-        const updateHD = await HoaDon.update({ phuong_thuc_thanh_toan, trang_thai : trang_thai || 'da_thanh_toan',thoi_gian_thanh_toan :  new Date() }, id_hoa_don);
+        const finalTrangThai = trang_thai || 'da_thanh_toan';
+        const updateHD = await HoaDon.update({ phuong_thuc_thanh_toan, trang_thai: finalTrangThai, thoi_gian_thanh_toan: new Date() }, id_hoa_don);
+
+        // Cập nhật trạng thái cuộc hẹn từ "cho_thanh_toan" → "da_dat" nếu là hóa đơn cọc và đã thanh toán
+        if (hoaDon.loai_hoa_don === 'dat_coc' && finalTrangThai === 'da_thanh_toan') {
+            try {
+                if (hoaDon.id_cuoc_hen_kham) {
+                    const cuocHen = await CuocHenKhamBenh.findOne({ id_cuoc_hen: hoaDon.id_cuoc_hen_kham });
+                    if (cuocHen && cuocHen.trang_thai === 'cho_thanh_toan') {
+                        await CuocHenKhamBenh.update({ trang_thai: 'da_dat' }, hoaDon.id_cuoc_hen_kham);
+                    }
+                } else if (hoaDon.id_cuoc_hen_tu_van) {
+                    const cuocHen = await CuocHenTuVan.findOne({ id_cuoc_hen: hoaDon.id_cuoc_hen_tu_van });
+                    if (cuocHen && cuocHen.trang_thai === 'cho_thanh_toan') {
+                        await CuocHenTuVan.update({ trang_thai: 'da_dat' }, hoaDon.id_cuoc_hen_tu_van);
+                    }
+                }
+            } catch (updateError) {
+                console.error('⚠️ Error updating appointment status (updateThanhToan):', updateError);
+            }
+        }
 
         return res.status(200).json({ success: true, message: "Cập nhật thanh toán thành công", data: updateHD });
     } catch (error) {
