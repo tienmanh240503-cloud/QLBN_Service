@@ -437,6 +437,10 @@ export const getMessages = async (req, res) => {
         const { page = 1, pageSize = 50 } = req.query;
         const id_nguoi_dung = req.decoded.info.id_nguoi_dung;
 
+        // Parse page và pageSize thành số nguyên
+        const pageNum = parseInt(page, 10) || 1;
+        const pageSizeNum = parseInt(pageSize, 10) || 50;
+
         if (!id_cuoc_tro_chuyen) {
             return res.status(400).json({
                 success: false,
@@ -456,7 +460,7 @@ export const getMessages = async (req, res) => {
         const connection = await poolPromise.getConnection();
         
         try {
-            const offset = (page - 1) * pageSize;
+            const offset = (pageNum - 1) * pageSizeNum;
             const [messages] = await connection.execute(
                 `SELECT t.*, n.ho_ten as nguoi_gui_ten, n.anh_dai_dien as nguoi_gui_avatar, n.id_nguoi_dung as nguoi_gui_id
                  FROM tinnhan t
@@ -464,7 +468,7 @@ export const getMessages = async (req, res) => {
                  WHERE t.id_cuoc_tro_chuyen COLLATE utf8mb4_general_ci = ?
                  ORDER BY t.thoi_gian_gui ASC
                  LIMIT ? OFFSET ?`,
-                [id_cuoc_tro_chuyen, parseInt(pageSize), offset]
+                [id_cuoc_tro_chuyen, pageSizeNum, offset]
             );
 
             // Đánh dấu tin nhắn là đã đọc
