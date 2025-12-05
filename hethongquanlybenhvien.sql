@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1:3307
--- Thời gian đã tạo: Th12 01, 2025 lúc 09:26 AM
+-- Thời gian đã tạo: Th12 05, 2025 lúc 06:52 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -255,11 +255,18 @@ CREATE TABLE `chuyenkhoa` (
 --
 
 INSERT INTO `chuyenkhoa` (`id_chuyen_khoa`, `ten_chuyen_khoa`, `mo_ta`, `hinh_anh`, `thiet_bi`, `thoi_gian_hoat_dong`) VALUES
-('CK_89a12b4f-6c8d-4e2a-9f1b-3d5e7a8b9c0d', 'Khoa Nội tiết', 'Chuyên điều trị các bệnh lý nội tiết, tiểu đường và rối loạn chuyển hóa.', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1762108319/QLBN/ChuyenKhoa/chuyenkhoa_1762108316363.jpg', 'Máy đo đường huyết, Máy phân tích hormone', 'Thứ 2 - Thứ 6: 7h00 - 17h00'),
-('CK_b3ef44c8-85d0-45e5-b6aa-0b647153cbe5', 'Khoa Tim mạch', 'Chuyên điều trị các bệnh lý tim mạch và huyết áp. Chúng tôi có đội ngũ bác sĩ giàu kinh nghiệm với máy móc hiện đại.', 'https://example.com/images/tim-mach.jpg', 'Máy siêu âm tim, Máy đo điện tim, Máy chụp MRI', 'Thứ 2 - Thứ 7: 7h00 - 17h00'),
-('CK_cf23d4e6-8a9b-4c5d-9e1f-2b3c4d5e6f7a', 'Khoa Nhi khoa', 'Chăm sóc sức khỏe trẻ em từ sơ sinh đến 18 tuổi với phương pháp hiện đại.', 'https://example.com/images/nhi-khoa.jpg', 'Máy theo dõi sức khỏe trẻ em, Hệ thống tiêm chủng', 'Thứ 2 - Chủ Nhật: 7h00 - 20h00'),
-('CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'Khoa Sản phụ khoa', 'Chăm sóc sức khỏe phụ nữ, sản phụ và trẻ sơ sinh với đội ngũ chuyên môn cao.', 'https://example.com/images/san-phu.jpg', 'Máy siêu âm 4D, Phòng phẫu thuật hiện đại', 'Thứ 2 - Thứ 7: 7h00 - 17h00'),
-('CK_g8h9i0j1-2k3l-4m5n-6o7p-8q9r0s1t2u3v', 'Khoa Thần kinh', 'Chẩn đoán và điều trị các bệnh lý thần kinh, đau đầu, động kinh.', 'https://example.com/images/than-kinh.jpg', 'Máy EEG, Máy MRI thần kinh, Máy đo lưu huyết não', 'Thứ 2 - Thứ 6: 7h00 - 17h00');
+('CK_252a8327-7c1c-4451-baf3-a14718f9a9cd', 'Khoa Mắt', 'Chăm sóc sức khỏe đôi mắt, phẫu thuật Phaco, điều trị tật khúc xạ và các bệnh lý võng mạc.', 'https://tamanhhospital.vn/wp-content/uploads/2024/02/trung-tam-mat-cong-nghe-cao.png', 'Máy đo khúc xạ tự động, Máy sinh hiển vi khám mắt, Máy chụp đáy mắt', 'Thứ 2 - Thứ 7: 7h30 - 17h00'),
+('CK_44e64776-7e17-4649-a1d6-e9ee87de4aa2', 'Khoa Da Liễu', 'Chuyên điều trị các bệnh về da, tóc, móng và thẩm mỹ da liễu công nghệ cao.', 'https://tamanhhospital.vn/wp-content/uploads/2023/04/khoa-da-lieu.png', 'Máy soi da, Máy Laser CO2', 'Thứ 2 - Chủ Nhật: 7h00 - 20h00'),
+('CK_6bf4ab09-d68c-44fb-bc23-f4f2078a2b9b', 'Khoa Tai Mũi Họng', 'Khám và điều trị các bệnh lý về tai, mũi, họng, thanh quản và phẫu thuật đầu cổ.', 'https://tamanhhospital.vn/wp-content/uploads/2021/03/khoa-tai-mui-hong.png', 'Máy nội soi tai mũi họng, Máy đo thính lực', 'Thứ 2 - Chủ Nhật: 7h00 - 20h00'),
+('CK_75a3465a-123d-461b-b0da-e3f1fd21de58', 'Khoa Răng Hàm Mặt', 'Chẩn đoán, điều trị và thẩm mỹ các bệnh lý về răng, nướu và hàm mặt.', 'https://tamanhhospital.vn/wp-content/uploads/2023/12/khoa-rang-ham-mat.png', 'Ghế nha khoa đa năng, Máy chụp X-quang răng', 'Thứ 2 - Chủ Nhật: 7h00 - 20h00'),
+('CK_7a065de3-ca1f-474d-b6d7-558020e6c9b0', 'Khoa Hô hấp', 'Chẩn đoán và điều trị các bệnh lý về đường hô hấp, phổi, hen suyễn và bệnh phổi tắc nghẽn mãn tính (COPD).', 'https://tamanhhospital.vn/wp-content/uploads/2020/12/khoa-noihohap.png', 'Máy đo chức năng hô hấp, Máy nội soi phế quản, Hệ thống đo đa ký giấc ngủ', 'Thứ 2 - Thứ 6: 7h00 - 17h00'),
+('CK_89a12b4f-6c8d-4e2a-9f1b-3d5e7a8b9c0d', 'Khoa Nội tiết', 'Chuyên điều trị các bệnh lý nội tiết, tiểu đường và rối loạn chuyển hóa.', 'https://tamanhhospital.vn/wp-content/uploads/2020/12/khoa-noitiet.png', 'Máy đo đường huyết, Máy phân tích hormone', 'Thứ 2 - Thứ 6: 7h00 - 17h00'),
+('CK_b3ef44c8-85d0-45e5-b6aa-0b647153cbe5', 'Khoa Tim mạch', 'Chuyên điều trị các bệnh lý tim mạch và huyết áp. Chúng tôi có đội ngũ bác sĩ giàu kinh nghiệm với máy móc hiện đại.', 'https://tamanhhospital.vn/wp-content/uploads/2020/12/khoa-noitimmach.png', 'Máy siêu âm tim, Máy đo điện tim, Máy chụp MRI', 'Thứ 2 - Thứ 7: 7h00 - 17h00'),
+('CK_cf23d4e6-8a9b-4c5d-9e1f-2b3c4d5e6f7a', 'Khoa Nhi', 'Chăm sóc sức khỏe trẻ em từ sơ sinh đến 18 tuổi với phương pháp hiện đại.', 'https://tamanhhospital.vn/wp-content/uploads/2021/03/khoa-nhi.png', 'Máy theo dõi sức khỏe trẻ em, Hệ thống tiêm chủng', 'Thứ 2 - Chủ Nhật: 7h00 - 20h00'),
+('CK_da54faae-96b6-4070-866d-5a1f3b74c6bc', 'Khoa Tiêu hóa - Gan mật', 'Chẩn đoán và điều trị các bệnh lý về đường tiêu hóa, gan, mật, tụy.', 'https://tamanhhospital.vn/wp-content/uploads/2022/02/logo-tieu-hoa-gan-mat-f.png', 'Hệ thống nội soi dạ dày - đại tràng, Máy siêu âm đàn hồi mô gan', 'Thứ 2 - Thứ 7: 7h00 - 16h30'),
+('CK_e2ff103e-81c4-4373-95a1-53376357518b', 'Khoa Chấn thương chỉnh hình', 'Điều trị các chấn thương xương khớp, phẫu thuật chỉnh hình và phục hồi chức năng vận động.', 'https://tamanhhospital.vn/wp-content/uploads/2020/12/khoa-cthuong-chinhhinh.png', 'Máy C-Arm phẫu thuật, Bàn chỉnh hình, Hệ thống nội soi khớp', 'Thứ 2 - Chủ Nhật: 7h00 - 20h00'),
+('CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'Khoa Sản phụ khoa', 'Chăm sóc sức khỏe phụ nữ, sản phụ và trẻ sơ sinh với đội ngũ chuyên môn cao.', 'https://tamanhhospital.vn/wp-content/uploads/2020/12/khoa-sanphukhoa.png', 'Máy siêu âm 4D, Phòng phẫu thuật hiện đại', 'Thứ 2 - Thứ 7: 7h00 - 17h00'),
+('CK_g8h9i0j1-2k3l-4m5n-6o7p-8q9r0s1t2u3v', 'Khoa Thần kinh', 'Chẩn đoán và điều trị các bệnh lý thần kinh, đau đầu, động kinh.', 'https://tamanhhospital.vn/wp-content/uploads/2020/12/khoa-noithankinh.png', 'Máy EEG, Máy MRI thần kinh, Máy đo lưu huyết não', 'Thứ 2 - Thứ 6: 7h00 - 17h00');
 
 -- --------------------------------------------------------
 
@@ -281,6 +288,16 @@ CREATE TABLE `chuyennganhdinhduong` (
 --
 
 INSERT INTO `chuyennganhdinhduong` (`id_chuyen_nganh`, `ten_chuyen_nganh`, `mo_ta`, `hinh_anh`, `doi_tuong_phuc_vu`, `thoi_gian_hoat_dong`) VALUES
+('CN_09d303ac-109a-4a29-b331-94e5825bb10f', 'Dinh dưỡng Thận - Tiết niệu', 'Xây dựng chế độ ăn kiểm soát đạm, muối và nước cho bệnh nhân có bệnh lý về thận, đặc biệt là suy thận mạn.', 'https://benhvienanbinh.vn/wp-content/uploads/2023/05/Untitled-1-1400x788.jpg', 'Bệnh nhân suy thận, chạy thận, sỏi thận', 'Thứ 2 - Thứ 6: 8h00 - 16h30'),
+('CN_1d4e5b3b-a31a-465b-8b9d-f11fdfc8dc63', 'Dinh dưỡng thai kỳ', 'Tư vấn chế độ ăn chuẩn khoa học cho phụ nữ trong giai đoạn mang thai và sau sinh, đảm bảo dưỡng chất cho mẹ và bé.', 'https://ngaydautien.vn/dai-thao-duong/wp-content/uploads/sites/2/2018/07/dinh-duong-cho-phu-nu-mac-dai-thao-duong-thai-ky.png', 'Phụ nữ mang thai, phụ nữ cho con bú', 'Thứ 2 - Thứ 7: 8h00 - 17h00'),
+('CN_427f9853-3d47-46a5-b558-09fd766c18af', 'Dinh dưỡng lâm sàng', 'Tư vấn chế độ dinh dưỡng cho bệnh nhân điều trị tại bệnh viện', 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxISEhUQEBIVFRUVFRYVFRUQFxUVFRUVFRUXFhUVFRUYHSggGBolGxUVITEiJSkrLi4uFx8zODMtNygtLisBCgoKDg0OGxAQFysiHyUtLS8tKy0tLS0tLS0tKy0tLS0tLS0tLS0tLi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tK//AABEIAK4BIgMBIgACEQEDEQH/', 'Bệnh nhân nội trú, ngoại trú', 'Thứ 2 - Chủ nhật: 8h00 - 18h00'),
+('CN_4582aa26-7f53-4fb4-b9a0-00218d7847ab', 'Dinh dưỡng Ung bướu', 'Hỗ trợ dinh dưỡng nâng cao thể trạng, giảm tác dụng phụ và duy trì cân nặng trong quá trình hóa trị, xạ trị.', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNu9MJ8rj_0tcBWkGRUhYV9wujpQQrR2NvvQ&s', 'Bệnh nhân ung thư, phục hồi sau phẫu thuật', 'Thứ 2 - Thứ 6: 8h00 - 17h00'),
+('CN_4eef85dc-66b4-44b4-84db-32d07d5864f9', 'Dinh dưỡng trẻ em', 'Hướng dẫn chế độ ăn phù hợp cho trẻ em và trẻ sơ sinh', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRy0zb9bV40wWgS34aMLaTt5OQ_83ejOUzhOg&s', 'Trẻ em', 'Thứ 2 - Thứ 6: 7h30 - 16h30'),
+('CN_5fa412c4-6019-4319-b3b7-32647b69116c', 'Dinh dưỡng thể thao', 'Tư vấn chế độ ăn và phục hồi năng lượng cho vận động viên', 'https://static.wixstatic.com/media/4206ec_246811c87d45451cabbf3fddb54805d4~mv2.jpg/v1/fill/w_568,h_378,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/4206ec_246811c87d45451cabbf3fddb54805d4~mv2.jpg', 'Vận động viên, người tập gym', 'Thứ 2 - Thứ 7: 8h00 - 17h00'),
+('CN_87aef3b2-8d37-4358-bd2e-87b76eecf199', 'Dinh dưỡng người cao tuổi', 'Tư vấn dinh dưỡng phòng ngừa lão hóa, hỗ trợ điều trị loãng xương, khó nuốt và các vấn đề tiêu hóa ở người già.', 'https://suckhoedoisong.qltns.mediacdn.vn/Images/hohuong/2021/06/15/NCT%20an%20che%20do%20can%20doi%20duong%20chat.jpg', 'Người cao tuổi, người suy nhược cơ thể', 'Thứ 2 - Thứ 6: 8h00 - 17h00'),
+('CN_aa3f1a36-93cf-44af-a7cb-ea87e6b7ea90', 'Kiểm soát cân nặng', 'Xây dựng lộ trình giảm cân hoặc tăng cân khoa học, điều trị béo phì an toàn thông qua điều chỉnh thói quen ăn uống', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSs4jhf3r8EXMhT5uix6-yhvIRcVjc9332S8Q&s', 'Người thừa cân, béo phì, người gầy yếu', 'Thứ 2 - Chủ Nhật: 7h00 - 20h00'),
+('CN_b1c1fbc4-250c-4ace-aa6c-050880ba4f0b', 'Dinh dưỡng Đái tháo đường', 'Thiết kế thực đơn chuyên biệt giúp kiểm soát chỉ số đường huyết (GI), ngăn ngừa biến chứng cho bệnh nhân tiểu đường.', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGGhUmvHv6sKMkyaVuYDAo5zaW8zRPGAF5xg&s', 'Bệnh nhân tiểu đường, tiền tiểu đường', 'Thứ 2 - Thứ 6: 7h30 - 16h30'),
+('CN_c40a8a2f-9670-41eb-a0c8-9c4f2846480f', 'Dinh dưỡng Tim mạch', 'Tư vấn chế độ ăn giảm mỡ máu, kiểm soát huyết áp và bảo vệ sức khỏe tim mạch (Chế độ ăn DASH/Mediterranean).', 'https://suckhoedoisong.qltns.mediacdn.vn/zoom/600_315/324455921873985536/2022/4/3/tim-mach-1649002529710261054564-37-0-474-700-crop-1649002539165246015210.jpg', 'Người cao huyết áp, mỡ máu, bệnh tim', 'Thứ 2 - Thứ 7: 7h30 - 17h30'),
 ('CN_test234', 'Dinh dưỡng thể thao', 'Tư vấn chế độ ăn và phục hồi năng lượng cho vận động viên', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1762844609/ChuyenNganhDinhDuong/image_1762844605424.jpg', 'Vận động viên, người tập gym', 'Thứ 2 - Thứ 7: 8h00 - 17h00'),
 ('CN_test235', 'Dinh dưỡng trẻ em', 'Hướng dẫn chế độ ăn phù hợp cho trẻ em và trẻ sơ sinh', 'dinh_duong_tre_em.jpg', 'Trẻ em, phụ huynh', 'Thứ 2 - Thứ 6: 7h30 - 16h30'),
 ('CN_test236', 'Dinh dưỡng lâm sàng', 'Tư vấn chế độ dinh dưỡng cho bệnh nhân điều trị tại bệnh viện', 'dinh_duong_lam_sang.jpg', 'Bệnh nhân nội trú, ngoại trú', 'Thứ 2 - Chủ nhật: 8h00 - 18h00');
@@ -325,14 +342,19 @@ INSERT INTO `cuochenkhambenh` (`id_cuoc_hen`, `id_benh_nhan`, `id_bac_si`, `id_c
 ('CH_330c842a-b1e4-4e46-ab28-1064cae35535', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_9b0c1d2e-3f4a-5678-9012-cdef34567890', '2025-12-06', 'truc_tiep', 'da_huy', 'aa', 'aa', 'HD_caa2a2b9-379a-4a31-a89d-7991d0a3583d', '2025-11-27 14:01:39', '2025-11-26 14:01:39'),
 ('CH_34bbf0a5-d033-4840-bc59-228dab0fe3c7', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_1d2e3f4a-5b6c-7890-1234-efab56789012', '2025-12-06', 'truc_tiep', 'da_huy', 'Đau đẻ', NULL, 'HD_1dbc32a3-2f03-4d97-b3fc-9546c73d3e3b', '2025-11-26 10:27:55', '2025-11-26 10:17:55'),
 ('CH_3bd800f8-372f-44ea-b8d3-d4a1e8232cb9', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_3deb3d42-e393-43ee-9fe2-f3868ba3116f', '2025-11-25', 'truc_tiep', 'da_hoan_thanh', 'aaa', 'aaaa', NULL, NULL, '2025-11-24 10:39:28'),
+('CH_3d8a184f-4735-4411-92ea-ceffd39b85df', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_0c1d2e3f-4a5b-6789-0123-defa45678901', '2025-12-13', 'truc_tiep', 'da_huy', 'aaaa', 'aaa', 'HD_e8180e8c-b629-4331-b71f-d917352cd5f7', '2025-12-05 04:34:23', '2025-12-04 04:34:23'),
 ('CH_4378e9d0-78be-4e7f-817e-c5bf4dd06b5e', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_0c1d2e3f-4a5b-6789-0123-defa45678901', '2025-12-06', 'truc_tiep', 'da_huy', 'aaa', NULL, 'HD_91cfccd0-a380-4220-ac33-644b775fe14f', '2025-11-27 13:56:19', '2025-11-26 13:56:19'),
 ('CH_4853c4ab-44a1-4fd6-a191-48587939ef57', 'BN_e2f3g4h5-i6j7-8901-cdef-456789012345', 'BS_c76d606e-1664-4d60-92bb-929f65667587', 'CK_89a12b4f-6c8d-4e2a-9f1b-3d5e7a8b9c0d', 'KG_0c1d2e3f-4a5b-6789-0123-defa45678901', '2025-10-30', 'truc_tiep', 'da_hoan_thanh', 'Khám sức khỏe định kỳ', 'Ho, sốt nhẹ', NULL, NULL, '2025-10-31 02:55:01'),
+('CH_49c96b2d-21ad-45e8-8181-19b47ae4b8bf', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_3deb3d42-e393-43ee-9fe2-f3868ba3116f', '2025-12-05', 'truc_tiep', 'cho_thanh_toan', 'aaaa', NULL, 'HD_d1f72896-02c4-45b3-b837-9dad29bf88b4', '2025-12-05 03:53:38', '2025-12-04 03:53:38'),
 ('CH_4b12c2cf-10d7-483f-8483-7bf649134968', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_3deb3d42-e393-43ee-9fe2-f3868ba3116f', '2025-11-17', 'truc_tiep', 'da_hoan_thanh', 'khám bệnh đau đẻ', NULL, NULL, NULL, '2025-11-16 06:16:53'),
 ('CH_629c1a1c-b05f-488f-9600-e65f53e38a9d', 'BN_d14d07f0-60d8-4ab2-9d80-a4f0e9f80a26', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'CK_b3ef44c8-85d0-45e5-b6aa-0b647153cbe5', 'KG_3deb3d42-e393-43ee-9fe2-f3868ba3116f', '2025-10-06', 'online', 'da_hoan_thanh', 'Khám sức khỏe định kỳ', 'Đau ngực, khó thở', NULL, NULL, '2025-10-04 13:09:50'),
 ('CH_6dcde652-339e-4749-a7c8-2537a0a39a45', 'BN_g4h5i6j7-k8l9-0123-efgh-678901234567', 'BS_c76d606e-1664-4d60-92bb-929f65667587', 'CK_89a12b4f-6c8d-4e2a-9f1b-3d5e7a8b9c0d', 'KG_3deb3d42-e393-43ee-9fe2-f3868ba3116f', '2025-10-30', 'truc_tiep', 'da_dat', 'Khám sức khỏe định kỳ', 'Ho, sốt nhẹ', NULL, NULL, '2025-10-31 02:56:26'),
+('CH_8624c923-0249-44f3-ae91-0e3d45611c8d', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_0c1d2e3f-4a5b-6789-0123-defa45678901', '2025-12-13', 'truc_tiep', 'da_huy', 'aaaa', NULL, 'HD_66b59b6a-b58d-4c20-9a1e-e95f25c5ba23', '2025-12-05 04:06:36', '2025-12-04 04:06:36'),
 ('CH_89fdb566-0b4f-4a0f-b923-13112990f668', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_7f8e9d0c-1b2a-3456-7890-abcd12345678', '2025-11-27', 'truc_tiep', 'da_huy', 'aaaa', NULL, 'HD_426c5a4d-bbc6-4cf5-961b-396441313230', '2025-11-26 09:56:42', '2025-11-26 09:46:42'),
 ('CH_91b92c19-e24c-409a-b616-01e91af1112a', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_8a9b0c1d-2e3f-4567-8901-bcde23456789', '2025-11-27', 'truc_tiep', 'da_huy', 'aaaa', NULL, 'HD_e821744d-0991-4e18-bb2d-050122df713c', '2025-11-26 10:07:14', '2025-11-26 09:57:14'),
+('CH_9cfc302b-d1ce-4bac-a55d-49f17a7430c0', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_9b0c1d2e-3f4a-5678-9012-cdef34567890', '2025-12-13', 'truc_tiep', 'cho_thanh_toan', 'aaaa', 'aaaa', 'HD_cddf6156-701d-443c-b7c5-9afc8716084e', '2025-12-05 04:01:37', '2025-12-04 04:01:37'),
 ('CH_9dad9fc6-0957-4939-962f-f4b8f8d2caab', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_3deb3d42-e393-43ee-9fe2-f3868ba3116f', '2025-11-30', 'truc_tiep', 'da_dat', 'aaa', NULL, 'HD_fdbb7673-6fb9-402e-9cd7-93bc3a53543e', '2025-11-30 02:33:42', '2025-11-29 02:33:42'),
+('CH_a5be3e09-0d8d-421c-80cb-2c80150dcbdf', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_1d2e3f4a-5b6c-7890-1234-efab56789012', '2025-12-13', 'truc_tiep', 'da_huy', 'aaa', 'aaa', 'HD_4d985950-e1cd-45fc-bfe1-0dc71d9c09af', '2025-12-05 04:24:55', '2025-12-04 04:24:55'),
 ('CH_a92e1bba-f810-40e3-8cd2-70e2f0ec0537', 'BN_9303ce6f-6ca8-4a17-9435-6b5e90a5144b', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_3deb3d42-e393-43ee-9fe2-f3868ba3116f', '2025-11-01', 'truc_tiep', 'da_hoan_thanh', 'đau bụng đẻ', NULL, NULL, NULL, '2025-11-01 09:28:47'),
 ('CH_ae9195d5-229f-43a8-b463-e777094f1eb6', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'KG_8a9b0c1d-2e3f-4567-8901-bcde23456789', '2025-11-25', 'online', 'da_hoan_thanh', 'aaaa', 'aaa', NULL, NULL, '2025-11-24 10:44:57'),
 ('CH_b068ff79-437e-4410-80cf-1fa6872918a3', 'BN_d14d07f0-60d8-4ab2-9d80-a4f0e9f80a26', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'CK_b3ef44c8-85d0-45e5-b6aa-0b647153cbe5', 'KG_7f8e9d0c-1b2a-3456-7890-abcd12345678', '2025-10-07', 'online', 'da_dat', 'Tái khám sau điều trị', 'Cần theo dõi huyết áp', NULL, NULL, '2025-10-06 09:27:05'),
@@ -409,6 +431,7 @@ INSERT INTO `cuoctrochuyen` (`id_cuoc_tro_chuyen`, `id_benh_nhan`, `id_bac_si`, 
 ('CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BN_d14d07f0-60d8-4ab2-9d80-a4f0e9f80a26', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'Cuộc trò chuyện: Trần Thị Lan - Nguyễn Văn A', 'dang_mo', '2025-10-31 15:32:59'),
 ('CTC_7d539791-d986-413e-b73d-cd033cdd2b99', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', NULL, 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'Cuộc trò chuyện: Nguyễn Văn C - TienManh', 'dang_mo', '2025-11-11 14:52:33'),
 ('CTC_a3d19086-6981-4f1f-99cb-bc1bae460863', 'BN_e2f3g4h5-i6j7-8901-cdef-456789012345', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'Cuộc trò chuyện: Trần Thị Lan - Trần Văn Minh', 'dang_mo', '2025-10-31 15:51:05'),
+('CTC_b3d4156e-e796-4dbd-85bb-7634337f0492', 'BN_9303ce6f-6ca8-4a17-9435-6b5e90a5144b', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'Cuộc trò chuyện: Trần Thị Lan - Nguyễn Lê A', 'dang_mo', '2025-12-03 18:59:32'),
 ('CTC_bbf8b18a-a213-4e14-a7f6-1e9b6efb68b2', 'NV_quay001', 'ADMIN_001', NULL, 'Cuộc trò chuyện: Phạm Thị Quỳnh - Nguyễn Văn Admin', 'dang_mo', '2025-11-03 17:47:22');
 
 -- --------------------------------------------------------
@@ -516,6 +539,7 @@ CREATE TABLE `hoadon` (
 --
 
 INSERT INTO `hoadon` (`id_hoa_don`, `id_cuoc_hen_kham`, `id_cuoc_hen_tu_van`, `tong_tien`, `trang_thai`, `phuong_thuc_thanh_toan`, `loai_hoa_don`, `id_hoa_don_tham_chieu`, `ma_giao_dich`, `thoi_han_thanh_toan`, `thoi_gian_thanh_toan`, `thoi_gian_tao`) VALUES
+('HD_06997cd7-401b-4e2f-bac3-fe3b0ff44f0a', 'CH_3d8a184f-4735-4411-92ea-ceffd39b85df', NULL, 100000.00, 'da_thanh_toan', 'momo', 'hoan_dat_coc', 'HD_e8180e8c-b629-4331-b71f-d917352cd5f7', NULL, NULL, '2025-12-04 04:36:12', '2025-12-04 04:36:12'),
 ('HD_184dea47-cc72-4dad-bde5-d61160330b76', 'CH_27e062f8-3f55-4938-95f6-b900097e2e07', NULL, 1500000.00, 'da_thanh_toan', 'tien_mat', 'dich_vu', NULL, NULL, NULL, '2025-11-24 09:59:53', '2025-11-24 04:30:50'),
 ('HD_1dbc32a3-2f03-4d97-b3fc-9546c73d3e3b', 'CH_34bbf0a5-d033-4840-bc59-228dab0fe3c7', NULL, 100000.00, 'da_hoan_tien', 'momo', 'dat_coc', NULL, '4617136874', '2025-11-26 10:27:55', '2025-11-26 10:18:35', '2025-11-26 10:17:55'),
 ('HD_1faef6b6-96dc-4312-9df2-b981d2967ff3', 'CH_15d1507b-3ea3-431e-8e8f-e158dd0bffac', NULL, 200000.00, 'da_thanh_toan', 'momo', 'dich_vu', NULL, NULL, NULL, NULL, '2025-11-24 11:26:11'),
@@ -526,7 +550,9 @@ INSERT INTO `hoadon` (`id_hoa_don`, `id_cuoc_hen_kham`, `id_cuoc_hen_tu_van`, `t
 ('HD_36a76e4d-1478-4ab3-8f08-ecc0246870d5', 'CH_4853c4ab-44a1-4fd6-a191-48587939ef57', NULL, 4000000.00, 'da_thanh_toan', 'chuyen_khoan', 'dich_vu', NULL, NULL, NULL, '2025-11-02 21:23:23', '2025-10-31 03:43:31'),
 ('HD_424d1448-b7f9-4f8b-91e2-72c4615a2d11', 'CH_192f4eac-947b-462b-a064-dade9cffd1eb', NULL, 2300000.00, 'da_thanh_toan', 'tien_mat', 'dich_vu', NULL, NULL, NULL, '2025-11-24 09:59:50', '2025-11-14 10:52:03'),
 ('HD_426c5a4d-bbc6-4cf5-961b-396441313230', 'CH_89fdb566-0b4f-4a0f-b923-13112990f668', NULL, 100000.00, 'da_huy', NULL, 'dat_coc', NULL, NULL, '2025-11-26 09:56:42', NULL, '2025-11-26 09:46:42'),
+('HD_4d985950-e1cd-45fc-bfe1-0dc71d9c09af', 'CH_a5be3e09-0d8d-421c-80cb-2c80150dcbdf', NULL, 100000.00, '', 'momo', 'dat_coc', NULL, NULL, '2025-12-05 04:24:55', '2025-12-04 04:25:16', '2025-12-04 04:24:55'),
 ('HD_63af286f-c000-4642-929a-5bf7e6265578', 'CH_13a4269b-7802-4b84-8644-3521033be9eb', NULL, 100000.00, 'da_hoan_tien', 'momo', 'dat_coc', NULL, '4617087214', '2025-11-26 10:25:12', '2025-11-26 10:15:47', '2025-11-26 10:15:12'),
+('HD_66b59b6a-b58d-4c20-9a1e-e95f25c5ba23', 'CH_8624c923-0249-44f3-ae91-0e3d45611c8d', NULL, 100000.00, '', 'momo', 'dat_coc', NULL, NULL, '2025-12-05 04:06:36', '2025-12-04 04:06:52', '2025-12-04 04:06:36'),
 ('HD_6978d4ba-9125-447f-a4a3-783e96fe6d1d', 'CH_a92e1bba-f810-40e3-8cd2-70e2f0ec0537', NULL, 100000.00, 'da_thanh_toan', 'tien_mat', 'dich_vu', NULL, NULL, NULL, '2025-11-24 10:27:56', '2025-11-24 10:09:01'),
 ('HD_745d5b69-2130-48a2-9776-1a282daf8cd2', 'CH_259d50de-0f19-4a55-a868-15f777313752', NULL, 80000.00, 'chua_thanh_toan', NULL, 'dich_vu', NULL, NULL, NULL, NULL, '2025-11-24 11:30:20'),
 ('HD_7a2394b2-1c4d-4f22-aa2a-4ee2e31f037b', 'CH_defdc026-aa0b-4235-81c8-f5cc3eaa5f56', NULL, 100000.00, 'da_huy', NULL, 'dat_coc', NULL, NULL, '2025-11-26 10:15:14', NULL, '2025-11-26 10:05:14'),
@@ -541,6 +567,9 @@ INSERT INTO `hoadon` (`id_hoa_don`, `id_cuoc_hen_kham`, `id_cuoc_hen_tu_van`, `t
 ('HD_b56a101f-5834-4bfc-860e-e0305d4aba4e', NULL, 'CH_02e9baa5-562e-4aaf-a572-23cf25d10ccf', 150000.00, 'da_thanh_toan', 'tien_mat', 'dich_vu', NULL, NULL, NULL, '2025-11-24 10:28:03', '2025-11-24 10:17:34'),
 ('HD_c1e4f6e4-216a-404c-8497-5a397f49d6e9', 'CH_629c1a1c-b05f-488f-9600-e65f53e38a9d', NULL, 260000.00, 'da_thanh_toan', 'tien_mat', 'dich_vu', NULL, NULL, NULL, '2025-11-24 09:54:27', '2025-10-04 13:31:45'),
 ('HD_caa2a2b9-379a-4a31-a89d-7991d0a3583d', 'CH_330c842a-b1e4-4e46-ab28-1064cae35535', NULL, 100000.00, 'da_huy', NULL, 'dat_coc', NULL, NULL, '2025-11-27 14:01:39', NULL, '2025-11-26 14:01:39'),
+('HD_cddf6156-701d-443c-b7c5-9afc8716084e', 'CH_9cfc302b-d1ce-4bac-a55d-49f17a7430c0', NULL, 100000.00, 'da_thanh_toan', 'momo', 'dat_coc', NULL, NULL, '2025-12-05 04:01:37', '2025-12-04 04:02:08', '2025-12-04 04:01:37'),
+('HD_d1f72896-02c4-45b3-b837-9dad29bf88b4', 'CH_49c96b2d-21ad-45e8-8181-19b47ae4b8bf', NULL, 100000.00, 'chua_thanh_toan', NULL, 'dat_coc', NULL, NULL, '2025-12-05 03:53:38', NULL, '2025-12-04 03:53:38'),
+('HD_e8180e8c-b629-4331-b71f-d917352cd5f7', 'CH_3d8a184f-4735-4411-92ea-ceffd39b85df', NULL, 100000.00, 'da_hoan_tien', 'momo', 'dat_coc', NULL, '4623040514', '2025-12-05 04:34:23', '2025-12-04 04:34:50', '2025-12-04 04:34:23'),
 ('HD_e821744d-0991-4e18-bb2d-050122df713c', 'CH_91b92c19-e24c-409a-b616-01e91af1112a', NULL, 100000.00, 'da_huy', NULL, 'dat_coc', NULL, NULL, '2025-11-26 10:07:14', NULL, '2025-11-26 09:57:14'),
 ('HD_e8a134b5-5162-47df-9e35-43782edb37c9', 'CH_09433868-c11a-4427-a7c6-7b577cf4d2d4', NULL, 100000.00, 'da_huy', NULL, 'dat_coc', NULL, NULL, '2025-11-27 13:51:30', NULL, '2025-11-26 13:51:30'),
 ('HD_e9f298b2-5a9a-4c94-9bd8-91cde2a6ae6a', 'CH_bd0eab68-9187-45b6-806e-dcf2c2e6db98', NULL, 100000.00, 'da_huy', NULL, 'dat_coc', NULL, NULL, '2025-11-26 10:13:35', NULL, '2025-11-26 10:03:35'),
@@ -715,6 +744,8 @@ INSERT INTO `lichlamviec` (`id_lich_lam_viec`, `id_nguoi_dung`, `id_nguoi_tao`, 
 ('L_1764152073705-652muvfe8', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'PK_e5f6g7h8-i9j0-1234-efgh-567890123456', '2025-12-06', 'Chieu'),
 ('L_1764383449768-5asag75lh', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'PK_e5f6g7h8-i9j0-1234-efgh-567890123456', '2025-11-30', 'Sang'),
 ('L_1764383460335-cgumge039', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'PK_e5f6g7h8-i9j0-1234-efgh-567890123456', '2025-11-30', 'Chieu'),
+('L_1764818625195-849x81yhg', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'PK_e5f6g7h8-i9j0-1234-efgh-567890123456', '2025-12-05', 'Sang'),
+('L_1764820854550-nxp0xotb7', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', NULL, 'PK_e5f6g7h8-i9j0-1234-efgh-567890123456', '2025-12-13', 'Chieu'),
 ('L_3436c298-20f6-4370-af5d-80a0114b0510', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'NV_phancong001', 'PK_a1b2c3d4-e5f6-7890-abcd-ef1234567890', '2025-10-04', 'Sang'),
 ('L_4eb27707-5cff-4961-b1c6-4a4e44958d4b', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'NV_phancong001', 'PK_b2c3d4e5-f6g7-8901-bcde-f23456789012', '2025-10-03', 'Chieu'),
 ('L_a3531195-c5a2-45ff-823e-f5a93cffa22c', 'BS_63ade75e-bbd3-4785-95a2-cd85c0840b08', 'NV_phancong001', 'PK_a1b2c3d4-e5f6-7890-abcd-ef1234567890', '2025-09-04', 'Sang'),
@@ -729,6 +760,37 @@ INSERT INTO `lichlamviec` (`id_lich_lam_viec`, `id_nguoi_dung`, `id_nguoi_tao`, 
 ('L_h7i8j9k0-l1m2-3456-ghij-789012345678', 'NV_quay001', 'NV_phancong001', 'PK_g7h8i9j0-k1l2-3456-ghij-789012345678', '2025-10-12', 'Chieu'),
 ('L_i8j9k0l1-m2n3-4567-hijk-890123456789', 'NV_phancong001', 'ADMIN_001', 'PK_g7h8i9j0-k1l2-3456-ghij-789012345678', '2025-10-13', 'Sang'),
 ('L_j9k0l1m2-n3o4-5678-ijkl-901234567890', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'NV_phancong001', 'PK_g7h8i9j0-k1l2-3456-ghij-789012345678', '2025-10-14', 'Chieu');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `lichsucuocgoi`
+--
+
+CREATE TABLE `lichsucuocgoi` (
+  `id_cuoc_goi` varchar(60) NOT NULL,
+  `id_cuoc_tro_chuyen` varchar(100) NOT NULL,
+  `nguoi_khoi_tao` varchar(50) NOT NULL,
+  `nguoi_nhan_du_kien` varchar(50) DEFAULT NULL,
+  `nguoi_nhan_thuc_te` varchar(50) DEFAULT NULL,
+  `trang_thai` enum('dang_goi','dang_noi','bi_tu_choi','bi_huy','hoan_thanh','that_bai') DEFAULT 'dang_goi',
+  `thoi_gian_khoi_tao` timestamp NOT NULL DEFAULT current_timestamp(),
+  `thoi_gian_tra_loi` timestamp NULL DEFAULT NULL,
+  `thoi_gian_ket_thuc` timestamp NULL DEFAULT NULL,
+  `ly_do_ket_thuc` varchar(255) DEFAULT NULL,
+  `ghi_chu` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `lichsucuocgoi`
+--
+
+INSERT INTO `lichsucuocgoi` (`id_cuoc_goi`, `id_cuoc_tro_chuyen`, `nguoi_khoi_tao`, `nguoi_nhan_du_kien`, `nguoi_nhan_thuc_te`, `trang_thai`, `thoi_gian_khoi_tao`, `thoi_gian_tra_loi`, `thoi_gian_ket_thuc`, `ly_do_ket_thuc`, `ghi_chu`) VALUES
+('CALL_1764763183767', 'CTC_b3d4156e-e796-4dbd-85bb-7634337f0492', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'BN_9303ce6f-6ca8-4a17-9435-6b5e90a5144b', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'bi_tu_choi', '2025-12-03 11:59:46', NULL, '2025-12-03 11:59:46', 'user_busy', 'Gọi đến Nguyễn Lê A'),
+('CALL_1764823157231', 'CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'BN_d14d07f0-60d8-4ab2-9d80-a4f0e9f80a26', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'bi_tu_choi', '2025-12-04 04:39:20', NULL, '2025-12-04 04:39:20', 'user_busy', 'Gọi đến Nguyễn Văn A'),
+('CALL_1764823178403', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'bi_tu_choi', '2025-12-04 04:39:40', NULL, '2025-12-04 04:39:40', 'user_busy', 'Gọi đến TienManh'),
+('CALL_1764823195861', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'hoan_thanh', '2025-12-04 04:40:01', '2025-12-04 04:40:09', '2025-12-04 04:40:13', 'hangup', 'Gọi đến Trần Thị Lan'),
+('CALL_1764823215651', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'hoan_thanh', '2025-12-04 04:40:16', '2025-12-04 04:40:21', '2025-12-04 04:40:30', 'hangup', 'Gọi đến TienManh');
 
 -- --------------------------------------------------------
 
@@ -1062,7 +1124,7 @@ INSERT INTO `phongkham` (`id_phong_kham`, `ten_phong`, `so_phong`, `tang`, `id_c
 ('PK_e5f6g7h8-i9j0-1234-efgh-567890123456', 'Phòng khám Sản phụ khoa', 'P401', 4, 'CK_e4f56g7h-9i0j-4k5l-0m1n-3o4p5q6r7s8t', 'phong_kham_bac_si', NULL, 'Phòng khám Sản phụ khoa với thiết bị siêu âm hiện đại', 'HoatDong', 'Máy siêu âm 4D, Phòng khám riêng tư, Giường khám', 12, '2025-10-01 08:00:00'),
 ('PK_f6g7h8i9-j0k1-2345-fghi-678901234567', 'Phòng khám Thần kinh', 'P501', 5, 'CK_g8h9i0j1-2k3l-4m5n-6o7p-8q9r0s1t2u3v', 'phong_kham_bac_si', NULL, 'Phòng khám chuyên khoa Thần kinh', 'BaoTri', 'Máy EEG, Máy đo lưu huyết não, Bộ dụng cụ khám thần kinh', 16, '2025-10-01 08:00:00'),
 ('PK_g7h8i9j0-k1l2-3456-ghij-789012345678', 'Phòng khám Tổng quát', 'P001', 1, NULL, 'phong_lam_viec', NULL, 'Phòng khám tổng quát cho các trường hợp chung', 'BaoTri', 'Máy đo huyết áp, Nhiệt kế, Đèn khám, Bộ dụng cụ y tế cơ bản', 30, '2025-10-01 08:00:00'),
-('PK_h8i9j0k1-l2m3-4567-hijk-890123456789', 'Phòng khám Cấp cứu', 'P000', 1, 'CK_89a12b4f-6c8d-4e2a-9f1b-3d5e7a8b9c0d', 'phong_kham_bac_si', NULL, 'Phòng khám cấp cứu 24/7', 'Ngung', 'Máy thở, Máy sốc tim, Bộ dụng cụ cấp cứu, Giường bệnh', 10, '2025-10-01 08:00:00');
+('PK_h8i9j0k1-l2m3-4567-hijk-890123456789', 'Phòng khám Cấp cứu', 'P000', 1, 'CK_89a12b4f-6c8d-4e2a-9f1b-3d5e7a8b9c0d', 'phong_kham_bac_si', NULL, 'Phòng khám cấp cứu 24/7', 'HoatDong', 'Máy thở, Máy sốc tim, Bộ dụng cụ cấp cứu, Giường bệnh', 10, '2025-10-01 08:00:00');
 
 -- --------------------------------------------------------
 
@@ -1145,11 +1207,14 @@ CREATE TABLE `thongbao` (
 
 INSERT INTO `thongbao` (`id_thong_bao`, `id_nguoi_nhan`, `tieu_de`, `noi_dung`, `loai_thong_bao`, `id_lien_ket`, `trang_thai`, `thoi_gian_tao`, `thoi_gian_doc`) VALUES
 ('TB_015db5b4-2dcc-47a2-b3ac-13e349f09939', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'Tin nhắn mới từ Hoàng Văn Long', 'có gì hú t nhe ', 'chat', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'chua_doc', '2025-12-01 08:16:19', NULL),
+('TB_094e134d-ba77-472c-b2a0-0afacf4b0030', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Sat Dec 13 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_3d8a184f-4735-4411-92ea-ceffd39b85df', 'chua_doc', '2025-12-04 04:36:12', NULL),
 ('TB_11721bee-901e-40b5-af26-c9446ea5c794', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày 2025-11-27 với Trần Thị Lan', 'cuoc_hen', 'CH_2d9e3baf-89a6-4c1c-94b6-12ddbdda9865', 'chua_doc', '2025-11-26 08:07:33', NULL),
 ('TB_121cabf5-ec30-4f20-a1c8-413913b37016', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đã hoàn thành', 'Cuộc hẹn của bạn vào ngày Tue Nov 25 2025 00:00:00 GMT+0700 (Indochina Time) đã hoàn thành', 'cuoc_hen', 'CH_f7c917a1-f898-4559-bce0-af54d603c9de', 'chua_doc', '2025-11-24 10:52:17', NULL),
 ('TB_13d2af9e-7069-45b3-9c97-ab830b302b27', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Hóa đơn mới', 'Bạn có hóa đơn mới với tổng tiền: 200.000 VNĐ', 'hoa_don', 'HD_aa788631-3645-437b-98a8-22db5853f559', 'da_doc', '2025-11-03 09:30:23', '2025-11-10 03:18:22'),
+('TB_13ea49d1-8c9f-457d-a577-cd3597f1af98', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đang chờ thanh toán cọc', 'Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày 2025-12-13', 'cuoc_hen', 'CH_8624c923-0249-44f3-ae91-0e3d45611c8d', 'chua_doc', '2025-12-04 04:06:36', NULL),
 ('TB_158ce7dc-cbae-4377-aa4e-83826997c22e', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đang chờ thanh toán cọc', 'Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày 2025-11-27', 'cuoc_hen', 'CH_defdc026-aa0b-4235-81c8-f5cc3eaa5f56', 'chua_doc', '2025-11-26 10:05:14', NULL),
 ('TB_17afb82e-6856-4e19-9a65-5e84ff78f9b1', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đã hoàn thành', 'Cuộc hẹn của bạn vào ngày Mon Nov 17 2025 00:00:00 GMT+0700 (Indochina Time) đã hoàn thành', 'cuoc_hen', 'CH_27e062f8-3f55-4938-95f6-b900097e2e07', 'chua_doc', '2025-11-24 04:30:50', NULL),
+('TB_17ca093c-a3a9-4a24-9d51-aac203eb3ac4', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đang chờ thanh toán cọc', 'Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày 2025-12-13', 'cuoc_hen', 'CH_a5be3e09-0d8d-421c-80cb-2c80150dcbdf', 'chua_doc', '2025-12-04 04:24:55', NULL),
 ('TB_184c416c-3c44-4167-8e56-c220d2ea9110', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Hóa đơn mới', 'Bạn có hóa đơn mới với tổng tiền: 100000.00 VNĐ', 'hoa_don', 'HD_366b4214-1536-436a-a26e-b2388fad8775', 'chua_doc', '2025-11-26 10:16:38', NULL),
 ('TB_184d3867-880d-4618-a005-3fafd6dc13be', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Hóa đơn mới', 'Bạn có hóa đơn mới với tổng tiền: 100000.00 VNĐ', 'hoa_don', 'HD_eef8c81f-a842-4ca3-ac80-5c128845fa0a', 'chua_doc', '2025-11-26 10:20:36', NULL),
 ('TB_1a193ef5-3a3b-4db5-9440-350672ea1411', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày Thu Nov 27 2025 00:00:00 GMT+0700 (Indochina Time) với Trần Thị Lan', 'cuoc_hen', 'CH_278e0925-456c-473f-8595-a175b3a1b43d', 'da_doc', '2025-11-26 10:11:57', '2025-11-26 03:12:58'),
@@ -1165,6 +1230,7 @@ INSERT INTO `thongbao` (`id_thong_bao`, `id_nguoi_nhan`, `tieu_de`, `noi_dung`, 
 ('TB_32529667-9ec7-4cec-85d6-8c14d7701ecc', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn đã hoàn thành', 'Cuộc hẹn của bạn vào ngày Tue Nov 25 2025 00:00:00 GMT+0700 (Indochina Time) đã hoàn thành', 'cuoc_hen', 'CH_f7c917a1-f898-4559-bce0-af54d603c9de', 'chua_doc', '2025-11-24 10:52:17', NULL),
 ('TB_3441d840-fac1-4f5a-bee7-d6e5abfed4ee', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đang chờ thanh toán cọc', 'Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày 2025-11-27', 'cuoc_hen', 'CH_278e0925-456c-473f-8595-a175b3a1b43d', 'chua_doc', '2025-11-26 10:09:17', NULL),
 ('TB_3a0b6bba-78a4-4d47-83d6-43563bf5ba86', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày 2025-11-13 với Trần Thị Lan', 'cuoc_hen', 'CH_192f4eac-947b-462b-a064-dade9cffd1eb', 'chua_doc', '2025-11-12 06:39:45', NULL),
+('TB_3cde8077-b70c-4d0b-8e11-4b1761dd9666', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Sat Dec 13 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_3d8a184f-4735-4411-92ea-ceffd39b85df', 'chua_doc', '2025-12-04 04:36:12', NULL),
 ('TB_41a768cd-6b85-43cc-8344-4cc2d1b81a72', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đang chờ thanh toán cọc', 'Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày 2025-12-06', 'cuoc_hen', 'CH_34bbf0a5-d033-4840-bc59-228dab0fe3c7', 'chua_doc', '2025-11-26 10:17:55', NULL),
 ('TB_471f97f8-0235-4c74-a1dd-010f95dca402', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Sat Dec 06 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_34bbf0a5-d033-4840-bc59-228dab0fe3c7', 'chua_doc', '2025-11-26 10:20:36', NULL),
 ('TB_479da91a-6a9b-4abd-8900-ace122e81107', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Sat Dec 06 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_4378e9d0-78be-4e7f-817e-c5bf4dd06b5e', 'chua_doc', '2025-11-26 14:00:58', NULL),
@@ -1174,17 +1240,20 @@ INSERT INTO `thongbao` (`id_thong_bao`, `id_nguoi_nhan`, `tieu_de`, `noi_dung`, 
 ('TB_4a7d3561-3e54-45dc-9ad5-165ade6e487a', 'BN_d14d07f0-60d8-4ab2-9d80-a4f0e9f80a26', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày 2025-11-25 với Trần Thị Lan', 'cuoc_hen', 'CH_259d50de-0f19-4a55-a868-15f777313752', 'chua_doc', '2025-11-24 11:24:42', NULL),
 ('TB_4ba00017-0164-499b-aeb8-8aaf82ef9266', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Tin nhắn mới từ Trần Thị Lan', 'Nguyen-Tien-Manh-CV.pdf', 'chat', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'chua_doc', '2025-11-16 07:17:29', NULL),
 ('TB_501b59dc-f20e-463b-a58c-bafee4d0d60d', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày 2025-11-25 với Trần Thị Lan', 'cuoc_hen', 'CH_3bd800f8-372f-44ea-b8d3-d4a1e8232cb9', 'chua_doc', '2025-11-24 10:39:28', NULL),
+('TB_5105dbd8-145b-4703-b7ee-48b2f1025307', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Sat Dec 13 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_8624c923-0249-44f3-ae91-0e3d45611c8d', 'chua_doc', '2025-12-04 04:17:38', NULL),
 ('TB_52d7f311-c8dd-4466-b75d-dcfdc6d5761e', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày 2025-11-25 với Trần Thị Lan', 'cuoc_hen', 'CH_15d1507b-3ea3-431e-8e8f-e158dd0bffac', 'chua_doc', '2025-11-24 11:24:24', NULL),
 ('TB_542e45c1-52d3-48fa-bd52-3bb25596f914', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày 2025-11-25 với Trần Thị Lan', 'cuoc_hen', 'CH_ae9195d5-229f-43a8-b463-e777094f1eb6', 'chua_doc', '2025-11-24 10:44:57', NULL),
 ('TB_5b2b64b1-5f37-4081-80e1-3634f5e08198', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Hóa đơn mới', 'Bạn có hóa đơn mới với tổng tiền: 120.000 VNĐ', 'hoa_don', 'HD_a5ef82ad-f2e5-4348-95af-c0239b72d7d7', 'chua_doc', '2025-11-24 10:45:45', NULL),
 ('TB_5b402091-86e7-4de1-ad4f-b42c2d905a64', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Thu Nov 27 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_91b92c19-e24c-409a-b616-01e91af1112a', 'chua_doc', '2025-11-26 10:03:08', NULL),
 ('TB_5be3a89f-6bc7-4f68-9a2f-b0fec8e4a2f6', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Sat Dec 06 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_4378e9d0-78be-4e7f-817e-c5bf4dd06b5e', 'chua_doc', '2025-11-26 14:00:58', NULL),
+('TB_5ef5f610-7646-4f7a-ab5f-ca147a862543', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Sat Dec 13 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_a5be3e09-0d8d-421c-80cb-2c80150dcbdf', 'chua_doc', '2025-12-04 04:26:26', NULL),
 ('TB_5f3ec312-7a9e-4a6b-9e8a-16241246f458', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày 2025-11-12 với Hoài Nam', 'cuoc_hen', 'CH_7072fa4e-30d8-494b-9cd1-3dca2db46304', 'chua_doc', '2025-11-12 03:59:13', NULL),
 ('TB_62fa50ca-77d0-4414-b155-8b6d9b497155', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'Tin nhắn mới từ Hoàng Văn Long', 'gọi tý đi ', 'chat', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'chua_doc', '2025-12-01 08:16:43', NULL),
 ('TB_63212010-9ce9-424f-953b-30800ccf9a96', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'Tin nhắn mới từ Trần Thị Lan', 'Khong có gì đâu nhe ', 'chat', 'CTC_22a5710d-95b3-4fef-9a5f-ca4bdbf4317a', 'chua_doc', '2025-11-24 03:26:26', NULL),
 ('TB_63d3cdee-7783-4953-af86-56e6221c569c', 'ADMIN_001', 'Tin nhắn mới từ Phạm Thị Quỳnh', 'alo', 'chat', 'CTC_bbf8b18a-a213-4e14-a7f6-1e9b6efb68b2', 'chua_doc', '2025-11-03 10:47:27', NULL),
 ('TB_64b33701-bd74-4732-b667-84db9ca39871', 'BN_9303ce6f-6ca8-4a17-9435-6b5e90a5144b', 'Cuộc hẹn đã hoàn thành', 'Cuộc hẹn của bạn vào ngày Sat Nov 01 2025 00:00:00 GMT+0700 (Indochina Time) đã hoàn thành', 'cuoc_hen', 'CH_a92e1bba-f810-40e3-8cd2-70e2f0ec0537', 'chua_doc', '2025-11-24 10:09:01', NULL),
 ('TB_64cfd99a-6cf4-4939-aed1-ff23aeecbbc3', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đang chờ thanh toán cọc', 'Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày 2025-12-06', 'cuoc_hen', 'CH_13a4269b-7802-4b84-8644-3521033be9eb', 'chua_doc', '2025-11-26 10:15:12', NULL),
+('TB_692de766-6472-462d-a29f-4aee28d47783', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đang chờ thanh toán cọc', 'Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày 2025-12-13', 'cuoc_hen', 'CH_9cfc302b-d1ce-4bac-a55d-49f17a7430c0', 'chua_doc', '2025-12-04 04:01:37', NULL),
 ('TB_6a318f67-4429-4f2e-baee-37c7cd16e38f', 'BN_d14d07f0-60d8-4ab2-9d80-a4f0e9f80a26', 'Hóa đơn mới', 'Bạn có hóa đơn mới với tổng tiền: 80.000 VNĐ', 'hoa_don', 'HD_a605f6fb-5940-46f1-9403-ca06deee1572', 'chua_doc', '2025-11-26 08:08:08', NULL),
 ('TB_6b444192-054c-44f9-bafe-48fc1b8f386a', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày Sat Dec 06 2025 00:00:00 GMT+0700 (Indochina Time) với Trần Thị Lan', 'cuoc_hen', 'CH_34bbf0a5-d033-4840-bc59-228dab0fe3c7', 'chua_doc', '2025-11-26 10:18:35', NULL),
 ('TB_6bcd9ac0-2254-4579-98a6-09ffb7851164', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đang chờ thanh toán cọc', 'Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày 2025-11-27', 'cuoc_hen', 'CH_89fdb566-0b4f-4a0f-b923-13112990f668', 'da_doc', '2025-11-26 09:46:42', '2025-11-26 02:47:46'),
@@ -1204,9 +1273,12 @@ INSERT INTO `thongbao` (`id_thong_bao`, `id_nguoi_nhan`, `tieu_de`, `noi_dung`, 
 ('TB_8882d231-6579-4e74-9bf4-86230eafe115', 'NV_phancong001', 'Tin nhắn mới từ Nguyễn Văn C', 'top-cac-mau-balo-saigon-swagger-ca-tinh-thu-hut-su-chu-y-tu-cac-ban-tre-01-1678948628.jpeg', 'chat', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'da_xoa', '2025-11-04 10:41:04', '2025-11-05 02:49:41'),
 ('TB_8a0d7e6b-18e2-4889-a7fc-7cf0228b3739', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Sat Dec 06 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_1d6aa622-e519-4553-b898-babafd548247', 'chua_doc', '2025-11-26 14:00:43', NULL),
 ('TB_8ec3d1db-f78d-4788-8fb8-5379f5f2dab9', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đang chờ thanh toán cọc', 'Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày 2025-11-27', 'cuoc_hen', 'CH_bd0eab68-9187-45b6-806e-dcf2c2e6db98', 'chua_doc', '2025-11-26 10:03:36', NULL),
+('TB_90c1db04-0099-4f3b-a2bf-47bc659422dc', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Hóa đơn mới', 'Bạn có hóa đơn mới với tổng tiền: 100000.00 VNĐ', 'hoa_don', 'HD_06997cd7-401b-4e2f-bac3-fe3b0ff44f0a', 'chua_doc', '2025-12-04 04:36:12', NULL),
 ('TB_9294e4db-360a-4bb8-88e5-55951f1ced96', 'BN_5b123bbc-450d-40c6-9648-5d8566247692', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày 2025-11-17 với Nguyễn Văn C', 'cuoc_hen', 'CH_02e9baa5-562e-4aaf-a572-23cf25d10ccf', 'da_doc', '2025-11-16 07:04:12', '2025-11-16 00:04:46'),
 ('TB_92c2e94a-1ebb-43e0-9075-bad8f2fc1ca8', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày 2025-11-24 với Nguyễn Văn C', 'cuoc_hen', 'CH_379d51bd-04f2-48e3-9d38-c4c616bf4754', 'chua_doc', '2025-11-24 10:15:01', NULL),
+('TB_9478c2d4-a244-4f27-8122-e859f61dc667', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Sat Dec 13 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_8624c923-0249-44f3-ae91-0e3d45611c8d', 'chua_doc', '2025-12-04 04:17:38', NULL),
 ('TB_954bf4c2-5e3b-4b99-a099-924388911297', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn đã hoàn thành', 'Cuộc hẹn của bạn vào ngày Tue Nov 25 2025 00:00:00 GMT+0700 (Indochina Time) đã hoàn thành', 'cuoc_hen', 'CH_f3874b43-beba-4ac5-9527-8a067c703b78', 'chua_doc', '2025-11-26 08:08:08', NULL),
+('TB_95efc7e7-9d65-4089-b2df-eaad722066d1', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Sat Dec 13 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_a5be3e09-0d8d-421c-80cb-2c80150dcbdf', 'chua_doc', '2025-12-04 04:26:26', NULL),
 ('TB_9dfd3ee4-6079-4cd7-8c30-7e147a24ea8a', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Tin nhắn mới từ TienManh', 'chào ạ ', 'chat', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'da_doc', '2025-11-03 10:16:21', '2025-11-05 02:37:24'),
 ('TB_9ff7cc09-1d27-42e8-9b50-db60d0b1ed7c', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Sat Dec 06 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_09433868-c11a-4427-a7c6-7b577cf4d2d4', 'chua_doc', '2025-11-26 14:00:45', NULL),
 ('TB_a1375254-3e1d-493f-a88b-a6703c888f83', 'BN_d14d07f0-60d8-4ab2-9d80-a4f0e9f80a26', 'Cuộc hẹn đã hoàn thành', 'Cuộc hẹn của bạn vào ngày Tue Nov 25 2025 00:00:00 GMT+0700 (Indochina Time) đã hoàn thành', 'cuoc_hen', 'CH_f3874b43-beba-4ac5-9527-8a067c703b78', 'chua_doc', '2025-11-26 08:08:08', NULL),
@@ -1237,6 +1309,9 @@ INSERT INTO `thongbao` (`id_thong_bao`, `id_nguoi_nhan`, `tieu_de`, `noi_dung`, 
 ('TB_c661d9af-f49b-40d9-b2cf-3c0704b5cfa1', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn đã bị hủy', 'Cuộc hẹn của bạn vào ngày Sat Dec 06 2025 00:00:00 GMT+0700 (Indochina Time) đã bị hủy', 'cuoc_hen', 'CH_13a4269b-7802-4b84-8644-3521033be9eb', 'chua_doc', '2025-11-26 10:16:38', NULL),
 ('TB_c6e3a0d5-db24-47b6-aa23-3defc873ec6b', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đang chờ thanh toán cọc', 'Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày 2025-12-06', 'cuoc_hen', 'CH_bedcc300-ee67-4022-96b0-ffc35c2ca52d', 'chua_doc', '2025-11-26 14:06:03', NULL),
 ('TB_c9324c69-4153-416c-bf32-0645fa08edca', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'Cuộc hẹn đã hoàn thành', 'Cuộc hẹn của bạn vào ngày Mon Nov 17 2025 00:00:00 GMT+0700 (Indochina Time) đã hoàn thành', 'cuoc_hen', 'CH_4b12c2cf-10d7-483f-8483-7bf649134968', 'chua_doc', '2025-11-24 10:00:37', NULL),
+('TB_c97a5ccd-2b91-40c7-aad8-710fa1440090', 'BN_9303ce6f-6ca8-4a17-9435-6b5e90a5144b', 'Tin nhắn mới từ Trần Thị Lan', 'chào', 'chat', 'CTC_b3d4156e-e796-4dbd-85bb-7634337f0492', 'chua_doc', '2025-12-03 11:59:54', NULL),
+('TB_ca753779-500b-4a2e-8fe6-35cc05bb1dec', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đang chờ thanh toán cọc', 'Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày 2025-12-13', 'cuoc_hen', 'CH_3d8a184f-4735-4411-92ea-ceffd39b85df', 'chua_doc', '2025-12-04 04:34:23', NULL),
+('TB_ccb24bf3-827c-472e-a8e0-15a1e9194584', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đang chờ thanh toán cọc', 'Vui lòng thanh toán tiền cọc để xác nhận cuộc hẹn ngày 2025-12-05', 'cuoc_hen', 'CH_49c96b2d-21ad-45e8-8181-19b47ae4b8bf', 'chua_doc', '2025-12-04 03:53:38', NULL),
 ('TB_cd96bc0d-0a15-417a-b4e0-9a1b7ae920ce', 'BS_5ad2c972-b614-41a3-9852-af4b9aef8685', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày 2025-11-12 với Nguyễn Tiến Mạnh', 'cuoc_hen', 'CH_b8c1c1cd-2680-42d5-8dcf-c5cdeea04ca0', 'chua_doc', '2025-11-10 11:29:16', NULL),
 ('TB_cea7efef-2d28-4edb-88e0-3b691c78dbf2', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'Cuộc hẹn đã hoàn thành', 'Cuộc hẹn của bạn vào ngày Thu Nov 13 2025 00:00:00 GMT+0700 (Indochina Time) đã hoàn thành', 'cuoc_hen', 'CH_192f4eac-947b-462b-a064-dade9cffd1eb', 'chua_doc', '2025-11-14 10:52:03', NULL),
 ('TB_d04efd90-b85c-4412-93df-4ea1d7a73d30', 'BN_d14d07f0-60d8-4ab2-9d80-a4f0e9f80a26', 'Cuộc hẹn mới đã được đặt', 'Bạn có cuộc hẹn mới vào ngày 2025-11-25 với Trần Thị Lan', 'cuoc_hen', 'CH_f3874b43-beba-4ac5-9527-8a067c703b78', 'chua_doc', '2025-11-24 11:24:59', NULL),
@@ -1364,41 +1439,54 @@ INSERT INTO `tinnhan` (`id_tin_nhan`, `id_cuoc_tro_chuyen`, `id_nguoi_gui`, `loa
 ('TN_1803d8ff-59c6-4baa-ab07-408d0dc7fa0e', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'NV_phancong001', 'van_ban', 'gọi tý đi ', NULL, '2025-12-01 15:16:42', 1),
 ('TN_20226c06-4285-4670-8a60-479e1f1d5431', 'CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Chào anh', NULL, '2025-10-31 15:33:09', 1),
 ('TN_2776c01d-f7a6-41b0-9c98-edbc9445f9f0', 'CTC_22a5710d-95b3-4fef-9a5f-ca4bdbf4317a', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Chào nha', NULL, '2025-11-24 10:25:03', 1),
+('TN_28d9adf0-416e-40a2-a3b5-ad00965fd8c6', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'van_ban', 'TienManh đã bắt đầu một cuộc gọi video.', NULL, '2025-12-04 11:40:01', 1),
 ('TN_291aa621-453a-4be1-85fe-ee79fca5a809', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'hinh_anh', 'aothun1.jpg', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1763277433/QLBN/Chat/chat_1763277431540_aothun1.jpg.jpg', '2025-11-16 14:17:14', 1),
 ('TN_31adc46d-b90f-4e8f-8b6c-a7352184a157', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'NV_phancong001', 'van_ban', 'ok nha ', NULL, '2025-10-31 16:28:03', 1),
 ('TN_32f6d367-163d-43e1-abb9-fd1d215096b2', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'tap_tin', 'Nguyen-Tien-Manh-CV.pdf', 'https://res.cloudinary.com/dh0lhvm9l/raw/upload/v1763277448/QLBN/Chat/chat_1763277445190_Nguyen-Tien-Manh-CV.pdf', '2025-11-16 14:17:29', 1),
 ('TN_3e160d92-5e51-48b2-8bfb-9373ed763058', 'CTC_22a5710d-95b3-4fef-9a5f-ca4bdbf4317a', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'alo', NULL, '2025-10-31 16:09:47', 1),
+('TN_40c270a4-4b4f-443a-8b3a-fda837aaa69f', 'CTC_b3d4156e-e796-4dbd-85bb-7634337f0492', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Trần Thị Lan đã từ chối cuộc gọi video.', NULL, '2025-12-03 18:59:46', 0),
 ('TN_485c085d-80b7-4db1-a974-2df46cfb67fb', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'hi', NULL, '2025-10-31 16:27:03', 1),
 ('TN_49bb3fc7-ffd2-4a6a-beca-95c733e5b6c4', 'CTC_22a5710d-95b3-4fef-9a5f-ca4bdbf4317a', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'van_ban', 'ok để tôi suy nghĩ nhe ', NULL, '2025-11-24 10:28:24', 1),
 ('TN_4ac42f3b-429b-44b3-9feb-ae88963ae8ad', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'chao cau nha ', NULL, '2025-10-31 17:38:42', 1),
+('TN_566aeea7-31aa-449a-bb2b-199f91fc22ab', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Cuộc gọi video đã kết thúc (hangup).', NULL, '2025-12-04 11:40:13', 1),
 ('TN_59c0b77b-7e9a-41e5-9b92-aecb984843de', 'CTC_bbf8b18a-a213-4e14-a7f6-1e9b6efb68b2', 'NV_quay001', 'van_ban', 'alo', NULL, '2025-11-03 17:47:27', 0),
 ('TN_5be2600e-ba29-4a11-a82d-6945436e0d2b', 'CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'hinh_anh', 'aothun1.jpg', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1761899611/QLBN/Chat/chat_1761899607057_aothun1.jpg.jpg', '2025-10-31 15:33:31', 1),
 ('TN_5c77389f-28ab-4769-a655-b83c640ad24a', 'CTC_a3d19086-6981-4f1f-99cb-bc1bae460863', 'BN_e2f3g4h5-i6j7-8901-cdef-456789012345', 'van_ban', 'tôi có việc bận ạ ', NULL, '2025-11-03 00:14:48', 1),
 ('TN_5cee63bb-c275-4015-8c54-4be0bcaebc5c', 'CTC_22a5710d-95b3-4fef-9a5f-ca4bdbf4317a', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'ok nhe ', NULL, '2025-11-29 09:27:38', 1),
 ('TN_60e307f0-a58a-4efb-9cf7-8cd1176ccf7f', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'NV_phancong001', 'van_ban', 'ok nha ', NULL, '2025-10-31 23:08:15', 1),
 ('TN_6163030c-33fb-4c28-98a1-f0aa6d49a93b', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Alo nghe khong', NULL, '2025-10-31 16:26:39', 1),
+('TN_617127b9-4379-4152-b5b8-4f3077a4f3d1', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Trần Thị Lan đã từ chối cuộc gọi video.', NULL, '2025-12-04 11:39:40', 1),
 ('TN_653ab5ae-45fd-47fe-a313-624dbe2ff8a1', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'NV_phancong001', 'van_ban', 'gọi cái được không ', NULL, '2025-12-01 15:15:33', 1),
 ('TN_661b60b9-b1c3-4e1d-9b4e-acce631efa09', 'CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'alo anh bình gold ', NULL, '2025-10-31 15:41:03', 1),
 ('TN_74ddd2dc-0c7f-44d5-9484-adb518699e61', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'van_ban', 'chào ạ ', NULL, '2025-11-03 17:16:21', 1),
 ('TN_74fb4058-698f-4f90-802e-65a174135ddf', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'NV_phancong001', 'tap_tin', 'hethongquanlybenhvien (1).sql', 'https://res.cloudinary.com/dh0lhvm9l/raw/upload/v1761904705/QLBN/Chat/chat_1761904703287_hethongquanlybenhvien__1_.sql', '2025-10-31 16:58:25', 1),
 ('TN_7dfd7e4b-c7f3-4b7a-925f-d4060fdddef2', 'CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'hinh_anh', 'aonhom2.jpg', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1761900077/QLBN/Chat/chat_1761900072316_aonhom2.jpg.jpg', '2025-10-31 15:41:16', 1),
 ('TN_7e3266ba-1229-4d27-855d-cb5f89d8d58d', 'CTC_22a5710d-95b3-4fef-9a5f-ca4bdbf4317a', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'van_ban', 'Hello', NULL, '2025-11-24 10:25:44', 1),
+('TN_813bec7f-9b8e-4ea0-91ee-9b67bf418bb0', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Trần Thị Lan đã bắt đầu một cuộc gọi video.', NULL, '2025-12-04 11:40:16', 1),
+('TN_84de5de6-02db-46a2-81f0-6994572271f7', 'CTC_b3d4156e-e796-4dbd-85bb-7634337f0492', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Trần Thị Lan đã bắt đầu một cuộc gọi video.', NULL, '2025-12-03 18:59:46', 0),
 ('TN_894a4210-fbfc-4aaa-8e6e-83d8ce1d165d', 'CTC_a3d19086-6981-4f1f-99cb-bc1bae460863', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'thì ko biết tại sao hôm nay anh không tham gia buổi tái khám được ạ ', NULL, '2025-10-31 15:51:56', 1),
 ('TN_8c3b9ebd-066b-4f86-8bca-bf6730606104', 'CTC_22a5710d-95b3-4fef-9a5f-ca4bdbf4317a', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Khong có gì đâu nhe ', NULL, '2025-11-24 10:26:26', 1),
 ('TN_8dd1b286-99c8-49ae-9e95-d681ba471ab8', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'hinh_anh', 'top-cac-mau-balo-saigon-swagger-ca-tinh-thu-hut-su-chu-y-tu-cac-ban-tre-01-1678948628.jpeg', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1762252864/QLBN/Chat/chat_1762252859791_top-cac-mau-balo-saigon-swagger-ca-tinh-thu-hut-su-chu-y-tu-cac-ban-tre-01-1678948628.jpeg.jpg', '2025-11-04 17:41:04', 1),
 ('TN_9029df42-f8ec-494c-92b5-1558344da0d4', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'van_ban', 'ok nhe ', NULL, '2025-12-01 15:16:35', 1),
+('TN_93bb1832-0897-40a8-b43b-72b064506b48', 'CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Trần Thị Lan đã từ chối cuộc gọi video.', NULL, '2025-12-04 11:39:20', 0),
 ('TN_93c43302-aed1-4cd0-8552-903238f311d7', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'NV_phancong001', 'hinh_anh', 'aonhom2.jpg', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1761902894/QLBN/Chat/chat_1761902889245_aonhom2.jpg.jpg', '2025-10-31 16:28:14', 1),
 ('TN_94b610b8-13a1-466e-a018-b158443d13dd', 'CTC_22a5710d-95b3-4fef-9a5f-ca4bdbf4317a', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Thật ngại quá hôm nay tôi có việc bận mấy ', NULL, '2025-11-24 10:26:10', 1),
 ('TN_97571a25-2cb8-4eef-86f2-4f893c73819e', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'NV_phancong001', 'van_ban', 'chuc cau may man ', NULL, '2025-10-31 17:32:20', 1),
+('TN_9c2c7137-bff2-43c2-883f-3a9e6e7bf579', 'CTC_b3d4156e-e796-4dbd-85bb-7634337f0492', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'chào', NULL, '2025-12-03 18:59:54', 0),
 ('TN_a4b255c4-2a2f-4274-8bc2-93eb3f9710a6', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'chieu di an khong', NULL, '2025-10-31 16:26:44', 1),
 ('TN_a99bc26e-b394-411d-a938-fbc1c27e97da', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'NV_phancong001', 'hinh_anh', 'aothun1.jpg', 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1761904689/QLBN/Chat/chat_1761904684577_aothun1.jpg.jpg', '2025-10-31 16:58:09', 1),
 ('TN_af349137-ca56-45de-9faa-150348e94d87', 'CTC_a3d19086-6981-4f1f-99cb-bc1bae460863', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Chào anh, hiện tại tôi thấy anh có lịch tái khám', NULL, '2025-10-31 15:51:22', 1),
 ('TN_b144c29d-e02b-463e-9cbc-ff29d81281f5', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'tap_tin', 'DailyReport.docx', 'https://res.cloudinary.com/dh0lhvm9l/raw/upload/v1762252889/QLBN/Chat/chat_1762252886449_DailyReport.docx', '2025-11-04 17:41:29', 1),
+('TN_bd9c798f-9036-4f64-8d41-fbc3e397b6d5', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Trần Thị Lan đã tham gia cuộc gọi video.', NULL, '2025-12-04 11:40:09', 1),
+('TN_ca9e71a8-83d5-43d5-b379-064e73c89851', 'CTC_62a3df20-1ca9-48d2-b539-4ccc40be3700', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Trần Thị Lan đã bắt đầu một cuộc gọi video.', NULL, '2025-12-04 11:39:20', 0),
 ('TN_cc3750c9-0753-4d18-9ad9-945b21ee62ae', 'CTC_06bfdf30-f76e-4da8-ac52-2320612cc9c7', 'NV_phancong001', 'tap_tin', '1. XÃ¡c Äá»nh cÃ¡c yÃªu cáº§u chá»©c nÄng.docx', 'https://res.cloudinary.com/dh0lhvm9l/raw/upload/v1761904723/QLBN/Chat/chat_1761904719282_1._X__c______nh_c__c_y__u_c___u_ch___c_n__ng.docx', '2025-10-31 16:58:42', 1),
 ('TN_cdabc7be-ce2e-4c3b-b6f8-7c4623e121c4', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'CG_8156ad36-ddbb-4fff-9f49-a0f7ee83647d', 'van_ban', 'để suy nghĩ ', NULL, '2025-12-01 15:15:45', 1),
+('TN_d4c05f8a-0694-4592-a2bb-d57baab18c61', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BS_b2c3d4e5-f6g7-8901-bcde-f23456789012', 'van_ban', 'Trần Thị Lan đã bắt đầu một cuộc gọi video.', NULL, '2025-12-04 11:39:40', 1),
 ('TN_d63c22de-2ba8-4417-9fb7-568e323d8418', 'CTC_3efee32c-4702-4fb0-a5a3-4771d8d89a08', 'NV_phancong001', 'van_ban', 'hi', NULL, '2025-11-08 22:42:57', 1),
 ('TN_d8cfc4b5-4dea-4502-b3f8-0ccb57302dba', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'NV_phancong001', 'van_ban', 'Hi', NULL, '2025-10-31 22:50:34', 1),
+('TN_e4522902-b72d-4f88-8924-acfa2abaa66b', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'van_ban', 'TienManh đã tham gia cuộc gọi video.', NULL, '2025-12-04 11:40:21', 1),
 ('TN_f7951fff-1cbc-491e-9eb1-5fe424aaeec4', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'NV_phancong001', 'van_ban', 'có gì hú t nhe ', NULL, '2025-12-01 15:16:19', 1),
+('TN_f95ca89e-b4fb-4f1b-8738-cd9df637d1e5', 'CTC_316abdce-a2d0-415c-97a2-d71abe7259ac', 'BN_2b417c16-1cc1-46b1-809c-47b9007f2554', 'van_ban', 'Cuộc gọi video đã kết thúc (hangup).', NULL, '2025-12-04 11:40:30', 1),
 ('TN_fd0821d3-addc-437f-97a4-c55ead87fb5a', 'CTC_611b0d0c-3936-4fe8-93a1-80dc9dc30c69', 'BS_c76d606e-1664-4d60-92bb-929f65667587', 'van_ban', 'hi', NULL, '2025-10-31 22:57:20', 1);
 
 -- --------------------------------------------------------
@@ -1654,6 +1742,13 @@ ALTER TABLE `lichlamviec`
   ADD KEY `fk_lichlamviec_nguoidung` (`id_nguoi_dung`),
   ADD KEY `fk_lichlamviec_nguoi_tao` (`id_nguoi_tao`),
   ADD KEY `fk_lichlamviec_phongkham` (`id_phong_kham`);
+
+--
+-- Chỉ mục cho bảng `lichsucuocgoi`
+--
+ALTER TABLE `lichsucuocgoi`
+  ADD PRIMARY KEY (`id_cuoc_goi`),
+  ADD KEY `idx_call_conversation` (`id_cuoc_tro_chuyen`);
 
 --
 -- Chỉ mục cho bảng `lichsudoica`
