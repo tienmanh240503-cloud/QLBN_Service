@@ -22,6 +22,10 @@ const buildDepositHoldLabel = () => {
     return `${BOOKING_DEPOSIT_TIMEOUT_MINUTES} phút`;
 };
 const DEPOSIT_HOLD_LABEL = buildDepositHoldLabel();
+
+// Số lượng tối đa cho mỗi khung giờ tư vấn (đồng bộ với FE)
+const MAX_CONSULTATIONS_PER_SLOT = 2;
+
 const isStaffRole = (role = '') => {
     const normalized = role.toString().trim().toLowerCase();
     return ['nhan_vien_quay', 'admin', 'quan_tri_vien', 'chuyen_gia_dinh_duong'].includes(normalized);
@@ -264,8 +268,12 @@ export const createCuocHenTuVan = async (req, res) => {
 
         const lichRaw = await CuocHenTuVan.findAll({ id_chuyen_gia, id_khung_gio, ngay_kham: normalizedDate });
         const lichList = await purgeExpiredPendingConsultations(lichRaw);
-        const lichTrung = lichList.find(item => item.trang_thai !== 'da_huy');
-        if (lichTrung) return res.status(400).json({ success: false, message: "Chuyên gia đã có lịch tư vấn trong khung giờ này" });
+        const lichConHieuLuc = lichList.filter(item => item.trang_thai !== 'da_huy');
+
+        // Giới hạn số lượt đặt/khung giờ theo MAX_CONSULTATIONS_PER_SLOT (đồng bộ FE)
+        if (lichConHieuLuc.length >= MAX_CONSULTATIONS_PER_SLOT) {
+            return res.status(400).json({ success: false, message: "Khung giờ đã đủ số lượng đặt" });
+        }
 
         const Id = `CH_${uuidv4()}`;
         const invoiceId = `HD_${uuidv4()}`;
@@ -840,7 +848,7 @@ export const countAppointmentsByTimeSlotTuVan = async (req, res) => {
             success: true, 
             data: {
                 count: validAppointments.length,
-                max_count: 2 // Tối đa 2 người đặt
+                max_count: MAX_CONSULTATIONS_PER_SLOT
             }
         });
         

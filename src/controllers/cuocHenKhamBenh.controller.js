@@ -22,6 +22,10 @@ const buildDepositHoldLabel = () => {
     return `${BOOKING_DEPOSIT_TIMEOUT_MINUTES} phút`;
 };
 const DEPOSIT_HOLD_LABEL = buildDepositHoldLabel();
+
+// Số lượng tối đa cho mỗi khung giờ khám (đồng bộ với FE)
+const MAX_APPOINTMENTS_PER_SLOT = 2;
+
 const isStaffRole = (role = '') => {
     const normalized = role.toString().trim().toLowerCase();
     return ['nhan_vien_quay', 'admin', 'quan_tri_vien', 'bac_si'].includes(normalized);
@@ -283,6 +287,18 @@ export const createCuocHenKham = async (req, res) => {
         const lich = allLich.find(l => l.trang_thai !== 'da_huy');
         if (lich) {
             return res.status(400).json({ success: false, message: "Bệnh nhân đã có cuộc hẹn trong khung giờ này" });
+        }
+
+        // Kiểm tra số lượng cuộc hẹn của bác sĩ trong khung giờ (giới hạn theo FE)
+        const doctorAppointmentsRaw = await CuocHenKhamBenh.findAll({
+            id_bac_si,
+            id_khung_gio,
+            ngay_kham: normalizedDate
+        });
+        const doctorAppointments = await purgeExpiredPendingAppointments(doctorAppointmentsRaw);
+        const validDoctorAppointments = doctorAppointments.filter(appt => appt.trang_thai !== 'da_huy');
+        if (validDoctorAppointments.length >= MAX_APPOINTMENTS_PER_SLOT) {
+            return res.status(400).json({ success: false, message: "Khung giờ của bác sĩ đã đủ số lượng đặt" });
         }
 
         const Id = `CH_${uuidv4()}`;
@@ -941,7 +957,7 @@ export const countAppointmentsByTimeSlot = async (req, res) => {
             success: true, 
             data: {
                 count: validAppointments.length,
-                max_count: 2 // Tối đa 2 người đặt
+                max_count: MAX_APPOINTMENTS_PER_SLOT
             }
         });
         

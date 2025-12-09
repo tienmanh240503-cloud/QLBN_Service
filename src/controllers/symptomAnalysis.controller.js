@@ -200,6 +200,29 @@ Lưu ý:
   } catch (error) {
     console.error('❌ Error analyzing symptoms:', error);
     
+    // Xử lý lỗi quota/quota exceeded
+    if (error.status === 429 || error.message?.includes('quota') || error.message?.includes('Quota exceeded')) {
+      console.warn('⚠️ Gemini API quota exceeded. Using fallback.');
+      try {
+        const chuyenKhoaList = await ChuyenKhoa.getAll();
+        return res.status(200).json({
+          success: true,
+          data: {
+            suggested_specialties: chuyenKhoaList.length > 0 ? [chuyenKhoaList[0]] : [],
+            confidence: 0.3,
+            explanation: 'Hệ thống AI đang tạm thời không khả dụng do hết quota. Vui lòng chọn chuyên khoa thủ công hoặc thử lại sau.',
+            warning: 'Đây là gợi ý mặc định do hết quota API'
+          }
+        });
+      } catch (fallbackError) {
+        return res.status(500).json({
+          success: false,
+          message: 'Hệ thống AI đang tạm thời không khả dụng',
+          error: 'Quota exceeded'
+        });
+      }
+    }
+    
     // Fallback: Trả về chuyên khoa đầu tiên
     try {
       const chuyenKhoaList = await ChuyenKhoa.getAll();
