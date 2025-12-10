@@ -9,6 +9,16 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
 const GEMINI_MODEL = (process.env.GEMINI_MODEL?.trim()) || 'gemini-2.0-flash';
 const hasValidApiKey = GEMINI_API_KEY && GEMINI_API_KEY.length > 0 && GEMINI_API_KEY !== '';
 
+// Log API key info (masked for security)
+if (GEMINI_API_KEY) {
+  const maskedKey = GEMINI_API_KEY.length > 8 
+    ? `${GEMINI_API_KEY.substring(0, 4)}${'*'.repeat(GEMINI_API_KEY.length - 8)}${GEMINI_API_KEY.substring(GEMINI_API_KEY.length - 4)}`
+    : '****';
+  console.log('🔑 [nutritionAnalysis] GEMINI_API_KEY:', maskedKey, `(length: ${GEMINI_API_KEY.length})`);
+} else {
+  console.log('⚠️ [nutritionAnalysis] GEMINI_API_KEY: NOT CONFIGURED');
+}
+
 // Khởi tạo Gemini client (chỉ khi có API key)
 const genAI = hasValidApiKey ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 
