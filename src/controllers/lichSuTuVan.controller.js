@@ -18,6 +18,23 @@ const toSqlTimestamp = (date) => {
     }
 };
 
+// Helper function để convert Date object sang MySQL date format (chỉ ngày, không có giờ)
+const toSqlDate = (date) => {
+    if (!date) return null;
+    try {
+        // Nếu là string, parse thành Date object
+        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        if (isNaN(dateObj.getTime())) return null;
+        
+        // Convert sang MySQL date format: YYYY-MM-DD
+        const localDate = new Date(dateObj.getTime() - dateObj.getTimezoneOffset() * 60000);
+        return localDate.toISOString().slice(0, 10);
+    } catch (error) {
+        console.error('Error converting date to SQL date:', error);
+        return null;
+    }
+};
+
 // Tạo mới lịch sử tư vấn
 export const createLichSuTuVan = async (req, res) => {
     try {
@@ -74,6 +91,9 @@ export const createLichSuTuVan = async (req, res) => {
             return res.status(400).json({ success: false, message: "Thời gian tư vấn không hợp lệ." });
         }
 
+        // Convert ngay_tai_kham sang MySQL date format (nếu có)
+        const ngayTaiKhamFormatted = ngay_tai_kham ? toSqlDate(ngay_tai_kham) : null;
+
         const lichSu = await LichSuTuVan.create({
             id_lich_su: Id,
             id_benh_nhan,
@@ -100,7 +120,7 @@ export const createLichSuTuVan = async (req, res) => {
             protein_target,
             carb_target,
             fat_target,
-            ngay_tai_kham,
+            ngay_tai_kham: ngayTaiKhamFormatted,
             mo_ta_muc_tieu
         });
 
@@ -171,6 +191,15 @@ export const updateLichSuTuVan = async (req, res) => {
                 return res.status(400).json({ success: false, message: "Thời gian tư vấn không hợp lệ." });
             }
             dataUpdate.thoi_gian_tu_van = thoiGianTuVanFormatted;
+        }
+        
+        // Convert ngay_tai_kham nếu có
+        if (dataUpdate.ngay_tai_kham !== undefined && dataUpdate.ngay_tai_kham !== null) {
+            const ngayTaiKhamFormatted = toSqlDate(dataUpdate.ngay_tai_kham);
+            if (ngayTaiKhamFormatted === null && dataUpdate.ngay_tai_kham !== null) {
+                return res.status(400).json({ success: false, message: "Ngày tái khám không hợp lệ." });
+            }
+            dataUpdate.ngay_tai_kham = ngayTaiKhamFormatted;
         }
         
         const updated = await LichSuTuVan.update(dataUpdate, id_lich_su);
