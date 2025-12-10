@@ -1,6 +1,23 @@
 import { LichSuTuVan, BenhNhan, ChuyenGiaDinhDuong, HoSoDinhDuong } from "../models/index.js";
 import { v4 as uuidv4 } from "uuid";
 
+// Helper function để convert Date object sang MySQL datetime format
+const toSqlTimestamp = (date) => {
+    if (!date) return null;
+    try {
+        // Nếu là string, parse thành Date object
+        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        if (isNaN(dateObj.getTime())) return null;
+        
+        // Convert sang MySQL datetime format: YYYY-MM-DD HH:mm:ss
+        const localDate = new Date(dateObj.getTime() - dateObj.getTimezoneOffset() * 60000);
+        return localDate.toISOString().slice(0, 19).replace('T', ' ');
+    } catch (error) {
+        console.error('Error converting date to SQL timestamp:', error);
+        return null;
+    }
+};
+
 // Tạo mới lịch sử tư vấn
 export const createLichSuTuVan = async (req, res) => {
     try {
@@ -51,12 +68,18 @@ export const createLichSuTuVan = async (req, res) => {
 
         const Id = `LSTV_${uuidv4()}`;
 
+        // Convert thoi_gian_tu_van sang MySQL datetime format
+        const thoiGianTuVanFormatted = toSqlTimestamp(thoi_gian_tu_van);
+        if (!thoiGianTuVanFormatted) {
+            return res.status(400).json({ success: false, message: "Thời gian tư vấn không hợp lệ." });
+        }
+
         const lichSu = await LichSuTuVan.create({
             id_lich_su: Id,
             id_benh_nhan,
             id_ho_so,
             id_cuoc_hen,
-            thoi_gian_tu_van,
+            thoi_gian_tu_van: thoiGianTuVanFormatted,
             nguoi_tao: id_nguoi_dung,
             ket_qua_cls,
             ke_hoach_dinh_duong,
@@ -139,7 +162,17 @@ export const getLichSuTuVanByCuocHen = async (req, res) => {
 export const updateLichSuTuVan = async (req, res) => {
     try {
         const { id_lich_su } = req.params;
-        const dataUpdate = req.body;
+        const dataUpdate = { ...req.body };
+        
+        // Convert thoi_gian_tu_van nếu có
+        if (dataUpdate.thoi_gian_tu_van) {
+            const thoiGianTuVanFormatted = toSqlTimestamp(dataUpdate.thoi_gian_tu_van);
+            if (!thoiGianTuVanFormatted) {
+                return res.status(400).json({ success: false, message: "Thời gian tư vấn không hợp lệ." });
+            }
+            dataUpdate.thoi_gian_tu_van = thoiGianTuVanFormatted;
+        }
+        
         const updated = await LichSuTuVan.update(dataUpdate, id_lich_su);
 
         res.status(200).json({ success: true, message: "Cập nhật thành công.", data: updated });

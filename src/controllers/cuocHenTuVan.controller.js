@@ -23,7 +23,7 @@ const buildDepositHoldLabel = () => {
 };
 const DEPOSIT_HOLD_LABEL = buildDepositHoldLabel();
 
-// Số lượng tối đa cho mỗi khung giờ tư vấn (đồng bộ với FE)
+// Số lượng tối đa cho mỗi khung giờ tư vấn 
 const MAX_CONSULTATIONS_PER_SLOT = 2;
 
 const isStaffRole = (role = '') => {
@@ -538,12 +538,35 @@ export const createCuocHenTuVanDepositPaymentSession = async (req, res) => {
         const requesterId = req?.decoded?.info?.id_nguoi_dung;
         const role = req?.decoded?.vai_tro || '';
 
+        if (!requesterId) {
+            return res.status(401).json({ success: false, message: "Không xác định được người dùng. Vui lòng đăng nhập lại." });
+        }
+
         const cuocHen = await CuocHenTuVan.findOne({ id_cuoc_hen });
         if (!cuocHen) return res.status(404).json({ success: false, message: "Cuộc hẹn không tồn tại" });
 
-        const isOwner = cuocHen.id_benh_nhan === requesterId;
-        if (!isOwner && !isStaffRole(role)) {
-            return res.status(403).json({ success: false, message: "Không có quyền khởi tạo thanh toán cho cuộc hẹn này" });
+        // Normalize để so sánh chính xác
+        const normalizedRequesterId = String(requesterId).trim();
+        const normalizedBenhNhanId = String(cuocHen.id_benh_nhan || '').trim();
+        const isOwner = normalizedBenhNhanId === normalizedRequesterId;
+        const isStaff = isStaffRole(role);
+
+        // Log để debug (chỉ trong development)
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('[Payment Permission Check]', {
+                requesterId: normalizedRequesterId,
+                benhNhanId: normalizedBenhNhanId,
+                role,
+                isOwner,
+                isStaff
+            });
+        }
+
+        if (!isOwner && !isStaff) {
+            return res.status(403).json({ 
+                success: false, 
+                message: "Không có quyền khởi tạo thanh toán cho cuộc hẹn này. Chỉ chủ sở hữu cuộc hẹn hoặc nhân viên mới có quyền thực hiện." 
+            });
         }
 
         if (!cuocHen.id_hoa_don_coc) {
