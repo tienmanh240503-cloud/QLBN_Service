@@ -1,52 +1,26 @@
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
+import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { HoSoDinhDuong, LichSuTuVan, TheoDoiTienDo } from '../models/index.js';
 
 dotenv.config();
 
-// Kiểm tra API key có được cấu hình không (Gemini)
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
-const GEMINI_MODEL = (process.env.GEMINI_MODEL?.trim()) || 'gemini-2.0-flash';
-const hasValidApiKey = GEMINI_API_KEY && GEMINI_API_KEY.length > 0 && GEMINI_API_KEY !== '';
+// Kiểm tra API key có được cấu hình không (OpenAI)
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY?.trim();
+const OPENAI_MODEL = (process.env.OPENAI_MODEL?.trim()) || 'gpt-4o-mini';
+const hasValidApiKey = OPENAI_API_KEY && OPENAI_API_KEY.length > 0 && OPENAI_API_KEY !== '';
 
 // Log API key info (masked for security)
-if (GEMINI_API_KEY) {
-  const maskedKey = GEMINI_API_KEY.length > 8 
-    ? `${GEMINI_API_KEY.substring(0, 4)}${'*'.repeat(GEMINI_API_KEY.length - 8)}${GEMINI_API_KEY.substring(GEMINI_API_KEY.length - 4)}`
+if (OPENAI_API_KEY) {
+  const maskedKey = OPENAI_API_KEY.length > 8 
+    ? `${OPENAI_API_KEY.substring(0, 4)}${'*'.repeat(OPENAI_API_KEY.length - 8)}${OPENAI_API_KEY.substring(OPENAI_API_KEY.length - 4)}`
     : '****';
-  console.log('🔑 [calorieCalculator] GEMINI_API_KEY:', maskedKey, `(length: ${GEMINI_API_KEY.length})`);
+  console.log('🔑 [calorieCalculator] OPENAI_API_KEY:', maskedKey, `(length: ${OPENAI_API_KEY.length})`);
 } else {
-  console.log('⚠️ [calorieCalculator] GEMINI_API_KEY: NOT CONFIGURED');
+  console.log('⚠️ [calorieCalculator] OPENAI_API_KEY: NOT CONFIGURED');
 }
 
-// Khởi tạo Gemini client (chỉ khi có API key)
-const genAI = hasValidApiKey ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
-
-const SAFETY_SETTINGS = [
-  {
-    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-];
-
-const geminiModel = genAI
-  ? genAI.getGenerativeModel({
-      model: GEMINI_MODEL,
-      safetySettings: SAFETY_SETTINGS,
-    })
-  : null;
+// Khởi tạo OpenAI client (chỉ khi có API key)
+const openaiClient = hasValidApiKey ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
 const MEAL_TYPES = ['sang', 'trua', 'chieu', 'toi'];
 
@@ -66,6 +40,7 @@ function convertToGram(amount, unit) {
     'cốc': 250,
     'miếng': 100, // Ước tính 1 miếng = 100g
     'phần': 200, // Ước tính 1 phần = 200g
+    'phan': 200,
     'cái': 50, // Ước tính 1 cái = 50g
     'quả': 150, // Ước tính 1 quả = 150g
     'lon': 330, // Ước tính 1 lon = 330ml
@@ -82,6 +57,19 @@ function isMeaningfulText(value) {
   if (trimmed.length < 2) return false;
   if (/^[\d\W_]+$/.test(trimmed)) return false;
   return /[a-zA-ZÀ-ỹ]/.test(trimmed);
+}
+
+// Chấp nhận giá trị số dạng "1", "1.5", "1 phan", "1,5 phần"
+function parseAmount(value) {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const numeric = value.replace(',', '.').match(/[\d.]+/);
+    if (!numeric) return 0;
+    const parsed = parseFloat(numeric[0]);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
 }
 
 function sanitizeMeals(meals = []) {
@@ -101,7 +89,7 @@ function sanitizeMeals(meals = []) {
       return;
     }
 
-    const hasAmount = MEAL_TYPES.some(type => Number(meal[type]) > 0);
+    const hasAmount = MEAL_TYPES.some(type => parseAmount(meal[type]) > 0);
     if (!hasAmount) {
       invalidMeals.push({
         index,
@@ -113,7 +101,7 @@ function sanitizeMeals(meals = []) {
 
     const normalizedMeal = { ...meal, ten_mon: normalizedName };
     MEAL_TYPES.forEach(type => {
-      const amount = Number(meal[type]) || 0;
+      const amount = parseAmount(meal[type]);
       normalizedMeal[type] = amount > 0 ? amount : 0;
       const unitKey = `${type}_unit`;
       normalizedMeal[unitKey] = meal[unitKey] || 'gram';
@@ -335,8 +323,8 @@ export const calculateCalories = async (req, res) => {
     patientContextText = buildPatientContextText(patientSummary);
 
     // Nếu không có API key hợp lệ, trả về lỗi
-    if (!hasValidApiKey || !geminiModel) {
-      console.warn('⚠️ GEMINI_API_KEY chưa được cấu hình hoặc không hợp lệ');
+    if (!hasValidApiKey || !openaiClient) {
+      console.warn('⚠️ OPENAI_API_KEY chưa được cấu hình hoặc không hợp lệ');
       const fallbackResult = calculateCaloriesFallback(sanitizedMeals, patientSummary);
       return res.status(200).json({
         success: true,
@@ -419,9 +407,21 @@ Lưu ý:
 - Sử dụng kiến thức về giá trị dinh dưỡng thực tế của các món ăn Việt Nam
 - Ưu tiên bám sát các mục tiêu dinh dưỡng đã ghi nhận (nếu hồ sơ cung cấp)`;
 
-    // Gọi Gemini API
-    const result = await geminiModel.generateContent(prompt);
-    const aiResponse = result?.response?.text() || '';
+    // Gọi OpenAI Chat Completion
+    const completion = await openaiClient.chat.completions.create({
+      model: OPENAI_MODEL,
+      temperature: 0.4,
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: 'Bạn là chuyên gia dinh dưỡng. Trả lời duy nhất bằng JSON hợp lệ theo yêu cầu.'
+        },
+        { role: 'user', content: prompt }
+      ]
+    });
+
+    const aiResponse = completion.choices?.[0]?.message?.content || '';
 
     // Parse JSON từ response
     let calorieResult;
@@ -459,29 +459,45 @@ Lưu ý:
       
       originalMeal = originalMeal || {};
       
+      const caloSang = originalMeal.sang > 0 ? (item.calo_theo_bua?.sang || 0) : 0;
+      const caloTrua = originalMeal.trua > 0 ? (item.calo_theo_bua?.trua || 0) : 0;
+      const caloChieu = originalMeal.chieu > 0 ? (item.calo_theo_bua?.chieu || 0) : 0;
+      const caloToi = originalMeal.toi > 0 ? (item.calo_theo_bua?.toi || 0) : 0;
+
       return {
         ten_mon: item.ten_mon || originalMeal.ten_mon || '',
-        calo_sang: item.calo_theo_bua?.sang || 0,
-        calo_trua: item.calo_theo_bua?.trua || 0,
-        calo_chieu: item.calo_theo_bua?.chieu || 0,
-        calo_toi: item.calo_theo_bua?.toi || 0,
+        calo_sang: caloSang,
+        calo_trua: caloTrua,
+        calo_chieu: caloChieu,
+        calo_toi: caloToi,
         luong_sang: originalMeal.sang ? `${originalMeal.sang} ${originalMeal.sang_unit || 'gram'}` : '',
         luong_trua: originalMeal.trua ? `${originalMeal.trua} ${originalMeal.trua_unit || 'gram'}` : '',
         luong_chieu: originalMeal.chieu ? `${originalMeal.chieu} ${originalMeal.chieu_unit || 'gram'}` : '',
         luong_toi: originalMeal.toi ? `${originalMeal.toi} ${originalMeal.toi_unit || 'gram'}` : ''
       };
     });
-    
+
+    // Tính lại calories theo bữa từ chi tiết (đảm bảo không dồn nhầm buổi)
+    const caloTheoBuaAdjusted = chiTietMon.reduce(
+      (acc, item) => ({
+        sang: acc.sang + (item.calo_sang || 0),
+        trua: acc.trua + (item.calo_trua || 0),
+        chieu: acc.chieu + (item.calo_chieu || 0),
+        toi: acc.toi + (item.calo_toi || 0),
+      }),
+      { sang: 0, trua: 0, chieu: 0, toi: 0 }
+    );
+
     const response = {
-      tong_calo_ngay: calorieResult.tong_calo_ngay || 0,
-      calo_sang: caloTheoBua.sang || 0,
-      calo_trua: caloTheoBua.trua || 0,
-      calo_chieu: caloTheoBua.chieu || 0,
-      calo_toi: caloTheoBua.toi || 0,
+      tong_calo_ngay: caloTheoBuaAdjusted.sang + caloTheoBuaAdjusted.trua + caloTheoBuaAdjusted.chieu + caloTheoBuaAdjusted.toi,
+      calo_sang: caloTheoBuaAdjusted.sang,
+      calo_trua: caloTheoBuaAdjusted.trua,
+      calo_chieu: caloTheoBuaAdjusted.chieu,
+      calo_toi: caloTheoBuaAdjusted.toi,
       chi_tiet_mon: chiTietMon,
       goi_y_ai: normalizeAiSuggestions(
         calorieResult.goi_y_ai,
-        { tong_calo_ngay: calorieResult.tong_calo_ngay },
+        { tong_calo_ngay: caloTheoBuaAdjusted.sang + caloTheoBuaAdjusted.trua + caloTheoBuaAdjusted.chieu + caloTheoBuaAdjusted.toi },
         patientSummary
       ),
       invalid_meals: invalidMeals,

@@ -1,52 +1,26 @@
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
+import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { ChuyenNganhDinhDuong } from '../models/index.js';
 
 dotenv.config();
 
-// Kiểm tra API key có được cấu hình không (Gemini)
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
-const GEMINI_MODEL = (process.env.GEMINI_MODEL?.trim()) || 'gemini-2.0-flash';
-const hasValidApiKey = GEMINI_API_KEY && GEMINI_API_KEY.length > 0 && GEMINI_API_KEY !== '';
+// Kiểm tra API key có được cấu hình không (OpenAI)
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY?.trim();
+const OPENAI_MODEL = (process.env.OPENAI_MODEL?.trim()) || 'gpt-4o-mini';
+const hasValidApiKey = OPENAI_API_KEY && OPENAI_API_KEY.length > 0 && OPENAI_API_KEY !== '';
 
 // Log API key info (masked for security)
-if (GEMINI_API_KEY) {
-  const maskedKey = GEMINI_API_KEY.length > 8 
-    ? `${GEMINI_API_KEY.substring(0, 4)}${'*'.repeat(GEMINI_API_KEY.length - 8)}${GEMINI_API_KEY.substring(GEMINI_API_KEY.length - 4)}`
+if (OPENAI_API_KEY) {
+  const maskedKey = OPENAI_API_KEY.length > 8 
+    ? `${OPENAI_API_KEY.substring(0, 4)}${'*'.repeat(OPENAI_API_KEY.length - 8)}${OPENAI_API_KEY.substring(OPENAI_API_KEY.length - 4)}`
     : '****';
-  console.log('🔑 [nutritionAnalysis] GEMINI_API_KEY:', maskedKey, `(length: ${GEMINI_API_KEY.length})`);
+  console.log('🔑 [nutritionAnalysis] OPENAI_API_KEY:', maskedKey, `(length: ${OPENAI_API_KEY.length})`);
 } else {
-  console.log('⚠️ [nutritionAnalysis] GEMINI_API_KEY: NOT CONFIGURED');
+  console.log('⚠️ [nutritionAnalysis] OPENAI_API_KEY: NOT CONFIGURED');
 }
 
-// Khởi tạo Gemini client (chỉ khi có API key)
-const genAI = hasValidApiKey ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
-
-const SAFETY_SETTINGS = [
-  {
-    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-];
-
-const geminiModel = genAI
-  ? genAI.getGenerativeModel({
-      model: GEMINI_MODEL,
-      safetySettings: SAFETY_SETTINGS,
-    })
-  : null;
+// Khởi tạo OpenAI client (chỉ khi có API key)
+const openaiClient = hasValidApiKey ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
 /**
  * Phân tích lý do tư vấn dinh dưỡng và gợi ý chuyên ngành dinh dưỡng
@@ -82,8 +56,8 @@ export const analyzeNutrition = async (req, res) => {
     }));
 
     // Nếu không có API key hợp lệ, trả về gợi ý đơn giản
-    if (!hasValidApiKey || !geminiModel) {
-      console.warn('⚠️ GEMINI_API_KEY chưa được cấu hình hoặc không hợp lệ');
+    if (!hasValidApiKey || !openaiClient) {
+      console.warn('⚠️ OPENAI_API_KEY chưa được cấu hình hoặc không hợp lệ');
       
       // Fallback: Gợi ý chuyên ngành đầu tiên
       return res.status(200).json({
@@ -137,9 +111,17 @@ Lưu ý:
 - Nếu không chắc chắn, confidence thấp hơn
 - Tập trung vào các vấn đề dinh dưỡng, chế độ ăn uống, và mục tiêu sức khỏe`;
 
-    // Gọi Gemini API
-    const result = await geminiModel.generateContent(prompt);
-    const aiResponse = result?.response?.text() || '';
+    // Gọi OpenAI API
+    const completion = await openaiClient.chat.completions.create({
+      model: OPENAI_MODEL,
+      temperature: 0.4,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: 'Bạn là chuyên gia dinh dưỡng. Chỉ trả về JSON hợp lệ theo yêu cầu.' },
+        { role: 'user', content: prompt }
+      ]
+    });
+    const aiResponse = completion.choices?.[0]?.message?.content || '';
 
     // Parse JSON từ response
     let analysisResult;

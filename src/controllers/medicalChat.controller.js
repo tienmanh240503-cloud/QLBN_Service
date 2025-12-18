@@ -1,51 +1,25 @@
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
+import OpenAI from 'openai';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Kiểm tra API key có được cấu hình không (Gemini)
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
-const GEMINI_MODEL = (process.env.GEMINI_MODEL?.trim()) || 'gemini-2.0-flash';
-const hasValidApiKey = GEMINI_API_KEY && GEMINI_API_KEY.length > 0 && GEMINI_API_KEY !== '';
+// Kiểm tra API key có được cấu hình không (OpenAI)
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY?.trim();
+const OPENAI_MODEL = (process.env.OPENAI_MODEL?.trim()) || 'gpt-4o-mini';
+const hasValidApiKey = OPENAI_API_KEY && OPENAI_API_KEY.length > 0 && OPENAI_API_KEY !== '';
 
 // Log API key info (masked for security)
-if (GEMINI_API_KEY) {
-  const maskedKey = GEMINI_API_KEY.length > 8 
-    ? `${GEMINI_API_KEY.substring(0, 4)}${'*'.repeat(GEMINI_API_KEY.length - 8)}${GEMINI_API_KEY.substring(GEMINI_API_KEY.length - 4)}`
+if (OPENAI_API_KEY) {
+  const maskedKey = OPENAI_API_KEY.length > 8 
+    ? `${OPENAI_API_KEY.substring(0, 4)}${'*'.repeat(OPENAI_API_KEY.length - 8)}${OPENAI_API_KEY.substring(OPENAI_API_KEY.length - 4)}`
     : '****';
-  console.log('🔑 [medicalChat] GEMINI_API_KEY:', maskedKey, `(length: ${GEMINI_API_KEY.length})`);
+  console.log('🔑 [medicalChat] OPENAI_API_KEY:', maskedKey, `(length: ${OPENAI_API_KEY.length})`);
 } else {
-  console.log('⚠️ [medicalChat] GEMINI_API_KEY: NOT CONFIGURED');
+  console.log('⚠️ [medicalChat] OPENAI_API_KEY: NOT CONFIGURED');
 }
 
-// Khởi tạo Gemini client (chỉ khi có API key) theo cách của GEMINITEST
-const genAI = hasValidApiKey ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
-
-const SAFETY_SETTINGS = [
-  {
-    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-];
-
-const geminiModel = genAI
-  ? genAI.getGenerativeModel({
-      model: GEMINI_MODEL,
-      safetySettings: SAFETY_SETTINGS,
-    })
-  : null;
+// Khởi tạo OpenAI client (chỉ khi có API key)
+const openaiClient = hasValidApiKey ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
 // System prompt cho medical assistant
 const SYSTEM_PROMPT = `Bạn là một trợ lý y tế AI chuyên nghiệp, thân thiện của bệnh viện. Nhiệm vụ của bạn là:
@@ -131,15 +105,15 @@ export const getMedicalChatResponse = async (req, res) => {
     }
 
     // Nếu không có API key hợp lệ, thử tìm câu trả lời từ knowledge base
-    if (!hasValidApiKey || !geminiModel) {
-      console.warn('⚠️ GEMINI_API_KEY chưa được cấu hình hoặc không hợp lệ');
+    if (!hasValidApiKey || !openaiClient) {
+      console.warn('⚠️ OPENAI_API_KEY chưa được cấu hình hoặc không hợp lệ');
       
       // Thử tìm câu trả lời từ knowledge base
       const fallbackAnswer = getFallbackResponse(message);
       if (fallbackAnswer) {
         return res.status(200).json({
           success: true,
-          message: fallbackAnswer + '\n\n💡 **Lưu ý:** Hiện tại hệ thống đang ở chế độ fallback. Vui lòng cấu hình GEMINI_API_KEY trong file .env để sử dụng tính năng AI đầy đủ.',
+          message: fallbackAnswer + '\n\n💡 **Lưu ý:** Hiện tại hệ thống đang ở chế độ fallback. Vui lòng cấu hình OPENAI_API_KEY trong file .env để sử dụng tính năng AI đầy đủ.',
           timestamp: new Date().toISOString()
         });
       }
@@ -147,7 +121,7 @@ export const getMedicalChatResponse = async (req, res) => {
       // Nếu không tìm thấy trong knowledge base
       return res.status(200).json({
         success: true,
-        message: `Cảm ơn bạn đã liên hệ! Tôi là trợ lý y tế AI và có thể hỗ trợ bạn về:
+          message: `Cảm ơn bạn đã liên hệ! Tôi là trợ lý y tế AI và có thể hỗ trợ bạn về:
 
 ✅ Tư vấn các triệu chứng bệnh thường gặp
 ✅ Hướng dẫn đặt lịch khám bệnh
@@ -159,28 +133,31 @@ export const getMedicalChatResponse = async (req, res) => {
 
 📞 **Liên hệ trực tiếp:** Hotline 1900-xxxx (7:00 - 20:00 hàng ngày)
 
-⚠️ Hiện tại hệ thống đang ở chế độ fallback. Vui lòng cấu hình GEMINI_API_KEY trong file .env để sử dụng tính năng AI đầy đủ.`,
+⚠️ Hiện tại hệ thống đang ở chế độ fallback. Vui lòng cấu hình OPENAI_API_KEY trong file .env để sử dụng tính năng AI đầy đủ.`,
         timestamp: new Date().toISOString()
       });
     }
 
-    // Tạo prompt theo cách GEMINITEST (generateContent) và "trend" tiếng Việt
     const recent = Array.isArray(conversationHistory)
       ? conversationHistory.slice(-6)
       : [];
-    const historyText = recent
-      .map((m) => (m.type === 'user' ? `Người dùng: ${m.content}` : `Trợ lý: ${m.content}`))
-      .join('\n');
 
-    const prompt = `Ngôn ngữ bắt buộc: Tiếng Việt.
-Bạn là trợ lý y tế AI của bệnh viện. Trả lời rõ ràng, thân thiện, dùng markdown khi phù hợp.
+    const chatHistory = recent.map((m) => ({
+      role: m.type === 'user' ? 'user' : 'assistant',
+      content: m.content
+    }));
 
-${SYSTEM_PROMPT}
+    const completion = await openaiClient.chat.completions.create({
+      model: OPENAI_MODEL,
+      temperature: 0.6,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...chatHistory,
+        { role: 'user', content: message }
+      ]
+    });
 
-${historyText ? `Lịch sử hội thoại gần đây:\n${historyText}\n\n` : ''}Câu hỏi hiện tại: ${message}`;
-
-    const result = await geminiModel.generateContent(prompt);
-    const aiResponse = result?.response?.text() || 
+    const aiResponse = completion.choices?.[0]?.message?.content?.trim() || 
       'Xin lỗi, tôi không thể trả lời câu hỏi này lúc này. Vui lòng thử lại sau.';
 
     return res.status(200).json({
@@ -191,7 +168,7 @@ ${historyText ? `Lịch sử hội thoại gần đây:\n${historyText}\n\n` : '
 
   } catch (error) {
     // Log chi tiết lỗi để debug
-    console.error('❌ Gemini API Error:', {
+    console.error('❌ OpenAI API Error:', {
       message: error.message,
       status: error.status,
       code: error.code,
@@ -211,10 +188,10 @@ ${historyText ? `Lịch sử hội thoại gần đây:\n${historyText}\n\n` : '
     
     // Xử lý lỗi cụ thể
     if (error.status === 401 || error.response?.status === 401) {
-      console.error('🔑 GEMINI_API_KEY không hợp lệ hoặc đã hết hạn');
+      console.error('🔑 OPENAI_API_KEY không hợp lệ hoặc đã hết hạn');
       return res.status(200).json({
         success: true,
-        message: fallbackAnswer || `🔑 **Lưu ý:** GEMINI_API_KEY không hợp lệ. Hệ thống đang sử dụng chế độ fallback.
+        message: fallbackAnswer || `🔑 **Lưu ý:** OPENAI_API_KEY không hợp lệ. Hệ thống đang sử dụng chế độ fallback.
 
 Tôi là trợ lý y tế AI và có thể hỗ trợ bạn về:
 ✅ Tư vấn các triệu chứng bệnh thường gặp
@@ -222,7 +199,7 @@ Tôi là trợ lý y tế AI và có thể hỗ trợ bạn về:
 ✅ Thông tin về các dịch vụ y tế
 ✅ Lời khuyên về sức khỏe và dinh dưỡng
 
-💡 **Lưu ý:** Để sử dụng tính năng AI đầy đủ, vui lòng cấu hình GEMINI_API_KEY hợp lệ trong file .env của server.`,
+💡 **Lưu ý:** Để sử dụng tính năng AI đầy đủ, vui lòng cấu hình OPENAI_API_KEY hợp lệ trong file .env của server.`,
         timestamp: new Date().toISOString()
       });
     }
@@ -232,9 +209,9 @@ Tôi là trợ lý y tế AI và có thể hỗ trợ bạn về:
       const isInsufficientQuota = error.code === 'insufficient_quota' || error.type === 'insufficient_quota';
       
       if (isInsufficientQuota) {
-        console.error('💰 Gemini API: Đã hết quota (insufficient_quota)');
+        console.error('💰 OpenAI API: Đã hết quota (insufficient_quota)');
       } else {
-        console.error('⏰ Gemini API: Quá nhiều yêu cầu (rate limit)');
+        console.error('⏰ OpenAI API: Quá nhiều yêu cầu (rate limit)');
       }
       
       // Nếu có câu trả lời từ knowledge base, ưu tiên hiển thị nó
@@ -267,7 +244,7 @@ Tôi vẫn có thể hỗ trợ bạn về:
     }
 
     // Lỗi kết nối hoặc lỗi khác - sử dụng knowledge base
-    console.error('⚠️ Lỗi khi gọi Gemini API:', error.message);
+    console.error('⚠️ Lỗi khi gọi OpenAI API:', error.message);
     
     if (fallbackAnswer) {
       return res.status(200).json({
